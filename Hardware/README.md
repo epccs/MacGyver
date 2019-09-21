@@ -39,9 +39,9 @@ This board connects a Pi Zero [W] to an ATmega4809-PF by way of serial or UPDI.
 ![Status](./status_icon.png "Status")
 
 ```
-        ^0  Done: Design, Layout, 
-            WIP: BOM, 
-            Todo: Review*, Order Boards, Assembly, Testing, Evaluation.
+        ^0  Done: Design, Layout, BOM, 
+            WIP: Review*,
+            Todo: Order Boards, Assembly, Testing, Evaluation.
             *during review the Design may change without changing the revision.
 ```
 
@@ -108,7 +108,7 @@ The BCM2835 Broadcom chip used in the Raspberry Pi Zero is an ARM11 running at 1
 
 The Pi serial port (RX is BCM 15 and TX is BCM 14) is crossover connected to the ATmega4909-PF serial. 
 
-![Pi Pinout](https://raw.githubusercontent.com/epccs/RPUpi/master/Hardware/Documents/Pi-pinout-graphic.png")
+![Pi Pinout](https://raw.githubusercontent.com/epccs/RPUpi/master/Hardware/Documents/Pi-pinout-graphic.png)
 
 UPDI does not use the nRTS/nCTS pins (16/17).
 
