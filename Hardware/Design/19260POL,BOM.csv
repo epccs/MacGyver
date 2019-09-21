@@ -1,0 +1,12 @@
+LINE, REF, QTY, TYP, PN, MFG@PN, DESCRIPTION, NOTES, COST EA, LINE COST,BIN
+,,,,,,PiUpdi POL,,,TOTAL,
+,,,,,,9/19/19 (19260^0),,,=SUM(J5:J100),
+,,,,,,,,,,
+1,J5,1,J-HDR2.54mm,PPPC202LJBN,SULLINS@PPPC202LJBN-RC,CONN HEADER FEMALE RIGHT ANGLE 20X2POS .1IN,(1),2.466,=C5*I5,RPUPI
+2,U1,1,U-DCDC,I50115H,MURATA PS@OKI-78SR-5/1.5-W36-C,SMPS 5V 1500MA H SIP3,(1),4.26,=C6*I6,RPUPI
+,,,,,,,,,,
+,,,,,,NOTES,,,,
+,,,,,,(1) Alternate part with same or better rating allowed,,,,
+,,,,,,(4) Cut 36 pin to needed size,,,,
+
+
