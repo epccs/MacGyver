@@ -11,10 +11,13 @@ This board connects a Pi Zero [W] to an ATmega4809-PF by way of serial or UPDI.
         TBD
 ```
 
+
 ## Uses
 
 ```
         TBD
+```
+
 
 ## Notice
 
@@ -33,7 +36,7 @@ This board connects a Pi Zero [W] to an ATmega4809-PF by way of serial or UPDI.
 
 # Status
 
-![Status](./status_icon.png "RPUpi Status")
+![Status](./status_icon.png "Status")
 
 ```
         ^0  Done: Design, Layout, 
