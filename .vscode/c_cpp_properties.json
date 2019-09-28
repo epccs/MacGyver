@@ -10,7 +10,7 @@
                 "/usr/lib/gcc/avr/5.4.0/include"
             ],
             "forcedInclude": [ "${workspaceFolder}/lib/Atmel.ATmega_DFP.1.3.300.atpack/include/avr/iom328pb.h" ],
-            "defines": ["__AVR_ATmega328PB__"],
+            "defines": ["__AVR_ATmega4809__"],
             "cStandard": "c11",
             "cppStandard": "c++17",
             "browse": {
