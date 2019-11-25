@@ -6,7 +6,7 @@
 ;* Number            : AVR000
 ;* File Name         : m4809def.inc
 ;* Title             : Register/Bit Definitions for the ATmega4809
-;* Created           : 2018-11-27 09:12
+;* Created           : 2019-10-16 08:25
 ;* Version           : 1.00
 ;* Support e-mail    : avr@atmel.com
 ;* Target MCU        : ATmega4809
@@ -45,804 +45,804 @@
 ;** AC0 - Analog Comparator
 ;*************************************************************************
 
-.equ AC0_CTRLA = 1664                    ; Control A
-.equ AC0_MUXCTRLA = 1666                 ; Mux Control A
-.equ AC0_DACREF = 1668                   ; Referance scale control
-.equ AC0_INTCTRL = 1670                  ; Interrupt Control
-.equ AC0_STATUS = 1671                   ; Status
+.equ AC0_CTRLA = 0x0680                  ; Control A
+.equ AC0_MUXCTRLA = 0x0682               ; Mux Control A
+.equ AC0_DACREF = 0x0684                 ; Referance scale control
+.equ AC0_INTCTRL = 0x0686                ; Interrupt Control
+.equ AC0_STATUS = 0x0687                 ; Status
 
 ;*************************************************************************
 ;** ADC0 - Analog to Digital Converter
 ;*************************************************************************
 
-.equ ADC0_CTRLA = 1536                   ; Control A
-.equ ADC0_CTRLB = 1537                   ; Control B
-.equ ADC0_CTRLC = 1538                   ; Control C
-.equ ADC0_CTRLD = 1539                   ; Control D
-.equ ADC0_CTRLE = 1540                   ; Control E
-.equ ADC0_SAMPCTRL = 1541                ; Sample Control
-.equ ADC0_MUXPOS = 1542                  ; Positive mux input
-.equ ADC0_COMMAND = 1544                 ; Command
-.equ ADC0_EVCTRL = 1545                  ; Event Control
-.equ ADC0_INTCTRL = 1546                 ; Interrupt Control
-.equ ADC0_INTFLAGS = 1547                ; Interrupt Flags
-.equ ADC0_DBGCTRL = 1548                 ; Debug Control
-.equ ADC0_TEMP = 1549                    ; Temporary Data
-.equ ADC0_RES = 1552                     ; ADC Accumulator Result
-.equ ADC0_RESL = 1552                    ; ADC Accumulator Result low byte
-.equ ADC0_RESH = 1553                    ; ADC Accumulator Result hi byte
-.equ ADC0_WINLT = 1554                   ; Window comparator low threshold
-.equ ADC0_WINLTL = 1554                  ; Window comparator low threshold low byte
-.equ ADC0_WINLTH = 1555                  ; Window comparator low threshold hi byte
-.equ ADC0_WINHT = 1556                   ; Window comparator high threshold
-.equ ADC0_WINHTL = 1556                  ; Window comparator high threshold low byte
-.equ ADC0_WINHTH = 1557                  ; Window comparator high threshold hi byte
-.equ ADC0_CALIB = 1558                   ; Calibration
+.equ ADC0_CTRLA = 0x0600                 ; Control A
+.equ ADC0_CTRLB = 0x0601                 ; Control B
+.equ ADC0_CTRLC = 0x0602                 ; Control C
+.equ ADC0_CTRLD = 0x0603                 ; Control D
+.equ ADC0_CTRLE = 0x0604                 ; Control E
+.equ ADC0_SAMPCTRL = 0x0605              ; Sample Control
+.equ ADC0_MUXPOS = 0x0606                ; Positive mux input
+.equ ADC0_COMMAND = 0x0608               ; Command
+.equ ADC0_EVCTRL = 0x0609                ; Event Control
+.equ ADC0_INTCTRL = 0x060A               ; Interrupt Control
+.equ ADC0_INTFLAGS = 0x060B              ; Interrupt Flags
+.equ ADC0_DBGCTRL = 0x060C               ; Debug Control
+.equ ADC0_TEMP = 0x060D                  ; Temporary Data
+.equ ADC0_RES = 0x0610                   ; ADC Accumulator Result
+.equ ADC0_RESL = 0x0610                  ; ADC Accumulator Result low byte
+.equ ADC0_RESH = 0x0611                  ; ADC Accumulator Result hi byte
+.equ ADC0_WINLT = 0x0612                 ; Window comparator low threshold
+.equ ADC0_WINLTL = 0x0612                ; Window comparator low threshold low byte
+.equ ADC0_WINLTH = 0x0613                ; Window comparator low threshold hi byte
+.equ ADC0_WINHT = 0x0614                 ; Window comparator high threshold
+.equ ADC0_WINHTL = 0x0614                ; Window comparator high threshold low byte
+.equ ADC0_WINHTH = 0x0615                ; Window comparator high threshold hi byte
+.equ ADC0_CALIB = 0x0616                 ; Calibration
 
 ;*************************************************************************
 ;** BOD - Bod interface
 ;*************************************************************************
 
-.equ BOD_CTRLA = 128                     ; Control A
-.equ BOD_CTRLB = 129                     ; Control B
-.equ BOD_VLMCTRLA = 136                  ; Voltage level monitor Control
-.equ BOD_INTCTRL = 137                   ; Voltage level monitor interrupt Control
-.equ BOD_INTFLAGS = 138                  ; Voltage level monitor interrupt Flags
-.equ BOD_STATUS = 139                    ; Voltage level monitor status
+.equ BOD_CTRLA = 0x0080                  ; Control A
+.equ BOD_CTRLB = 0x0081                  ; Control B
+.equ BOD_VLMCTRLA = 0x0088               ; Voltage level monitor Control
+.equ BOD_INTCTRL = 0x0089                ; Voltage level monitor interrupt Control
+.equ BOD_INTFLAGS = 0x008A               ; Voltage level monitor interrupt Flags
+.equ BOD_STATUS = 0x008B                 ; Voltage level monitor status
 
 ;*************************************************************************
 ;** CCL - Configurable Custom Logic
 ;*************************************************************************
 
-.equ CCL_CTRLA = 448                     ; Control Register A
-.equ CCL_SEQCTRL0 = 449                  ; Sequential Control 0
-.equ CCL_SEQCTRL1 = 450                  ; Sequential Control 1
-.equ CCL_INTCTRL0 = 453                  ; Interrupt Control 0
-.equ CCL_INTFLAGS = 455                  ; Interrupt Flags
-.equ CCL_LUT0CTRLA = 456                 ; LUT Control 0 A
-.equ CCL_LUT0CTRLB = 457                 ; LUT Control 0 B
-.equ CCL_LUT0CTRLC = 458                 ; LUT Control 0 C
-.equ CCL_TRUTH0 = 459                    ; Truth 0
-.equ CCL_LUT1CTRLA = 460                 ; LUT Control 1 A
-.equ CCL_LUT1CTRLB = 461                 ; LUT Control 1 B
-.equ CCL_LUT1CTRLC = 462                 ; LUT Control 1 C
-.equ CCL_TRUTH1 = 463                    ; Truth 1
-.equ CCL_LUT2CTRLA = 464                 ; LUT Control 2 A
-.equ CCL_LUT2CTRLB = 465                 ; LUT Control 2 B
-.equ CCL_LUT2CTRLC = 466                 ; LUT Control 2 C
-.equ CCL_TRUTH2 = 467                    ; Truth 2
-.equ CCL_LUT3CTRLA = 468                 ; LUT Control 3 A
-.equ CCL_LUT3CTRLB = 469                 ; LUT Control 3 B
-.equ CCL_LUT3CTRLC = 470                 ; LUT Control 3 C
-.equ CCL_TRUTH3 = 471                    ; Truth 3
+.equ CCL_CTRLA = 0x01C0                  ; Control Register A
+.equ CCL_SEQCTRL0 = 0x01C1               ; Sequential Control 0
+.equ CCL_SEQCTRL1 = 0x01C2               ; Sequential Control 1
+.equ CCL_INTCTRL0 = 0x01C5               ; Interrupt Control 0
+.equ CCL_INTFLAGS = 0x01C7               ; Interrupt Flags
+.equ CCL_LUT0CTRLA = 0x01C8              ; LUT Control 0 A
+.equ CCL_LUT0CTRLB = 0x01C9              ; LUT Control 0 B
+.equ CCL_LUT0CTRLC = 0x01CA              ; LUT Control 0 C
+.equ CCL_TRUTH0 = 0x01CB                 ; Truth 0
+.equ CCL_LUT1CTRLA = 0x01CC              ; LUT Control 1 A
+.equ CCL_LUT1CTRLB = 0x01CD              ; LUT Control 1 B
+.equ CCL_LUT1CTRLC = 0x01CE              ; LUT Control 1 C
+.equ CCL_TRUTH1 = 0x01CF                 ; Truth 1
+.equ CCL_LUT2CTRLA = 0x01D0              ; LUT Control 2 A
+.equ CCL_LUT2CTRLB = 0x01D1              ; LUT Control 2 B
+.equ CCL_LUT2CTRLC = 0x01D2              ; LUT Control 2 C
+.equ CCL_TRUTH2 = 0x01D3                 ; Truth 2
+.equ CCL_LUT3CTRLA = 0x01D4              ; LUT Control 3 A
+.equ CCL_LUT3CTRLB = 0x01D5              ; LUT Control 3 B
+.equ CCL_LUT3CTRLC = 0x01D6              ; LUT Control 3 C
+.equ CCL_TRUTH3 = 0x01D7                 ; Truth 3
 
 ;*************************************************************************
 ;** CLKCTRL - Clock controller
 ;*************************************************************************
 
-.equ CLKCTRL_MCLKCTRLA = 96              ; MCLK Control A
-.equ CLKCTRL_MCLKCTRLB = 97              ; MCLK Control B
-.equ CLKCTRL_MCLKLOCK = 98               ; MCLK Lock
-.equ CLKCTRL_MCLKSTATUS = 99             ; MCLK Status
-.equ CLKCTRL_OSC20MCTRLA = 112           ; OSC20M Control A
-.equ CLKCTRL_OSC20MCALIBA = 113          ; OSC20M Calibration A
-.equ CLKCTRL_OSC20MCALIBB = 114          ; OSC20M Calibration B
-.equ CLKCTRL_OSC32KCTRLA = 120           ; OSC32K Control A
-.equ CLKCTRL_XOSC32KCTRLA = 124          ; XOSC32K Control A
+.equ CLKCTRL_MCLKCTRLA = 0x0060          ; MCLK Control A
+.equ CLKCTRL_MCLKCTRLB = 0x0061          ; MCLK Control B
+.equ CLKCTRL_MCLKLOCK = 0x0062           ; MCLK Lock
+.equ CLKCTRL_MCLKSTATUS = 0x0063         ; MCLK Status
+.equ CLKCTRL_OSC20MCTRLA = 0x0070        ; OSC20M Control A
+.equ CLKCTRL_OSC20MCALIBA = 0x0071       ; OSC20M Calibration A
+.equ CLKCTRL_OSC20MCALIBB = 0x0072       ; OSC20M Calibration B
+.equ CLKCTRL_OSC32KCTRLA = 0x0078        ; OSC32K Control A
+.equ CLKCTRL_XOSC32KCTRLA = 0x007C       ; XOSC32K Control A
 
 ;*************************************************************************
 ;** CPU - CPU
 ;*************************************************************************
 
-.equ CPU_CCP = 52                        ; Configuration Change Protection
-.equ CPU_SPL = 61                        ; Stack Pointer Low
-.equ CPU_SPH = 62                        ; Stack Pointer High
-.equ CPU_SREG = 63                       ; Status Register
+.equ CPU_CCP = 0x0034                    ; Configuration Change Protection
+.equ CPU_SPL = 0x003D                    ; Stack Pointer Low
+.equ CPU_SPH = 0x003E                    ; Stack Pointer High
+.equ CPU_SREG = 0x003F                   ; Status Register
 
 ;*************************************************************************
 ;** CPUINT - Interrupt Controller
 ;*************************************************************************
 
-.equ CPUINT_CTRLA = 272                  ; Control A
-.equ CPUINT_STATUS = 273                 ; Status
-.equ CPUINT_LVL0PRI = 274                ; Interrupt Level 0 Priority
-.equ CPUINT_LVL1VEC = 275                ; Interrupt Level 1 Priority Vector
+.equ CPUINT_CTRLA = 0x0110               ; Control A
+.equ CPUINT_STATUS = 0x0111              ; Status
+.equ CPUINT_LVL0PRI = 0x0112             ; Interrupt Level 0 Priority
+.equ CPUINT_LVL1VEC = 0x0113             ; Interrupt Level 1 Priority Vector
 
 ;*************************************************************************
 ;** CRCSCAN - CRCSCAN
 ;*************************************************************************
 
-.equ CRCSCAN_CTRLA = 288                 ; Control A
-.equ CRCSCAN_CTRLB = 289                 ; Control B
-.equ CRCSCAN_STATUS = 290                ; Status
+.equ CRCSCAN_CTRLA = 0x0120              ; Control A
+.equ CRCSCAN_CTRLB = 0x0121              ; Control B
+.equ CRCSCAN_STATUS = 0x0122             ; Status
 
 ;*************************************************************************
 ;** EVSYS - Event System
 ;*************************************************************************
 
-.equ EVSYS_STROBE = 384                  ; Channel Strobe
-.equ EVSYS_CHANNEL0 = 400                ; Multiplexer Channel 0
-.equ EVSYS_CHANNEL1 = 401                ; Multiplexer Channel 1
-.equ EVSYS_CHANNEL2 = 402                ; Multiplexer Channel 2
-.equ EVSYS_CHANNEL3 = 403                ; Multiplexer Channel 3
-.equ EVSYS_CHANNEL4 = 404                ; Multiplexer Channel 4
-.equ EVSYS_CHANNEL5 = 405                ; Multiplexer Channel 5
-.equ EVSYS_CHANNEL6 = 406                ; Multiplexer Channel 6
-.equ EVSYS_CHANNEL7 = 407                ; Multiplexer Channel 7
-.equ EVSYS_USERCCLLUT0A = 416            ; User CCL LUT0 Event A
-.equ EVSYS_USERCCLLUT0B = 417            ; User CCL LUT0 Event B
-.equ EVSYS_USERCCLLUT1A = 418            ; User CCL LUT1 Event A
-.equ EVSYS_USERCCLLUT1B = 419            ; User CCL LUT1 Event B
-.equ EVSYS_USERCCLLUT2A = 420            ; User CCL LUT2 Event A
-.equ EVSYS_USERCCLLUT2B = 421            ; User CCL LUT2 Event B
-.equ EVSYS_USERCCLLUT3A = 422            ; User CCL LUT3 Event A
-.equ EVSYS_USERCCLLUT3B = 423            ; User CCL LUT3 Event B
-.equ EVSYS_USERADC0 = 424                ; User ADC0
-.equ EVSYS_USEREVOUTA = 425              ; User EVOUT Port A
-.equ EVSYS_USEREVOUTB = 426              ; User EVOUT Port B
-.equ EVSYS_USEREVOUTC = 427              ; User EVOUT Port C
-.equ EVSYS_USEREVOUTD = 428              ; User EVOUT Port D
-.equ EVSYS_USEREVOUTE = 429              ; User EVOUT Port E
-.equ EVSYS_USEREVOUTF = 430              ; User EVOUT Port F
-.equ EVSYS_USERUSART0 = 431              ; User USART0
-.equ EVSYS_USERUSART1 = 432              ; User USART1
-.equ EVSYS_USERUSART2 = 433              ; User USART2
-.equ EVSYS_USERUSART3 = 434              ; User USART3
-.equ EVSYS_USERTCA0 = 435                ; User TCA0
-.equ EVSYS_USERTCB0 = 436                ; User TCB0
-.equ EVSYS_USERTCB1 = 437                ; User TCB1
-.equ EVSYS_USERTCB2 = 438                ; User TCB2
-.equ EVSYS_USERTCB3 = 439                ; User TCB3
+.equ EVSYS_STROBE = 0x0180               ; Channel Strobe
+.equ EVSYS_CHANNEL0 = 0x0190             ; Multiplexer Channel 0
+.equ EVSYS_CHANNEL1 = 0x0191             ; Multiplexer Channel 1
+.equ EVSYS_CHANNEL2 = 0x0192             ; Multiplexer Channel 2
+.equ EVSYS_CHANNEL3 = 0x0193             ; Multiplexer Channel 3
+.equ EVSYS_CHANNEL4 = 0x0194             ; Multiplexer Channel 4
+.equ EVSYS_CHANNEL5 = 0x0195             ; Multiplexer Channel 5
+.equ EVSYS_CHANNEL6 = 0x0196             ; Multiplexer Channel 6
+.equ EVSYS_CHANNEL7 = 0x0197             ; Multiplexer Channel 7
+.equ EVSYS_USERCCLLUT0A = 0x01A0         ; User CCL LUT0 Event A
+.equ EVSYS_USERCCLLUT0B = 0x01A1         ; User CCL LUT0 Event B
+.equ EVSYS_USERCCLLUT1A = 0x01A2         ; User CCL LUT1 Event A
+.equ EVSYS_USERCCLLUT1B = 0x01A3         ; User CCL LUT1 Event B
+.equ EVSYS_USERCCLLUT2A = 0x01A4         ; User CCL LUT2 Event A
+.equ EVSYS_USERCCLLUT2B = 0x01A5         ; User CCL LUT2 Event B
+.equ EVSYS_USERCCLLUT3A = 0x01A6         ; User CCL LUT3 Event A
+.equ EVSYS_USERCCLLUT3B = 0x01A7         ; User CCL LUT3 Event B
+.equ EVSYS_USERADC0 = 0x01A8             ; User ADC0
+.equ EVSYS_USEREVOUTA = 0x01A9           ; User EVOUT Port A
+.equ EVSYS_USEREVOUTB = 0x01AA           ; User EVOUT Port B
+.equ EVSYS_USEREVOUTC = 0x01AB           ; User EVOUT Port C
+.equ EVSYS_USEREVOUTD = 0x01AC           ; User EVOUT Port D
+.equ EVSYS_USEREVOUTE = 0x01AD           ; User EVOUT Port E
+.equ EVSYS_USEREVOUTF = 0x01AE           ; User EVOUT Port F
+.equ EVSYS_USERUSART0 = 0x01AF           ; User USART0
+.equ EVSYS_USERUSART1 = 0x01B0           ; User USART1
+.equ EVSYS_USERUSART2 = 0x01B1           ; User USART2
+.equ EVSYS_USERUSART3 = 0x01B2           ; User USART3
+.equ EVSYS_USERTCA0 = 0x01B3             ; User TCA0
+.equ EVSYS_USERTCB0 = 0x01B4             ; User TCB0
+.equ EVSYS_USERTCB1 = 0x01B5             ; User TCB1
+.equ EVSYS_USERTCB2 = 0x01B6             ; User TCB2
+.equ EVSYS_USERTCB3 = 0x01B7             ; User TCB3
 
 ;*************************************************************************
 ;** FUSE - Fuses
 ;*************************************************************************
 
-.equ FUSE_WDTCFG = 4736                  ; Watchdog Configuration
-.equ FUSE_BODCFG = 4737                  ; BOD Configuration
-.equ FUSE_OSCCFG = 4738                  ; Oscillator Configuration
-.equ FUSE_SYSCFG0 = 4741                 ; System Configuration 0
-.equ FUSE_SYSCFG1 = 4742                 ; System Configuration 1
-.equ FUSE_APPEND = 4743                  ; Application Code Section End
-.equ FUSE_BOOTEND = 4744                 ; Boot Section End
+.equ FUSE_WDTCFG = 0x1280                ; Watchdog Configuration
+.equ FUSE_BODCFG = 0x1281                ; BOD Configuration
+.equ FUSE_OSCCFG = 0x1282                ; Oscillator Configuration
+.equ FUSE_SYSCFG0 = 0x1285               ; System Configuration 0
+.equ FUSE_SYSCFG1 = 0x1286               ; System Configuration 1
+.equ FUSE_APPEND = 0x1287                ; Application Code Section End
+.equ FUSE_BOOTEND = 0x1288               ; Boot Section End
 
 ;*************************************************************************
 ;** GPIO - General Purpose IO
 ;*************************************************************************
 
-.equ GPIO_GPIOR0 = 28                    ; General Purpose IO Register 0
-.equ GPIO_GPIOR1 = 29                    ; General Purpose IO Register 1
-.equ GPIO_GPIOR2 = 30                    ; General Purpose IO Register 2
-.equ GPIO_GPIOR3 = 31                    ; General Purpose IO Register 3
+.equ GPIO_GPIOR0 = 0x001C                ; General Purpose IO Register 0
+.equ GPIO_GPIOR1 = 0x001D                ; General Purpose IO Register 1
+.equ GPIO_GPIOR2 = 0x001E                ; General Purpose IO Register 2
+.equ GPIO_GPIOR3 = 0x001F                ; General Purpose IO Register 3
 
 ;*************************************************************************
 ;** LOCKBIT - Lockbit
 ;*************************************************************************
 
-.equ LOCKBIT_LOCKBIT = 4746              ; Lock Bits
+.equ LOCKBIT_LOCKBIT = 0x128A            ; Lock Bits
 
 ;*************************************************************************
 ;** NVMCTRL - Non-volatile Memory Controller
 ;*************************************************************************
 
-.equ NVMCTRL_CTRLA = 4096                ; Control A
-.equ NVMCTRL_CTRLB = 4097                ; Control B
-.equ NVMCTRL_STATUS = 4098               ; Status
-.equ NVMCTRL_INTCTRL = 4099              ; Interrupt Control
-.equ NVMCTRL_INTFLAGS = 4100             ; Interrupt Flags
-.equ NVMCTRL_DATA = 4102                 ; Data
-.equ NVMCTRL_DATAL = 4102                ; Data low byte
-.equ NVMCTRL_DATAH = 4103                ; Data hi byte
-.equ NVMCTRL_ADDR = 4104                 ; Address
-.equ NVMCTRL_ADDRL = 4104                ; Address low byte
-.equ NVMCTRL_ADDRH = 4105                ; Address hi byte
+.equ NVMCTRL_CTRLA = 0x1000              ; Control A
+.equ NVMCTRL_CTRLB = 0x1001              ; Control B
+.equ NVMCTRL_STATUS = 0x1002             ; Status
+.equ NVMCTRL_INTCTRL = 0x1003            ; Interrupt Control
+.equ NVMCTRL_INTFLAGS = 0x1004           ; Interrupt Flags
+.equ NVMCTRL_DATA = 0x1006               ; Data
+.equ NVMCTRL_DATAL = 0x1006              ; Data low byte
+.equ NVMCTRL_DATAH = 0x1007              ; Data hi byte
+.equ NVMCTRL_ADDR = 0x1008               ; Address
+.equ NVMCTRL_ADDRL = 0x1008              ; Address low byte
+.equ NVMCTRL_ADDRH = 0x1009              ; Address hi byte
 
 ;*************************************************************************
 ;** PORTA - I/O Ports
 ;*************************************************************************
 
-.equ PORTA_DIR = 1024                    ; Data Direction
-.equ PORTA_DIRSET = 1025                 ; Data Direction Set
-.equ PORTA_DIRCLR = 1026                 ; Data Direction Clear
-.equ PORTA_DIRTGL = 1027                 ; Data Direction Toggle
-.equ PORTA_OUT = 1028                    ; Output Value
-.equ PORTA_OUTSET = 1029                 ; Output Value Set
-.equ PORTA_OUTCLR = 1030                 ; Output Value Clear
-.equ PORTA_OUTTGL = 1031                 ; Output Value Toggle
-.equ PORTA_IN = 1032                     ; Input Value
-.equ PORTA_INTFLAGS = 1033               ; Interrupt Flags
-.equ PORTA_PORTCTRL = 1034               ; Port Control
-.equ PORTA_PIN0CTRL = 1040               ; Pin 0 Control
-.equ PORTA_PIN1CTRL = 1041               ; Pin 1 Control
-.equ PORTA_PIN2CTRL = 1042               ; Pin 2 Control
-.equ PORTA_PIN3CTRL = 1043               ; Pin 3 Control
-.equ PORTA_PIN4CTRL = 1044               ; Pin 4 Control
-.equ PORTA_PIN5CTRL = 1045               ; Pin 5 Control
-.equ PORTA_PIN6CTRL = 1046               ; Pin 6 Control
-.equ PORTA_PIN7CTRL = 1047               ; Pin 7 Control
+.equ PORTA_DIR = 0x0400                  ; Data Direction
+.equ PORTA_DIRSET = 0x0401               ; Data Direction Set
+.equ PORTA_DIRCLR = 0x0402               ; Data Direction Clear
+.equ PORTA_DIRTGL = 0x0403               ; Data Direction Toggle
+.equ PORTA_OUT = 0x0404                  ; Output Value
+.equ PORTA_OUTSET = 0x0405               ; Output Value Set
+.equ PORTA_OUTCLR = 0x0406               ; Output Value Clear
+.equ PORTA_OUTTGL = 0x0407               ; Output Value Toggle
+.equ PORTA_IN = 0x0408                   ; Input Value
+.equ PORTA_INTFLAGS = 0x0409             ; Interrupt Flags
+.equ PORTA_PORTCTRL = 0x040A             ; Port Control
+.equ PORTA_PIN0CTRL = 0x0410             ; Pin 0 Control
+.equ PORTA_PIN1CTRL = 0x0411             ; Pin 1 Control
+.equ PORTA_PIN2CTRL = 0x0412             ; Pin 2 Control
+.equ PORTA_PIN3CTRL = 0x0413             ; Pin 3 Control
+.equ PORTA_PIN4CTRL = 0x0414             ; Pin 4 Control
+.equ PORTA_PIN5CTRL = 0x0415             ; Pin 5 Control
+.equ PORTA_PIN6CTRL = 0x0416             ; Pin 6 Control
+.equ PORTA_PIN7CTRL = 0x0417             ; Pin 7 Control
 
 ;*************************************************************************
 ;** PORTB - I/O Ports
 ;*************************************************************************
 
-.equ PORTB_DIR = 1056                    ; Data Direction
-.equ PORTB_DIRSET = 1057                 ; Data Direction Set
-.equ PORTB_DIRCLR = 1058                 ; Data Direction Clear
-.equ PORTB_DIRTGL = 1059                 ; Data Direction Toggle
-.equ PORTB_OUT = 1060                    ; Output Value
-.equ PORTB_OUTSET = 1061                 ; Output Value Set
-.equ PORTB_OUTCLR = 1062                 ; Output Value Clear
-.equ PORTB_OUTTGL = 1063                 ; Output Value Toggle
-.equ PORTB_IN = 1064                     ; Input Value
-.equ PORTB_INTFLAGS = 1065               ; Interrupt Flags
-.equ PORTB_PORTCTRL = 1066               ; Port Control
-.equ PORTB_PIN0CTRL = 1072               ; Pin 0 Control
-.equ PORTB_PIN1CTRL = 1073               ; Pin 1 Control
-.equ PORTB_PIN2CTRL = 1074               ; Pin 2 Control
-.equ PORTB_PIN3CTRL = 1075               ; Pin 3 Control
-.equ PORTB_PIN4CTRL = 1076               ; Pin 4 Control
-.equ PORTB_PIN5CTRL = 1077               ; Pin 5 Control
-.equ PORTB_PIN6CTRL = 1078               ; Pin 6 Control
-.equ PORTB_PIN7CTRL = 1079               ; Pin 7 Control
+.equ PORTB_DIR = 0x0420                  ; Data Direction
+.equ PORTB_DIRSET = 0x0421               ; Data Direction Set
+.equ PORTB_DIRCLR = 0x0422               ; Data Direction Clear
+.equ PORTB_DIRTGL = 0x0423               ; Data Direction Toggle
+.equ PORTB_OUT = 0x0424                  ; Output Value
+.equ PORTB_OUTSET = 0x0425               ; Output Value Set
+.equ PORTB_OUTCLR = 0x0426               ; Output Value Clear
+.equ PORTB_OUTTGL = 0x0427               ; Output Value Toggle
+.equ PORTB_IN = 0x0428                   ; Input Value
+.equ PORTB_INTFLAGS = 0x0429             ; Interrupt Flags
+.equ PORTB_PORTCTRL = 0x042A             ; Port Control
+.equ PORTB_PIN0CTRL = 0x0430             ; Pin 0 Control
+.equ PORTB_PIN1CTRL = 0x0431             ; Pin 1 Control
+.equ PORTB_PIN2CTRL = 0x0432             ; Pin 2 Control
+.equ PORTB_PIN3CTRL = 0x0433             ; Pin 3 Control
+.equ PORTB_PIN4CTRL = 0x0434             ; Pin 4 Control
+.equ PORTB_PIN5CTRL = 0x0435             ; Pin 5 Control
+.equ PORTB_PIN6CTRL = 0x0436             ; Pin 6 Control
+.equ PORTB_PIN7CTRL = 0x0437             ; Pin 7 Control
 
 ;*************************************************************************
 ;** PORTC - I/O Ports
 ;*************************************************************************
 
-.equ PORTC_DIR = 1088                    ; Data Direction
-.equ PORTC_DIRSET = 1089                 ; Data Direction Set
-.equ PORTC_DIRCLR = 1090                 ; Data Direction Clear
-.equ PORTC_DIRTGL = 1091                 ; Data Direction Toggle
-.equ PORTC_OUT = 1092                    ; Output Value
-.equ PORTC_OUTSET = 1093                 ; Output Value Set
-.equ PORTC_OUTCLR = 1094                 ; Output Value Clear
-.equ PORTC_OUTTGL = 1095                 ; Output Value Toggle
-.equ PORTC_IN = 1096                     ; Input Value
-.equ PORTC_INTFLAGS = 1097               ; Interrupt Flags
-.equ PORTC_PORTCTRL = 1098               ; Port Control
-.equ PORTC_PIN0CTRL = 1104               ; Pin 0 Control
-.equ PORTC_PIN1CTRL = 1105               ; Pin 1 Control
-.equ PORTC_PIN2CTRL = 1106               ; Pin 2 Control
-.equ PORTC_PIN3CTRL = 1107               ; Pin 3 Control
-.equ PORTC_PIN4CTRL = 1108               ; Pin 4 Control
-.equ PORTC_PIN5CTRL = 1109               ; Pin 5 Control
-.equ PORTC_PIN6CTRL = 1110               ; Pin 6 Control
-.equ PORTC_PIN7CTRL = 1111               ; Pin 7 Control
+.equ PORTC_DIR = 0x0440                  ; Data Direction
+.equ PORTC_DIRSET = 0x0441               ; Data Direction Set
+.equ PORTC_DIRCLR = 0x0442               ; Data Direction Clear
+.equ PORTC_DIRTGL = 0x0443               ; Data Direction Toggle
+.equ PORTC_OUT = 0x0444                  ; Output Value
+.equ PORTC_OUTSET = 0x0445               ; Output Value Set
+.equ PORTC_OUTCLR = 0x0446               ; Output Value Clear
+.equ PORTC_OUTTGL = 0x0447               ; Output Value Toggle
+.equ PORTC_IN = 0x0448                   ; Input Value
+.equ PORTC_INTFLAGS = 0x0449             ; Interrupt Flags
+.equ PORTC_PORTCTRL = 0x044A             ; Port Control
+.equ PORTC_PIN0CTRL = 0x0450             ; Pin 0 Control
+.equ PORTC_PIN1CTRL = 0x0451             ; Pin 1 Control
+.equ PORTC_PIN2CTRL = 0x0452             ; Pin 2 Control
+.equ PORTC_PIN3CTRL = 0x0453             ; Pin 3 Control
+.equ PORTC_PIN4CTRL = 0x0454             ; Pin 4 Control
+.equ PORTC_PIN5CTRL = 0x0455             ; Pin 5 Control
+.equ PORTC_PIN6CTRL = 0x0456             ; Pin 6 Control
+.equ PORTC_PIN7CTRL = 0x0457             ; Pin 7 Control
 
 ;*************************************************************************
 ;** PORTD - I/O Ports
 ;*************************************************************************
 
-.equ PORTD_DIR = 1120                    ; Data Direction
-.equ PORTD_DIRSET = 1121                 ; Data Direction Set
-.equ PORTD_DIRCLR = 1122                 ; Data Direction Clear
-.equ PORTD_DIRTGL = 1123                 ; Data Direction Toggle
-.equ PORTD_OUT = 1124                    ; Output Value
-.equ PORTD_OUTSET = 1125                 ; Output Value Set
-.equ PORTD_OUTCLR = 1126                 ; Output Value Clear
-.equ PORTD_OUTTGL = 1127                 ; Output Value Toggle
-.equ PORTD_IN = 1128                     ; Input Value
-.equ PORTD_INTFLAGS = 1129               ; Interrupt Flags
-.equ PORTD_PORTCTRL = 1130               ; Port Control
-.equ PORTD_PIN0CTRL = 1136               ; Pin 0 Control
-.equ PORTD_PIN1CTRL = 1137               ; Pin 1 Control
-.equ PORTD_PIN2CTRL = 1138               ; Pin 2 Control
-.equ PORTD_PIN3CTRL = 1139               ; Pin 3 Control
-.equ PORTD_PIN4CTRL = 1140               ; Pin 4 Control
-.equ PORTD_PIN5CTRL = 1141               ; Pin 5 Control
-.equ PORTD_PIN6CTRL = 1142               ; Pin 6 Control
-.equ PORTD_PIN7CTRL = 1143               ; Pin 7 Control
+.equ PORTD_DIR = 0x0460                  ; Data Direction
+.equ PORTD_DIRSET = 0x0461               ; Data Direction Set
+.equ PORTD_DIRCLR = 0x0462               ; Data Direction Clear
+.equ PORTD_DIRTGL = 0x0463               ; Data Direction Toggle
+.equ PORTD_OUT = 0x0464                  ; Output Value
+.equ PORTD_OUTSET = 0x0465               ; Output Value Set
+.equ PORTD_OUTCLR = 0x0466               ; Output Value Clear
+.equ PORTD_OUTTGL = 0x0467               ; Output Value Toggle
+.equ PORTD_IN = 0x0468                   ; Input Value
+.equ PORTD_INTFLAGS = 0x0469             ; Interrupt Flags
+.equ PORTD_PORTCTRL = 0x046A             ; Port Control
+.equ PORTD_PIN0CTRL = 0x0470             ; Pin 0 Control
+.equ PORTD_PIN1CTRL = 0x0471             ; Pin 1 Control
+.equ PORTD_PIN2CTRL = 0x0472             ; Pin 2 Control
+.equ PORTD_PIN3CTRL = 0x0473             ; Pin 3 Control
+.equ PORTD_PIN4CTRL = 0x0474             ; Pin 4 Control
+.equ PORTD_PIN5CTRL = 0x0475             ; Pin 5 Control
+.equ PORTD_PIN6CTRL = 0x0476             ; Pin 6 Control
+.equ PORTD_PIN7CTRL = 0x0477             ; Pin 7 Control
 
 ;*************************************************************************
 ;** PORTE - I/O Ports
 ;*************************************************************************
 
-.equ PORTE_DIR = 1152                    ; Data Direction
-.equ PORTE_DIRSET = 1153                 ; Data Direction Set
-.equ PORTE_DIRCLR = 1154                 ; Data Direction Clear
-.equ PORTE_DIRTGL = 1155                 ; Data Direction Toggle
-.equ PORTE_OUT = 1156                    ; Output Value
-.equ PORTE_OUTSET = 1157                 ; Output Value Set
-.equ PORTE_OUTCLR = 1158                 ; Output Value Clear
-.equ PORTE_OUTTGL = 1159                 ; Output Value Toggle
-.equ PORTE_IN = 1160                     ; Input Value
-.equ PORTE_INTFLAGS = 1161               ; Interrupt Flags
-.equ PORTE_PORTCTRL = 1162               ; Port Control
-.equ PORTE_PIN0CTRL = 1168               ; Pin 0 Control
-.equ PORTE_PIN1CTRL = 1169               ; Pin 1 Control
-.equ PORTE_PIN2CTRL = 1170               ; Pin 2 Control
-.equ PORTE_PIN3CTRL = 1171               ; Pin 3 Control
-.equ PORTE_PIN4CTRL = 1172               ; Pin 4 Control
-.equ PORTE_PIN5CTRL = 1173               ; Pin 5 Control
-.equ PORTE_PIN6CTRL = 1174               ; Pin 6 Control
-.equ PORTE_PIN7CTRL = 1175               ; Pin 7 Control
+.equ PORTE_DIR = 0x0480                  ; Data Direction
+.equ PORTE_DIRSET = 0x0481               ; Data Direction Set
+.equ PORTE_DIRCLR = 0x0482               ; Data Direction Clear
+.equ PORTE_DIRTGL = 0x0483               ; Data Direction Toggle
+.equ PORTE_OUT = 0x0484                  ; Output Value
+.equ PORTE_OUTSET = 0x0485               ; Output Value Set
+.equ PORTE_OUTCLR = 0x0486               ; Output Value Clear
+.equ PORTE_OUTTGL = 0x0487               ; Output Value Toggle
+.equ PORTE_IN = 0x0488                   ; Input Value
+.equ PORTE_INTFLAGS = 0x0489             ; Interrupt Flags
+.equ PORTE_PORTCTRL = 0x048A             ; Port Control
+.equ PORTE_PIN0CTRL = 0x0490             ; Pin 0 Control
+.equ PORTE_PIN1CTRL = 0x0491             ; Pin 1 Control
+.equ PORTE_PIN2CTRL = 0x0492             ; Pin 2 Control
+.equ PORTE_PIN3CTRL = 0x0493             ; Pin 3 Control
+.equ PORTE_PIN4CTRL = 0x0494             ; Pin 4 Control
+.equ PORTE_PIN5CTRL = 0x0495             ; Pin 5 Control
+.equ PORTE_PIN6CTRL = 0x0496             ; Pin 6 Control
+.equ PORTE_PIN7CTRL = 0x0497             ; Pin 7 Control
 
 ;*************************************************************************
 ;** PORTF - I/O Ports
 ;*************************************************************************
 
-.equ PORTF_DIR = 1184                    ; Data Direction
-.equ PORTF_DIRSET = 1185                 ; Data Direction Set
-.equ PORTF_DIRCLR = 1186                 ; Data Direction Clear
-.equ PORTF_DIRTGL = 1187                 ; Data Direction Toggle
-.equ PORTF_OUT = 1188                    ; Output Value
-.equ PORTF_OUTSET = 1189                 ; Output Value Set
-.equ PORTF_OUTCLR = 1190                 ; Output Value Clear
-.equ PORTF_OUTTGL = 1191                 ; Output Value Toggle
-.equ PORTF_IN = 1192                     ; Input Value
-.equ PORTF_INTFLAGS = 1193               ; Interrupt Flags
-.equ PORTF_PORTCTRL = 1194               ; Port Control
-.equ PORTF_PIN0CTRL = 1200               ; Pin 0 Control
-.equ PORTF_PIN1CTRL = 1201               ; Pin 1 Control
-.equ PORTF_PIN2CTRL = 1202               ; Pin 2 Control
-.equ PORTF_PIN3CTRL = 1203               ; Pin 3 Control
-.equ PORTF_PIN4CTRL = 1204               ; Pin 4 Control
-.equ PORTF_PIN5CTRL = 1205               ; Pin 5 Control
-.equ PORTF_PIN6CTRL = 1206               ; Pin 6 Control
-.equ PORTF_PIN7CTRL = 1207               ; Pin 7 Control
+.equ PORTF_DIR = 0x04A0                  ; Data Direction
+.equ PORTF_DIRSET = 0x04A1               ; Data Direction Set
+.equ PORTF_DIRCLR = 0x04A2               ; Data Direction Clear
+.equ PORTF_DIRTGL = 0x04A3               ; Data Direction Toggle
+.equ PORTF_OUT = 0x04A4                  ; Output Value
+.equ PORTF_OUTSET = 0x04A5               ; Output Value Set
+.equ PORTF_OUTCLR = 0x04A6               ; Output Value Clear
+.equ PORTF_OUTTGL = 0x04A7               ; Output Value Toggle
+.equ PORTF_IN = 0x04A8                   ; Input Value
+.equ PORTF_INTFLAGS = 0x04A9             ; Interrupt Flags
+.equ PORTF_PORTCTRL = 0x04AA             ; Port Control
+.equ PORTF_PIN0CTRL = 0x04B0             ; Pin 0 Control
+.equ PORTF_PIN1CTRL = 0x04B1             ; Pin 1 Control
+.equ PORTF_PIN2CTRL = 0x04B2             ; Pin 2 Control
+.equ PORTF_PIN3CTRL = 0x04B3             ; Pin 3 Control
+.equ PORTF_PIN4CTRL = 0x04B4             ; Pin 4 Control
+.equ PORTF_PIN5CTRL = 0x04B5             ; Pin 5 Control
+.equ PORTF_PIN6CTRL = 0x04B6             ; Pin 6 Control
+.equ PORTF_PIN7CTRL = 0x04B7             ; Pin 7 Control
 
 ;*************************************************************************
 ;** PORTMUX - Port Multiplexer
 ;*************************************************************************
 
-.equ PORTMUX_EVSYSROUTEA = 1504          ; Port Multiplexer EVSYS
-.equ PORTMUX_CCLROUTEA = 1505            ; Port Multiplexer CCL
-.equ PORTMUX_USARTROUTEA = 1506          ; Port Multiplexer USART register A
-.equ PORTMUX_TWISPIROUTEA = 1507         ; Port Multiplexer TWI and SPI
-.equ PORTMUX_TCAROUTEA = 1508            ; Port Multiplexer TCA
-.equ PORTMUX_TCBROUTEA = 1509            ; Port Multiplexer TCB
+.equ PORTMUX_EVSYSROUTEA = 0x05E0        ; Port Multiplexer EVSYS
+.equ PORTMUX_CCLROUTEA = 0x05E1          ; Port Multiplexer CCL
+.equ PORTMUX_USARTROUTEA = 0x05E2        ; Port Multiplexer USART register A
+.equ PORTMUX_TWISPIROUTEA = 0x05E3       ; Port Multiplexer TWI and SPI
+.equ PORTMUX_TCAROUTEA = 0x05E4          ; Port Multiplexer TCA
+.equ PORTMUX_TCBROUTEA = 0x05E5          ; Port Multiplexer TCB
 
 ;*************************************************************************
 ;** RSTCTRL - Reset controller
 ;*************************************************************************
 
-.equ RSTCTRL_RSTFR = 64                  ; Reset Flags
-.equ RSTCTRL_SWRR = 65                   ; Software Reset
+.equ RSTCTRL_RSTFR = 0x0040              ; Reset Flags
+.equ RSTCTRL_SWRR = 0x0041               ; Software Reset
 
 ;*************************************************************************
 ;** RTC - Real-Time Counter
 ;*************************************************************************
 
-.equ RTC_CTRLA = 320                     ; Control A
-.equ RTC_STATUS = 321                    ; Status
-.equ RTC_INTCTRL = 322                   ; Interrupt Control
-.equ RTC_INTFLAGS = 323                  ; Interrupt Flags
-.equ RTC_TEMP = 324                      ; Temporary
-.equ RTC_DBGCTRL = 325                   ; Debug control
-.equ RTC_CALIB = 326                     ; Calibration
-.equ RTC_CLKSEL = 327                    ; Clock Select
-.equ RTC_CNT = 328                       ; Counter
-.equ RTC_CNTL = 328                      ; Counter low byte
-.equ RTC_CNTH = 329                      ; Counter hi byte
-.equ RTC_PER = 330                       ; Period
-.equ RTC_PERL = 330                      ; Period low byte
-.equ RTC_PERH = 331                      ; Period hi byte
-.equ RTC_CMP = 332                       ; Compare
-.equ RTC_CMPL = 332                      ; Compare low byte
-.equ RTC_CMPH = 333                      ; Compare hi byte
-.equ RTC_PITCTRLA = 336                  ; PIT Control A
-.equ RTC_PITSTATUS = 337                 ; PIT Status
-.equ RTC_PITINTCTRL = 338                ; PIT Interrupt Control
-.equ RTC_PITINTFLAGS = 339               ; PIT Interrupt Flags
-.equ RTC_PITDBGCTRL = 341                ; PIT Debug control
+.equ RTC_CTRLA = 0x0140                  ; Control A
+.equ RTC_STATUS = 0x0141                 ; Status
+.equ RTC_INTCTRL = 0x0142                ; Interrupt Control
+.equ RTC_INTFLAGS = 0x0143               ; Interrupt Flags
+.equ RTC_TEMP = 0x0144                   ; Temporary
+.equ RTC_DBGCTRL = 0x0145                ; Debug control
+.equ RTC_CALIB = 0x0146                  ; Calibration
+.equ RTC_CLKSEL = 0x0147                 ; Clock Select
+.equ RTC_CNT = 0x0148                    ; Counter
+.equ RTC_CNTL = 0x0148                   ; Counter low byte
+.equ RTC_CNTH = 0x0149                   ; Counter hi byte
+.equ RTC_PER = 0x014A                    ; Period
+.equ RTC_PERL = 0x014A                   ; Period low byte
+.equ RTC_PERH = 0x014B                   ; Period hi byte
+.equ RTC_CMP = 0x014C                    ; Compare
+.equ RTC_CMPL = 0x014C                   ; Compare low byte
+.equ RTC_CMPH = 0x014D                   ; Compare hi byte
+.equ RTC_PITCTRLA = 0x0150               ; PIT Control A
+.equ RTC_PITSTATUS = 0x0151              ; PIT Status
+.equ RTC_PITINTCTRL = 0x0152             ; PIT Interrupt Control
+.equ RTC_PITINTFLAGS = 0x0153            ; PIT Interrupt Flags
+.equ RTC_PITDBGCTRL = 0x0155             ; PIT Debug control
 
 ;*************************************************************************
 ;** SIGROW - Signature row
 ;*************************************************************************
 
-.equ SIGROW_DEVICEID0 = 4352             ; Device ID Byte 0
-.equ SIGROW_DEVICEID1 = 4353             ; Device ID Byte 1
-.equ SIGROW_DEVICEID2 = 4354             ; Device ID Byte 2
-.equ SIGROW_SERNUM0 = 4355               ; Serial Number Byte 0
-.equ SIGROW_SERNUM1 = 4356               ; Serial Number Byte 1
-.equ SIGROW_SERNUM2 = 4357               ; Serial Number Byte 2
-.equ SIGROW_SERNUM3 = 4358               ; Serial Number Byte 3
-.equ SIGROW_SERNUM4 = 4359               ; Serial Number Byte 4
-.equ SIGROW_SERNUM5 = 4360               ; Serial Number Byte 5
-.equ SIGROW_SERNUM6 = 4361               ; Serial Number Byte 6
-.equ SIGROW_SERNUM7 = 4362               ; Serial Number Byte 7
-.equ SIGROW_SERNUM8 = 4363               ; Serial Number Byte 8
-.equ SIGROW_SERNUM9 = 4364               ; Serial Number Byte 9
-.equ SIGROW_OSCCAL32K = 4372             ; Oscillator Calibration for 32kHz ULP
-.equ SIGROW_OSCCAL16M0 = 4376            ; Oscillator Calibration 16 MHz Byte 0
-.equ SIGROW_OSCCAL16M1 = 4377            ; Oscillator Calibration 16 MHz Byte 1
-.equ SIGROW_OSCCAL20M0 = 4378            ; Oscillator Calibration 20 MHz Byte 0
-.equ SIGROW_OSCCAL20M1 = 4379            ; Oscillator Calibration 20 MHz Byte 1
-.equ SIGROW_TEMPSENSE0 = 4384            ; Temperature Sensor Calibration Byte 0
-.equ SIGROW_TEMPSENSE1 = 4385            ; Temperature Sensor Calibration Byte 1
-.equ SIGROW_OSC16ERR3V = 4386            ; OSC16 error at 3V
-.equ SIGROW_OSC16ERR5V = 4387            ; OSC16 error at 5V
-.equ SIGROW_OSC20ERR3V = 4388            ; OSC20 error at 3V
-.equ SIGROW_OSC20ERR5V = 4389            ; OSC20 error at 5V
-.equ SIGROW_CHECKSUM1 = 4399             ; CRC Checksum Byte 1
+.equ SIGROW_DEVICEID0 = 0x1100           ; Device ID Byte 0
+.equ SIGROW_DEVICEID1 = 0x1101           ; Device ID Byte 1
+.equ SIGROW_DEVICEID2 = 0x1102           ; Device ID Byte 2
+.equ SIGROW_SERNUM0 = 0x1103             ; Serial Number Byte 0
+.equ SIGROW_SERNUM1 = 0x1104             ; Serial Number Byte 1
+.equ SIGROW_SERNUM2 = 0x1105             ; Serial Number Byte 2
+.equ SIGROW_SERNUM3 = 0x1106             ; Serial Number Byte 3
+.equ SIGROW_SERNUM4 = 0x1107             ; Serial Number Byte 4
+.equ SIGROW_SERNUM5 = 0x1108             ; Serial Number Byte 5
+.equ SIGROW_SERNUM6 = 0x1109             ; Serial Number Byte 6
+.equ SIGROW_SERNUM7 = 0x110A             ; Serial Number Byte 7
+.equ SIGROW_SERNUM8 = 0x110B             ; Serial Number Byte 8
+.equ SIGROW_SERNUM9 = 0x110C             ; Serial Number Byte 9
+.equ SIGROW_OSCCAL32K = 0x1114           ; Oscillator Calibration for 32kHz ULP
+.equ SIGROW_OSCCAL16M0 = 0x1118          ; Oscillator Calibration 16 MHz Byte 0
+.equ SIGROW_OSCCAL16M1 = 0x1119          ; Oscillator Calibration 16 MHz Byte 1
+.equ SIGROW_OSCCAL20M0 = 0x111A          ; Oscillator Calibration 20 MHz Byte 0
+.equ SIGROW_OSCCAL20M1 = 0x111B          ; Oscillator Calibration 20 MHz Byte 1
+.equ SIGROW_TEMPSENSE0 = 0x1120          ; Temperature Sensor Calibration Byte 0
+.equ SIGROW_TEMPSENSE1 = 0x1121          ; Temperature Sensor Calibration Byte 1
+.equ SIGROW_OSC16ERR3V = 0x1122          ; OSC16 error at 3V
+.equ SIGROW_OSC16ERR5V = 0x1123          ; OSC16 error at 5V
+.equ SIGROW_OSC20ERR3V = 0x1124          ; OSC20 error at 3V
+.equ SIGROW_OSC20ERR5V = 0x1125          ; OSC20 error at 5V
+.equ SIGROW_CHECKSUM1 = 0x112F           ; CRC Checksum Byte 1
 
 ;*************************************************************************
 ;** SLPCTRL - Sleep Controller
 ;*************************************************************************
 
-.equ SLPCTRL_CTRLA = 80                  ; Control
+.equ SLPCTRL_CTRLA = 0x0050              ; Control
 
 ;*************************************************************************
 ;** SPI0 - Serial Peripheral Interface
 ;*************************************************************************
 
-.equ SPI0_CTRLA = 2240                   ; Control A
-.equ SPI0_CTRLB = 2241                   ; Control B
-.equ SPI0_INTCTRL = 2242                 ; Interrupt Control
-.equ SPI0_INTFLAGS = 2243                ; Interrupt Flags
-.equ SPI0_DATA = 2244                    ; Data
+.equ SPI0_CTRLA = 0x08C0                 ; Control A
+.equ SPI0_CTRLB = 0x08C1                 ; Control B
+.equ SPI0_INTCTRL = 0x08C2               ; Interrupt Control
+.equ SPI0_INTFLAGS = 0x08C3              ; Interrupt Flags
+.equ SPI0_DATA = 0x08C4                  ; Data
 
 ;*************************************************************************
 ;** SYSCFG - System Configuration Registers
 ;*************************************************************************
 
-.equ SYSCFG_REVID = 3841                 ; Revision ID
-.equ SYSCFG_EXTBRK = 3842                ; External Break
-.equ SYSCFG_OCDM = 3864                  ; OCD Message Register
-.equ SYSCFG_OCDMS = 3865                 ; OCD Message Status
+.equ SYSCFG_REVID = 0x0F01               ; Revision ID
+.equ SYSCFG_EXTBRK = 0x0F02              ; External Break
+.equ SYSCFG_OCDM = 0x0F18                ; OCD Message Register
+.equ SYSCFG_OCDMS = 0x0F19               ; OCD Message Status
 
 ;*************************************************************************
 ;** TCA0 - 16-bit Timer/Counter Type A
 ;*************************************************************************
 
-.equ TCA0_SINGLE_CTRLA = 2560            ; SINGLE Control A
-.equ TCA0_SINGLE_CTRLB = 2561            ; SINGLE Control B
-.equ TCA0_SINGLE_CTRLC = 2562            ; SINGLE Control C
-.equ TCA0_SINGLE_CTRLD = 2563            ; SINGLE Control D
-.equ TCA0_SINGLE_CTRLECLR = 2564         ; SINGLE Control E Clear
-.equ TCA0_SINGLE_CTRLESET = 2565         ; SINGLE Control E Set
-.equ TCA0_SINGLE_CTRLFCLR = 2566         ; SINGLE Control F Clear
-.equ TCA0_SINGLE_CTRLFSET = 2567         ; SINGLE Control F Set
-.equ TCA0_SINGLE_EVCTRL = 2569           ; SINGLE Event Control
-.equ TCA0_SINGLE_INTCTRL = 2570          ; SINGLE Interrupt Control
-.equ TCA0_SINGLE_INTFLAGS = 2571         ; SINGLE Interrupt Flags
-.equ TCA0_SINGLE_DBGCTRL = 2574          ; SINGLE Degbug Control
-.equ TCA0_SINGLE_TEMP = 2575             ; SINGLE Temporary data for 16-bit Access
-.equ TCA0_SINGLE_CNT = 2592              ; SINGLE Count
-.equ TCA0_SINGLE_PER = 2598              ; SINGLE Period
-.equ TCA0_SINGLE_CMP0 = 2600             ; SINGLE Compare 0
-.equ TCA0_SINGLE_CMP1 = 2602             ; SINGLE Compare 1
-.equ TCA0_SINGLE_CMP2 = 2604             ; SINGLE Compare 2
-.equ TCA0_SINGLE_PERBUF = 2614           ; SINGLE Period Buffer
-.equ TCA0_SINGLE_CMP0BUF = 2616          ; SINGLE Compare 0 Buffer
-.equ TCA0_SINGLE_CMP1BUF = 2618          ; SINGLE Compare 1 Buffer
-.equ TCA0_SINGLE_CMP2BUF = 2620          ; SINGLE Compare 2 Buffer
-.equ TCA0_SPLIT_CTRLA = 2560             ; SPLIT Control A
-.equ TCA0_SPLIT_CTRLB = 2561             ; SPLIT Control B
-.equ TCA0_SPLIT_CTRLC = 2562             ; SPLIT Control C
-.equ TCA0_SPLIT_CTRLD = 2563             ; SPLIT Control D
-.equ TCA0_SPLIT_CTRLECLR = 2564          ; SPLIT Control E Clear
-.equ TCA0_SPLIT_CTRLESET = 2565          ; SPLIT Control E Set
-.equ TCA0_SPLIT_INTCTRL = 2570           ; SPLIT Interrupt Control
-.equ TCA0_SPLIT_INTFLAGS = 2571          ; SPLIT Interrupt Flags
-.equ TCA0_SPLIT_DBGCTRL = 2574           ; SPLIT Degbug Control
-.equ TCA0_SPLIT_LCNT = 2592              ; SPLIT Low Count
-.equ TCA0_SPLIT_HCNT = 2593              ; SPLIT High Count
-.equ TCA0_SPLIT_LPER = 2598              ; SPLIT Low Period
-.equ TCA0_SPLIT_HPER = 2599              ; SPLIT High Period
-.equ TCA0_SPLIT_LCMP0 = 2600             ; SPLIT Low Compare
-.equ TCA0_SPLIT_HCMP0 = 2601             ; SPLIT High Compare
-.equ TCA0_SPLIT_LCMP1 = 2602             ; SPLIT Low Compare
-.equ TCA0_SPLIT_HCMP1 = 2603             ; SPLIT High Compare
-.equ TCA0_SPLIT_LCMP2 = 2604             ; SPLIT Low Compare
-.equ TCA0_SPLIT_HCMP2 = 2605             ; SPLIT High Compare
+.equ TCA0_SINGLE_CTRLA = 0x0A00          ; SINGLE Control A
+.equ TCA0_SINGLE_CTRLB = 0x0A01          ; SINGLE Control B
+.equ TCA0_SINGLE_CTRLC = 0x0A02          ; SINGLE Control C
+.equ TCA0_SINGLE_CTRLD = 0x0A03          ; SINGLE Control D
+.equ TCA0_SINGLE_CTRLECLR = 0x0A04       ; SINGLE Control E Clear
+.equ TCA0_SINGLE_CTRLESET = 0x0A05       ; SINGLE Control E Set
+.equ TCA0_SINGLE_CTRLFCLR = 0x0A06       ; SINGLE Control F Clear
+.equ TCA0_SINGLE_CTRLFSET = 0x0A07       ; SINGLE Control F Set
+.equ TCA0_SINGLE_EVCTRL = 0x0A09         ; SINGLE Event Control
+.equ TCA0_SINGLE_INTCTRL = 0x0A0A        ; SINGLE Interrupt Control
+.equ TCA0_SINGLE_INTFLAGS = 0x0A0B       ; SINGLE Interrupt Flags
+.equ TCA0_SINGLE_DBGCTRL = 0x0A0E        ; SINGLE Degbug Control
+.equ TCA0_SINGLE_TEMP = 0x0A0F           ; SINGLE Temporary data for 16-bit Access
+.equ TCA0_SINGLE_CNT = 0x0A20            ; SINGLE Count
+.equ TCA0_SINGLE_PER = 0x0A26            ; SINGLE Period
+.equ TCA0_SINGLE_CMP0 = 0x0A28           ; SINGLE Compare 0
+.equ TCA0_SINGLE_CMP1 = 0x0A2A           ; SINGLE Compare 1
+.equ TCA0_SINGLE_CMP2 = 0x0A2C           ; SINGLE Compare 2
+.equ TCA0_SINGLE_PERBUF = 0x0A36         ; SINGLE Period Buffer
+.equ TCA0_SINGLE_CMP0BUF = 0x0A38        ; SINGLE Compare 0 Buffer
+.equ TCA0_SINGLE_CMP1BUF = 0x0A3A        ; SINGLE Compare 1 Buffer
+.equ TCA0_SINGLE_CMP2BUF = 0x0A3C        ; SINGLE Compare 2 Buffer
+.equ TCA0_SPLIT_CTRLA = 0x0A00           ; SPLIT Control A
+.equ TCA0_SPLIT_CTRLB = 0x0A01           ; SPLIT Control B
+.equ TCA0_SPLIT_CTRLC = 0x0A02           ; SPLIT Control C
+.equ TCA0_SPLIT_CTRLD = 0x0A03           ; SPLIT Control D
+.equ TCA0_SPLIT_CTRLECLR = 0x0A04        ; SPLIT Control E Clear
+.equ TCA0_SPLIT_CTRLESET = 0x0A05        ; SPLIT Control E Set
+.equ TCA0_SPLIT_INTCTRL = 0x0A0A         ; SPLIT Interrupt Control
+.equ TCA0_SPLIT_INTFLAGS = 0x0A0B        ; SPLIT Interrupt Flags
+.equ TCA0_SPLIT_DBGCTRL = 0x0A0E         ; SPLIT Degbug Control
+.equ TCA0_SPLIT_LCNT = 0x0A20            ; SPLIT Low Count
+.equ TCA0_SPLIT_HCNT = 0x0A21            ; SPLIT High Count
+.equ TCA0_SPLIT_LPER = 0x0A26            ; SPLIT Low Period
+.equ TCA0_SPLIT_HPER = 0x0A27            ; SPLIT High Period
+.equ TCA0_SPLIT_LCMP0 = 0x0A28           ; SPLIT Low Compare
+.equ TCA0_SPLIT_HCMP0 = 0x0A29           ; SPLIT High Compare
+.equ TCA0_SPLIT_LCMP1 = 0x0A2A           ; SPLIT Low Compare
+.equ TCA0_SPLIT_HCMP1 = 0x0A2B           ; SPLIT High Compare
+.equ TCA0_SPLIT_LCMP2 = 0x0A2C           ; SPLIT Low Compare
+.equ TCA0_SPLIT_HCMP2 = 0x0A2D           ; SPLIT High Compare
 
 ;*************************************************************************
 ;** TCB0 - 16-bit Timer Type B
 ;*************************************************************************
 
-.equ TCB0_CTRLA = 2688                   ; Control A
-.equ TCB0_CTRLB = 2689                   ; Control Register B
-.equ TCB0_EVCTRL = 2692                  ; Event Control
-.equ TCB0_INTCTRL = 2693                 ; Interrupt Control
-.equ TCB0_INTFLAGS = 2694                ; Interrupt Flags
-.equ TCB0_STATUS = 2695                  ; Status
-.equ TCB0_DBGCTRL = 2696                 ; Debug Control
-.equ TCB0_TEMP = 2697                    ; Temporary Value
-.equ TCB0_CNT = 2698                     ; Count
-.equ TCB0_CNTL = 2698                    ; Count low byte
-.equ TCB0_CNTH = 2699                    ; Count hi byte
-.equ TCB0_CCMP = 2700                    ; Compare or Capture
-.equ TCB0_CCMPL = 2700                   ; Compare or Capture low byte
-.equ TCB0_CCMPH = 2701                   ; Compare or Capture hi byte
+.equ TCB0_CTRLA = 0x0A80                 ; Control A
+.equ TCB0_CTRLB = 0x0A81                 ; Control Register B
+.equ TCB0_EVCTRL = 0x0A84                ; Event Control
+.equ TCB0_INTCTRL = 0x0A85               ; Interrupt Control
+.equ TCB0_INTFLAGS = 0x0A86              ; Interrupt Flags
+.equ TCB0_STATUS = 0x0A87                ; Status
+.equ TCB0_DBGCTRL = 0x0A88               ; Debug Control
+.equ TCB0_TEMP = 0x0A89                  ; Temporary Value
+.equ TCB0_CNT = 0x0A8A                   ; Count
+.equ TCB0_CNTL = 0x0A8A                  ; Count low byte
+.equ TCB0_CNTH = 0x0A8B                  ; Count hi byte
+.equ TCB0_CCMP = 0x0A8C                  ; Compare or Capture
+.equ TCB0_CCMPL = 0x0A8C                 ; Compare or Capture low byte
+.equ TCB0_CCMPH = 0x0A8D                 ; Compare or Capture hi byte
 
 ;*************************************************************************
 ;** TCB1 - 16-bit Timer Type B
 ;*************************************************************************
 
-.equ TCB1_CTRLA = 2704                   ; Control A
-.equ TCB1_CTRLB = 2705                   ; Control Register B
-.equ TCB1_EVCTRL = 2708                  ; Event Control
-.equ TCB1_INTCTRL = 2709                 ; Interrupt Control
-.equ TCB1_INTFLAGS = 2710                ; Interrupt Flags
-.equ TCB1_STATUS = 2711                  ; Status
-.equ TCB1_DBGCTRL = 2712                 ; Debug Control
-.equ TCB1_TEMP = 2713                    ; Temporary Value
-.equ TCB1_CNT = 2714                     ; Count
-.equ TCB1_CNTL = 2714                    ; Count low byte
-.equ TCB1_CNTH = 2715                    ; Count hi byte
-.equ TCB1_CCMP = 2716                    ; Compare or Capture
-.equ TCB1_CCMPL = 2716                   ; Compare or Capture low byte
-.equ TCB1_CCMPH = 2717                   ; Compare or Capture hi byte
+.equ TCB1_CTRLA = 0x0A90                 ; Control A
+.equ TCB1_CTRLB = 0x0A91                 ; Control Register B
+.equ TCB1_EVCTRL = 0x0A94                ; Event Control
+.equ TCB1_INTCTRL = 0x0A95               ; Interrupt Control
+.equ TCB1_INTFLAGS = 0x0A96              ; Interrupt Flags
+.equ TCB1_STATUS = 0x0A97                ; Status
+.equ TCB1_DBGCTRL = 0x0A98               ; Debug Control
+.equ TCB1_TEMP = 0x0A99                  ; Temporary Value
+.equ TCB1_CNT = 0x0A9A                   ; Count
+.equ TCB1_CNTL = 0x0A9A                  ; Count low byte
+.equ TCB1_CNTH = 0x0A9B                  ; Count hi byte
+.equ TCB1_CCMP = 0x0A9C                  ; Compare or Capture
+.equ TCB1_CCMPL = 0x0A9C                 ; Compare or Capture low byte
+.equ TCB1_CCMPH = 0x0A9D                 ; Compare or Capture hi byte
 
 ;*************************************************************************
 ;** TCB2 - 16-bit Timer Type B
 ;*************************************************************************
 
-.equ TCB2_CTRLA = 2720                   ; Control A
-.equ TCB2_CTRLB = 2721                   ; Control Register B
-.equ TCB2_EVCTRL = 2724                  ; Event Control
-.equ TCB2_INTCTRL = 2725                 ; Interrupt Control
-.equ TCB2_INTFLAGS = 2726                ; Interrupt Flags
-.equ TCB2_STATUS = 2727                  ; Status
-.equ TCB2_DBGCTRL = 2728                 ; Debug Control
-.equ TCB2_TEMP = 2729                    ; Temporary Value
-.equ TCB2_CNT = 2730                     ; Count
-.equ TCB2_CNTL = 2730                    ; Count low byte
-.equ TCB2_CNTH = 2731                    ; Count hi byte
-.equ TCB2_CCMP = 2732                    ; Compare or Capture
-.equ TCB2_CCMPL = 2732                   ; Compare or Capture low byte
-.equ TCB2_CCMPH = 2733                   ; Compare or Capture hi byte
+.equ TCB2_CTRLA = 0x0AA0                 ; Control A
+.equ TCB2_CTRLB = 0x0AA1                 ; Control Register B
+.equ TCB2_EVCTRL = 0x0AA4                ; Event Control
+.equ TCB2_INTCTRL = 0x0AA5               ; Interrupt Control
+.equ TCB2_INTFLAGS = 0x0AA6              ; Interrupt Flags
+.equ TCB2_STATUS = 0x0AA7                ; Status
+.equ TCB2_DBGCTRL = 0x0AA8               ; Debug Control
+.equ TCB2_TEMP = 0x0AA9                  ; Temporary Value
+.equ TCB2_CNT = 0x0AAA                   ; Count
+.equ TCB2_CNTL = 0x0AAA                  ; Count low byte
+.equ TCB2_CNTH = 0x0AAB                  ; Count hi byte
+.equ TCB2_CCMP = 0x0AAC                  ; Compare or Capture
+.equ TCB2_CCMPL = 0x0AAC                 ; Compare or Capture low byte
+.equ TCB2_CCMPH = 0x0AAD                 ; Compare or Capture hi byte
 
 ;*************************************************************************
 ;** TCB3 - 16-bit Timer Type B
 ;*************************************************************************
 
-.equ TCB3_CTRLA = 2736                   ; Control A
-.equ TCB3_CTRLB = 2737                   ; Control Register B
-.equ TCB3_EVCTRL = 2740                  ; Event Control
-.equ TCB3_INTCTRL = 2741                 ; Interrupt Control
-.equ TCB3_INTFLAGS = 2742                ; Interrupt Flags
-.equ TCB3_STATUS = 2743                  ; Status
-.equ TCB3_DBGCTRL = 2744                 ; Debug Control
-.equ TCB3_TEMP = 2745                    ; Temporary Value
-.equ TCB3_CNT = 2746                     ; Count
-.equ TCB3_CNTL = 2746                    ; Count low byte
-.equ TCB3_CNTH = 2747                    ; Count hi byte
-.equ TCB3_CCMP = 2748                    ; Compare or Capture
-.equ TCB3_CCMPL = 2748                   ; Compare or Capture low byte
-.equ TCB3_CCMPH = 2749                   ; Compare or Capture hi byte
+.equ TCB3_CTRLA = 0x0AB0                 ; Control A
+.equ TCB3_CTRLB = 0x0AB1                 ; Control Register B
+.equ TCB3_EVCTRL = 0x0AB4                ; Event Control
+.equ TCB3_INTCTRL = 0x0AB5               ; Interrupt Control
+.equ TCB3_INTFLAGS = 0x0AB6              ; Interrupt Flags
+.equ TCB3_STATUS = 0x0AB7                ; Status
+.equ TCB3_DBGCTRL = 0x0AB8               ; Debug Control
+.equ TCB3_TEMP = 0x0AB9                  ; Temporary Value
+.equ TCB3_CNT = 0x0ABA                   ; Count
+.equ TCB3_CNTL = 0x0ABA                  ; Count low byte
+.equ TCB3_CNTH = 0x0ABB                  ; Count hi byte
+.equ TCB3_CCMP = 0x0ABC                  ; Compare or Capture
+.equ TCB3_CCMPL = 0x0ABC                 ; Compare or Capture low byte
+.equ TCB3_CCMPH = 0x0ABD                 ; Compare or Capture hi byte
 
 ;*************************************************************************
 ;** TWI0 - Two-Wire Interface
 ;*************************************************************************
 
-.equ TWI0_CTRLA = 2208                   ; Control A
-.equ TWI0_DUALCTRL = 2209                ; Dual Control
-.equ TWI0_DBGCTRL = 2210                 ; Debug Control Register
-.equ TWI0_MCTRLA = 2211                  ; Master Control A
-.equ TWI0_MCTRLB = 2212                  ; Master Control B
-.equ TWI0_MSTATUS = 2213                 ; Master Status
-.equ TWI0_MBAUD = 2214                   ; Master Baurd Rate Control
-.equ TWI0_MADDR = 2215                   ; Master Address
-.equ TWI0_MDATA = 2216                   ; Master Data
-.equ TWI0_SCTRLA = 2217                  ; Slave Control A
-.equ TWI0_SCTRLB = 2218                  ; Slave Control B
-.equ TWI0_SSTATUS = 2219                 ; Slave Status
-.equ TWI0_SADDR = 2220                   ; Slave Address
-.equ TWI0_SDATA = 2221                   ; Slave Data
-.equ TWI0_SADDRMASK = 2222               ; Slave Address Mask
+.equ TWI0_CTRLA = 0x08A0                 ; Control A
+.equ TWI0_DUALCTRL = 0x08A1              ; Dual Control
+.equ TWI0_DBGCTRL = 0x08A2               ; Debug Control Register
+.equ TWI0_MCTRLA = 0x08A3                ; Master Control A
+.equ TWI0_MCTRLB = 0x08A4                ; Master Control B
+.equ TWI0_MSTATUS = 0x08A5               ; Master Status
+.equ TWI0_MBAUD = 0x08A6                 ; Master Baurd Rate Control
+.equ TWI0_MADDR = 0x08A7                 ; Master Address
+.equ TWI0_MDATA = 0x08A8                 ; Master Data
+.equ TWI0_SCTRLA = 0x08A9                ; Slave Control A
+.equ TWI0_SCTRLB = 0x08AA                ; Slave Control B
+.equ TWI0_SSTATUS = 0x08AB               ; Slave Status
+.equ TWI0_SADDR = 0x08AC                 ; Slave Address
+.equ TWI0_SDATA = 0x08AD                 ; Slave Data
+.equ TWI0_SADDRMASK = 0x08AE             ; Slave Address Mask
 
 ;*************************************************************************
 ;** USART0 - Universal Synchronous and Asynchronous Receiver and Transmitter
 ;*************************************************************************
 
-.equ USART0_RXDATAL = 2048               ; Receive Data Low Byte
-.equ USART0_RXDATAH = 2049               ; Receive Data High Byte
-.equ USART0_TXDATAL = 2050               ; Transmit Data Low Byte
-.equ USART0_TXDATAH = 2051               ; Transmit Data High Byte
-.equ USART0_STATUS = 2052                ; Status
-.equ USART0_CTRLA = 2053                 ; Control A
-.equ USART0_CTRLB = 2054                 ; Control B
-.equ USART0_CTRLC = 2055                 ; Control C
-.equ USART0_BAUD = 2056                  ; Baud Rate
-.equ USART0_BAUDL = 2056                 ; Baud Rate low byte
-.equ USART0_BAUDH = 2057                 ; Baud Rate hi byte
-.equ USART0_CTRLD = 2058                 ; Control D
-.equ USART0_DBGCTRL = 2059               ; Debug Control
-.equ USART0_EVCTRL = 2060                ; Event Control
-.equ USART0_TXPLCTRL = 2061              ; IRCOM Transmitter Pulse Length Control
-.equ USART0_RXPLCTRL = 2062              ; IRCOM Receiver Pulse Length Control
+.equ USART0_RXDATAL = 0x0800             ; Receive Data Low Byte
+.equ USART0_RXDATAH = 0x0801             ; Receive Data High Byte
+.equ USART0_TXDATAL = 0x0802             ; Transmit Data Low Byte
+.equ USART0_TXDATAH = 0x0803             ; Transmit Data High Byte
+.equ USART0_STATUS = 0x0804              ; Status
+.equ USART0_CTRLA = 0x0805               ; Control A
+.equ USART0_CTRLB = 0x0806               ; Control B
+.equ USART0_CTRLC = 0x0807               ; Control C
+.equ USART0_BAUD = 0x0808                ; Baud Rate
+.equ USART0_BAUDL = 0x0808               ; Baud Rate low byte
+.equ USART0_BAUDH = 0x0809               ; Baud Rate hi byte
+.equ USART0_CTRLD = 0x080A               ; Control D
+.equ USART0_DBGCTRL = 0x080B             ; Debug Control
+.equ USART0_EVCTRL = 0x080C              ; Event Control
+.equ USART0_TXPLCTRL = 0x080D            ; IRCOM Transmitter Pulse Length Control
+.equ USART0_RXPLCTRL = 0x080E            ; IRCOM Receiver Pulse Length Control
 
 ;*************************************************************************
 ;** USART1 - Universal Synchronous and Asynchronous Receiver and Transmitter
 ;*************************************************************************
 
-.equ USART1_RXDATAL = 2080               ; Receive Data Low Byte
-.equ USART1_RXDATAH = 2081               ; Receive Data High Byte
-.equ USART1_TXDATAL = 2082               ; Transmit Data Low Byte
-.equ USART1_TXDATAH = 2083               ; Transmit Data High Byte
-.equ USART1_STATUS = 2084                ; Status
-.equ USART1_CTRLA = 2085                 ; Control A
-.equ USART1_CTRLB = 2086                 ; Control B
-.equ USART1_CTRLC = 2087                 ; Control C
-.equ USART1_BAUD = 2088                  ; Baud Rate
-.equ USART1_BAUDL = 2088                 ; Baud Rate low byte
-.equ USART1_BAUDH = 2089                 ; Baud Rate hi byte
-.equ USART1_CTRLD = 2090                 ; Control D
-.equ USART1_DBGCTRL = 2091               ; Debug Control
-.equ USART1_EVCTRL = 2092                ; Event Control
-.equ USART1_TXPLCTRL = 2093              ; IRCOM Transmitter Pulse Length Control
-.equ USART1_RXPLCTRL = 2094              ; IRCOM Receiver Pulse Length Control
+.equ USART1_RXDATAL = 0x0820             ; Receive Data Low Byte
+.equ USART1_RXDATAH = 0x0821             ; Receive Data High Byte
+.equ USART1_TXDATAL = 0x0822             ; Transmit Data Low Byte
+.equ USART1_TXDATAH = 0x0823             ; Transmit Data High Byte
+.equ USART1_STATUS = 0x0824              ; Status
+.equ USART1_CTRLA = 0x0825               ; Control A
+.equ USART1_CTRLB = 0x0826               ; Control B
+.equ USART1_CTRLC = 0x0827               ; Control C
+.equ USART1_BAUD = 0x0828                ; Baud Rate
+.equ USART1_BAUDL = 0x0828               ; Baud Rate low byte
+.equ USART1_BAUDH = 0x0829               ; Baud Rate hi byte
+.equ USART1_CTRLD = 0x082A               ; Control D
+.equ USART1_DBGCTRL = 0x082B             ; Debug Control
+.equ USART1_EVCTRL = 0x082C              ; Event Control
+.equ USART1_TXPLCTRL = 0x082D            ; IRCOM Transmitter Pulse Length Control
+.equ USART1_RXPLCTRL = 0x082E            ; IRCOM Receiver Pulse Length Control
 
 ;*************************************************************************
 ;** USART2 - Universal Synchronous and Asynchronous Receiver and Transmitter
 ;*************************************************************************
 
-.equ USART2_RXDATAL = 2112               ; Receive Data Low Byte
-.equ USART2_RXDATAH = 2113               ; Receive Data High Byte
-.equ USART2_TXDATAL = 2114               ; Transmit Data Low Byte
-.equ USART2_TXDATAH = 2115               ; Transmit Data High Byte
-.equ USART2_STATUS = 2116                ; Status
-.equ USART2_CTRLA = 2117                 ; Control A
-.equ USART2_CTRLB = 2118                 ; Control B
-.equ USART2_CTRLC = 2119                 ; Control C
-.equ USART2_BAUD = 2120                  ; Baud Rate
-.equ USART2_BAUDL = 2120                 ; Baud Rate low byte
-.equ USART2_BAUDH = 2121                 ; Baud Rate hi byte
-.equ USART2_CTRLD = 2122                 ; Control D
-.equ USART2_DBGCTRL = 2123               ; Debug Control
-.equ USART2_EVCTRL = 2124                ; Event Control
-.equ USART2_TXPLCTRL = 2125              ; IRCOM Transmitter Pulse Length Control
-.equ USART2_RXPLCTRL = 2126              ; IRCOM Receiver Pulse Length Control
+.equ USART2_RXDATAL = 0x0840             ; Receive Data Low Byte
+.equ USART2_RXDATAH = 0x0841             ; Receive Data High Byte
+.equ USART2_TXDATAL = 0x0842             ; Transmit Data Low Byte
+.equ USART2_TXDATAH = 0x0843             ; Transmit Data High Byte
+.equ USART2_STATUS = 0x0844              ; Status
+.equ USART2_CTRLA = 0x0845               ; Control A
+.equ USART2_CTRLB = 0x0846               ; Control B
+.equ USART2_CTRLC = 0x0847               ; Control C
+.equ USART2_BAUD = 0x0848                ; Baud Rate
+.equ USART2_BAUDL = 0x0848               ; Baud Rate low byte
+.equ USART2_BAUDH = 0x0849               ; Baud Rate hi byte
+.equ USART2_CTRLD = 0x084A               ; Control D
+.equ USART2_DBGCTRL = 0x084B             ; Debug Control
+.equ USART2_EVCTRL = 0x084C              ; Event Control
+.equ USART2_TXPLCTRL = 0x084D            ; IRCOM Transmitter Pulse Length Control
+.equ USART2_RXPLCTRL = 0x084E            ; IRCOM Receiver Pulse Length Control
 
 ;*************************************************************************
 ;** USART3 - Universal Synchronous and Asynchronous Receiver and Transmitter
 ;*************************************************************************
 
-.equ USART3_RXDATAL = 2144               ; Receive Data Low Byte
-.equ USART3_RXDATAH = 2145               ; Receive Data High Byte
-.equ USART3_TXDATAL = 2146               ; Transmit Data Low Byte
-.equ USART3_TXDATAH = 2147               ; Transmit Data High Byte
-.equ USART3_STATUS = 2148                ; Status
-.equ USART3_CTRLA = 2149                 ; Control A
-.equ USART3_CTRLB = 2150                 ; Control B
-.equ USART3_CTRLC = 2151                 ; Control C
-.equ USART3_BAUD = 2152                  ; Baud Rate
-.equ USART3_BAUDL = 2152                 ; Baud Rate low byte
-.equ USART3_BAUDH = 2153                 ; Baud Rate hi byte
-.equ USART3_CTRLD = 2154                 ; Control D
-.equ USART3_DBGCTRL = 2155               ; Debug Control
-.equ USART3_EVCTRL = 2156                ; Event Control
-.equ USART3_TXPLCTRL = 2157              ; IRCOM Transmitter Pulse Length Control
-.equ USART3_RXPLCTRL = 2158              ; IRCOM Receiver Pulse Length Control
+.equ USART3_RXDATAL = 0x0860             ; Receive Data Low Byte
+.equ USART3_RXDATAH = 0x0861             ; Receive Data High Byte
+.equ USART3_TXDATAL = 0x0862             ; Transmit Data Low Byte
+.equ USART3_TXDATAH = 0x0863             ; Transmit Data High Byte
+.equ USART3_STATUS = 0x0864              ; Status
+.equ USART3_CTRLA = 0x0865               ; Control A
+.equ USART3_CTRLB = 0x0866               ; Control B
+.equ USART3_CTRLC = 0x0867               ; Control C
+.equ USART3_BAUD = 0x0868                ; Baud Rate
+.equ USART3_BAUDL = 0x0868               ; Baud Rate low byte
+.equ USART3_BAUDH = 0x0869               ; Baud Rate hi byte
+.equ USART3_CTRLD = 0x086A               ; Control D
+.equ USART3_DBGCTRL = 0x086B             ; Debug Control
+.equ USART3_EVCTRL = 0x086C              ; Event Control
+.equ USART3_TXPLCTRL = 0x086D            ; IRCOM Transmitter Pulse Length Control
+.equ USART3_RXPLCTRL = 0x086E            ; IRCOM Receiver Pulse Length Control
 
 ;*************************************************************************
 ;** USERROW - User Row
 ;*************************************************************************
 
-.equ USERROW_USERROW0 = 4864             ; User Row Byte 0
-.equ USERROW_USERROW1 = 4865             ; User Row Byte 1
-.equ USERROW_USERROW2 = 4866             ; User Row Byte 2
-.equ USERROW_USERROW3 = 4867             ; User Row Byte 3
-.equ USERROW_USERROW4 = 4868             ; User Row Byte 4
-.equ USERROW_USERROW5 = 4869             ; User Row Byte 5
-.equ USERROW_USERROW6 = 4870             ; User Row Byte 6
-.equ USERROW_USERROW7 = 4871             ; User Row Byte 7
-.equ USERROW_USERROW8 = 4872             ; User Row Byte 8
-.equ USERROW_USERROW9 = 4873             ; User Row Byte 9
-.equ USERROW_USERROW10 = 4874            ; User Row Byte 10
-.equ USERROW_USERROW11 = 4875            ; User Row Byte 11
-.equ USERROW_USERROW12 = 4876            ; User Row Byte 12
-.equ USERROW_USERROW13 = 4877            ; User Row Byte 13
-.equ USERROW_USERROW14 = 4878            ; User Row Byte 14
-.equ USERROW_USERROW15 = 4879            ; User Row Byte 15
-.equ USERROW_USERROW16 = 4880            ; User Row Byte 16
-.equ USERROW_USERROW17 = 4881            ; User Row Byte 17
-.equ USERROW_USERROW18 = 4882            ; User Row Byte 18
-.equ USERROW_USERROW19 = 4883            ; User Row Byte 19
-.equ USERROW_USERROW20 = 4884            ; User Row Byte 20
-.equ USERROW_USERROW21 = 4885            ; User Row Byte 21
-.equ USERROW_USERROW22 = 4886            ; User Row Byte 22
-.equ USERROW_USERROW23 = 4887            ; User Row Byte 23
-.equ USERROW_USERROW24 = 4888            ; User Row Byte 24
-.equ USERROW_USERROW25 = 4889            ; User Row Byte 25
-.equ USERROW_USERROW26 = 4890            ; User Row Byte 26
-.equ USERROW_USERROW27 = 4891            ; User Row Byte 27
-.equ USERROW_USERROW28 = 4892            ; User Row Byte 28
-.equ USERROW_USERROW29 = 4893            ; User Row Byte 29
-.equ USERROW_USERROW30 = 4894            ; User Row Byte 30
-.equ USERROW_USERROW31 = 4895            ; User Row Byte 31
-.equ USERROW_USERROW32 = 4896            ; User Row Byte 32
-.equ USERROW_USERROW33 = 4897            ; User Row Byte 33
-.equ USERROW_USERROW34 = 4898            ; User Row Byte 34
-.equ USERROW_USERROW35 = 4899            ; User Row Byte 35
-.equ USERROW_USERROW36 = 4900            ; User Row Byte 36
-.equ USERROW_USERROW37 = 4901            ; User Row Byte 37
-.equ USERROW_USERROW38 = 4902            ; User Row Byte 38
-.equ USERROW_USERROW39 = 4903            ; User Row Byte 39
-.equ USERROW_USERROW40 = 4904            ; User Row Byte 40
-.equ USERROW_USERROW41 = 4905            ; User Row Byte 41
-.equ USERROW_USERROW42 = 4906            ; User Row Byte 42
-.equ USERROW_USERROW43 = 4907            ; User Row Byte 43
-.equ USERROW_USERROW44 = 4908            ; User Row Byte 44
-.equ USERROW_USERROW45 = 4909            ; User Row Byte 45
-.equ USERROW_USERROW46 = 4910            ; User Row Byte 46
-.equ USERROW_USERROW47 = 4911            ; User Row Byte 47
-.equ USERROW_USERROW48 = 4912            ; User Row Byte 48
-.equ USERROW_USERROW49 = 4913            ; User Row Byte 49
-.equ USERROW_USERROW50 = 4914            ; User Row Byte 50
-.equ USERROW_USERROW51 = 4915            ; User Row Byte 51
-.equ USERROW_USERROW52 = 4916            ; User Row Byte 52
-.equ USERROW_USERROW53 = 4917            ; User Row Byte 53
-.equ USERROW_USERROW54 = 4918            ; User Row Byte 54
-.equ USERROW_USERROW55 = 4919            ; User Row Byte 55
-.equ USERROW_USERROW56 = 4920            ; User Row Byte 56
-.equ USERROW_USERROW57 = 4921            ; User Row Byte 57
-.equ USERROW_USERROW58 = 4922            ; User Row Byte 58
-.equ USERROW_USERROW59 = 4923            ; User Row Byte 59
-.equ USERROW_USERROW60 = 4924            ; User Row Byte 60
-.equ USERROW_USERROW61 = 4925            ; User Row Byte 61
-.equ USERROW_USERROW62 = 4926            ; User Row Byte 62
-.equ USERROW_USERROW63 = 4927            ; User Row Byte 63
+.equ USERROW_USERROW0 = 0x1300           ; User Row Byte 0
+.equ USERROW_USERROW1 = 0x1301           ; User Row Byte 1
+.equ USERROW_USERROW2 = 0x1302           ; User Row Byte 2
+.equ USERROW_USERROW3 = 0x1303           ; User Row Byte 3
+.equ USERROW_USERROW4 = 0x1304           ; User Row Byte 4
+.equ USERROW_USERROW5 = 0x1305           ; User Row Byte 5
+.equ USERROW_USERROW6 = 0x1306           ; User Row Byte 6
+.equ USERROW_USERROW7 = 0x1307           ; User Row Byte 7
+.equ USERROW_USERROW8 = 0x1308           ; User Row Byte 8
+.equ USERROW_USERROW9 = 0x1309           ; User Row Byte 9
+.equ USERROW_USERROW10 = 0x130A          ; User Row Byte 10
+.equ USERROW_USERROW11 = 0x130B          ; User Row Byte 11
+.equ USERROW_USERROW12 = 0x130C          ; User Row Byte 12
+.equ USERROW_USERROW13 = 0x130D          ; User Row Byte 13
+.equ USERROW_USERROW14 = 0x130E          ; User Row Byte 14
+.equ USERROW_USERROW15 = 0x130F          ; User Row Byte 15
+.equ USERROW_USERROW16 = 0x1310          ; User Row Byte 16
+.equ USERROW_USERROW17 = 0x1311          ; User Row Byte 17
+.equ USERROW_USERROW18 = 0x1312          ; User Row Byte 18
+.equ USERROW_USERROW19 = 0x1313          ; User Row Byte 19
+.equ USERROW_USERROW20 = 0x1314          ; User Row Byte 20
+.equ USERROW_USERROW21 = 0x1315          ; User Row Byte 21
+.equ USERROW_USERROW22 = 0x1316          ; User Row Byte 22
+.equ USERROW_USERROW23 = 0x1317          ; User Row Byte 23
+.equ USERROW_USERROW24 = 0x1318          ; User Row Byte 24
+.equ USERROW_USERROW25 = 0x1319          ; User Row Byte 25
+.equ USERROW_USERROW26 = 0x131A          ; User Row Byte 26
+.equ USERROW_USERROW27 = 0x131B          ; User Row Byte 27
+.equ USERROW_USERROW28 = 0x131C          ; User Row Byte 28
+.equ USERROW_USERROW29 = 0x131D          ; User Row Byte 29
+.equ USERROW_USERROW30 = 0x131E          ; User Row Byte 30
+.equ USERROW_USERROW31 = 0x131F          ; User Row Byte 31
+.equ USERROW_USERROW32 = 0x1320          ; User Row Byte 32
+.equ USERROW_USERROW33 = 0x1321          ; User Row Byte 33
+.equ USERROW_USERROW34 = 0x1322          ; User Row Byte 34
+.equ USERROW_USERROW35 = 0x1323          ; User Row Byte 35
+.equ USERROW_USERROW36 = 0x1324          ; User Row Byte 36
+.equ USERROW_USERROW37 = 0x1325          ; User Row Byte 37
+.equ USERROW_USERROW38 = 0x1326          ; User Row Byte 38
+.equ USERROW_USERROW39 = 0x1327          ; User Row Byte 39
+.equ USERROW_USERROW40 = 0x1328          ; User Row Byte 40
+.equ USERROW_USERROW41 = 0x1329          ; User Row Byte 41
+.equ USERROW_USERROW42 = 0x132A          ; User Row Byte 42
+.equ USERROW_USERROW43 = 0x132B          ; User Row Byte 43
+.equ USERROW_USERROW44 = 0x132C          ; User Row Byte 44
+.equ USERROW_USERROW45 = 0x132D          ; User Row Byte 45
+.equ USERROW_USERROW46 = 0x132E          ; User Row Byte 46
+.equ USERROW_USERROW47 = 0x132F          ; User Row Byte 47
+.equ USERROW_USERROW48 = 0x1330          ; User Row Byte 48
+.equ USERROW_USERROW49 = 0x1331          ; User Row Byte 49
+.equ USERROW_USERROW50 = 0x1332          ; User Row Byte 50
+.equ USERROW_USERROW51 = 0x1333          ; User Row Byte 51
+.equ USERROW_USERROW52 = 0x1334          ; User Row Byte 52
+.equ USERROW_USERROW53 = 0x1335          ; User Row Byte 53
+.equ USERROW_USERROW54 = 0x1336          ; User Row Byte 54
+.equ USERROW_USERROW55 = 0x1337          ; User Row Byte 55
+.equ USERROW_USERROW56 = 0x1338          ; User Row Byte 56
+.equ USERROW_USERROW57 = 0x1339          ; User Row Byte 57
+.equ USERROW_USERROW58 = 0x133A          ; User Row Byte 58
+.equ USERROW_USERROW59 = 0x133B          ; User Row Byte 59
+.equ USERROW_USERROW60 = 0x133C          ; User Row Byte 60
+.equ USERROW_USERROW61 = 0x133D          ; User Row Byte 61
+.equ USERROW_USERROW62 = 0x133E          ; User Row Byte 62
+.equ USERROW_USERROW63 = 0x133F          ; User Row Byte 63
 
 ;*************************************************************************
 ;** VPORTA - Virtual Ports
 ;*************************************************************************
 
-.equ VPORTA_DIR = 0                      ; Data Direction
-.equ VPORTA_OUT = 1                      ; Output Value
-.equ VPORTA_IN = 2                       ; Input Value
-.equ VPORTA_INTFLAGS = 3                 ; Interrupt Flags
+.equ VPORTA_DIR = 0x0000                 ; Data Direction
+.equ VPORTA_OUT = 0x0001                 ; Output Value
+.equ VPORTA_IN = 0x0002                  ; Input Value
+.equ VPORTA_INTFLAGS = 0x0003            ; Interrupt Flags
 
 ;*************************************************************************
 ;** VPORTB - Virtual Ports
 ;*************************************************************************
 
-.equ VPORTB_DIR = 4                      ; Data Direction
-.equ VPORTB_OUT = 5                      ; Output Value
-.equ VPORTB_IN = 6                       ; Input Value
-.equ VPORTB_INTFLAGS = 7                 ; Interrupt Flags
+.equ VPORTB_DIR = 0x0004                 ; Data Direction
+.equ VPORTB_OUT = 0x0005                 ; Output Value
+.equ VPORTB_IN = 0x0006                  ; Input Value
+.equ VPORTB_INTFLAGS = 0x0007            ; Interrupt Flags
 
 ;*************************************************************************
 ;** VPORTC - Virtual Ports
 ;*************************************************************************
 
-.equ VPORTC_DIR = 8                      ; Data Direction
-.equ VPORTC_OUT = 9                      ; Output Value
-.equ VPORTC_IN = 10                      ; Input Value
-.equ VPORTC_INTFLAGS = 11                ; Interrupt Flags
+.equ VPORTC_DIR = 0x0008                 ; Data Direction
+.equ VPORTC_OUT = 0x0009                 ; Output Value
+.equ VPORTC_IN = 0x000A                  ; Input Value
+.equ VPORTC_INTFLAGS = 0x000B            ; Interrupt Flags
 
 ;*************************************************************************
 ;** VPORTD - Virtual Ports
 ;*************************************************************************
 
-.equ VPORTD_DIR = 12                     ; Data Direction
-.equ VPORTD_OUT = 13                     ; Output Value
-.equ VPORTD_IN = 14                      ; Input Value
-.equ VPORTD_INTFLAGS = 15                ; Interrupt Flags
+.equ VPORTD_DIR = 0x000C                 ; Data Direction
+.equ VPORTD_OUT = 0x000D                 ; Output Value
+.equ VPORTD_IN = 0x000E                  ; Input Value
+.equ VPORTD_INTFLAGS = 0x000F            ; Interrupt Flags
 
 ;*************************************************************************
 ;** VPORTE - Virtual Ports
 ;*************************************************************************
 
-.equ VPORTE_DIR = 16                     ; Data Direction
-.equ VPORTE_OUT = 17                     ; Output Value
-.equ VPORTE_IN = 18                      ; Input Value
-.equ VPORTE_INTFLAGS = 19                ; Interrupt Flags
+.equ VPORTE_DIR = 0x0010                 ; Data Direction
+.equ VPORTE_OUT = 0x0011                 ; Output Value
+.equ VPORTE_IN = 0x0012                  ; Input Value
+.equ VPORTE_INTFLAGS = 0x0013            ; Interrupt Flags
 
 ;*************************************************************************
 ;** VPORTF - Virtual Ports
 ;*************************************************************************
 
-.equ VPORTF_DIR = 20                     ; Data Direction
-.equ VPORTF_OUT = 21                     ; Output Value
-.equ VPORTF_IN = 22                      ; Input Value
-.equ VPORTF_INTFLAGS = 23                ; Interrupt Flags
+.equ VPORTF_DIR = 0x0014                 ; Data Direction
+.equ VPORTF_OUT = 0x0015                 ; Output Value
+.equ VPORTF_IN = 0x0016                  ; Input Value
+.equ VPORTF_INTFLAGS = 0x0017            ; Interrupt Flags
 
 ;*************************************************************************
 ;** VREF - Voltage reference
 ;*************************************************************************
 
-.equ VREF_CTRLA = 160                    ; Control A
-.equ VREF_CTRLB = 161                    ; Control B
+.equ VREF_CTRLA = 0x00A0                 ; Control A
+.equ VREF_CTRLB = 0x00A1                 ; Control B
 
 ;*************************************************************************
 ;** WDT - Watch-Dog Timer
 ;*************************************************************************
 
-.equ WDT_CTRLA = 256                     ; Control A
-.equ WDT_STATUS = 257                    ; Status
+.equ WDT_CTRLA = 0x0100                  ; Control A
+.equ WDT_STATUS = 0x0101                 ; Status
 
 
 ; ***** ALL MODULE BASE ADRESSES *****************************************
@@ -1773,12 +1773,7 @@
 
 ; Bod level select
 .equ BOD_LVL_BODLEVEL0_gc = (0x00<<0)    ; 1.8 V
-.equ BOD_LVL_BODLEVEL1_gc = (0x01<<0)    ; 2.1 V
 .equ BOD_LVL_BODLEVEL2_gc = (0x02<<0)    ; 2.6 V
-.equ BOD_LVL_BODLEVEL3_gc = (0x03<<0)    ; 2.9 V
-.equ BOD_LVL_BODLEVEL4_gc = (0x04<<0)    ; 3.3 V
-.equ BOD_LVL_BODLEVEL5_gc = (0x05<<0)    ; 3.7 V
-.equ BOD_LVL_BODLEVEL6_gc = (0x06<<0)    ; 4.0 V
 .equ BOD_LVL_BODLEVEL7_gc = (0x07<<0)    ; 4.2 V
 
 ; Configuration select
@@ -2294,12 +2289,6 @@
 .equ CRCSCAN_RESET_bp = 7                ; Reset CRC scan bit position
 
 ; CRCSCAN_CTRLB masks
-.equ CRCSCAN_MODE_gm = 0x30              ; CRC Flash Access Mode group mask
-.equ CRCSCAN_MODE_gp = 4                 ; CRC Flash Access Mode group position
-.equ CRCSCAN_MODE0_bm = (1<<4)           ; CRC Flash Access Mode bit 0 mask
-.equ CRCSCAN_MODE0_bp = 4                ; CRC Flash Access Mode bit 0 position
-.equ CRCSCAN_MODE1_bm = (1<<5)           ; CRC Flash Access Mode bit 1 mask
-.equ CRCSCAN_MODE1_bp = 5                ; CRC Flash Access Mode bit 1 position
 .equ CRCSCAN_SRC_gm = 0x03               ; CRC Source group mask
 .equ CRCSCAN_SRC_gp = 0                  ; CRC Source group position
 .equ CRCSCAN_SRC0_bm = (1<<0)            ; CRC Source bit 0 mask
@@ -2312,12 +2301,6 @@
 .equ CRCSCAN_BUSY_bp = 0                 ; CRC Busy bit position
 .equ CRCSCAN_OK_bm = 0x02                ; CRC Ok bit mask
 .equ CRCSCAN_OK_bp = 1                   ; CRC Ok bit position
-
-; CRC Flash Access Mode select
-.equ CRCSCAN_MODE_PRIORITY_gc = (0x00<<4) ; Priority to flash
-.equ CRCSCAN_MODE_RESERVED_gc = (0x01<<4) ; Reserved
-.equ CRCSCAN_MODE_BACKGROUND_gc = (0x02<<4) ; Lowest priority to flash
-.equ CRCSCAN_MODE_CONTINUOUS_gc = (0x03<<4) ; Continuous checks in background
 
 ; CRC Source select
 .equ CRCSCAN_SRC_FLASH_gc = (0x00<<0)    ; CRC on entire flash
@@ -2493,7 +2476,7 @@
 .equ EVSYS_GENERATOR_CCL_LUT2_gc = (0x12<<0) ; Configurable Custom Logic LUT2
 .equ EVSYS_GENERATOR_CCL_LUT3_gc = (0x13<<0) ; Configurable Custom Logic LUT3
 .equ EVSYS_GENERATOR_AC0_OUT_gc = (0x20<<0) ; Analog Comparator 0 out
-.equ EVSYS_GENERATOR_ADC0_COMP_gc = (0x24<<0) ; ADC 0 Comparator Event
+.equ EVSYS_GENERATOR_ADC0_RESRDY_gc = (0x24<<0) ; ADC 0 Result Ready Event
 .equ EVSYS_GENERATOR_PORT0_PIN0_gc = (0x40<<0) ; Port 0 Pin 0
 .equ EVSYS_GENERATOR_PORT0_PIN1_gc = (0x41<<0) ; Port 0 Pin 1
 .equ EVSYS_GENERATOR_PORT0_PIN2_gc = (0x42<<0) ; Port 0 Pin 2
@@ -2520,10 +2503,10 @@
 .equ EVSYS_GENERATOR_TCA0_CMP0_gc = (0x84<<0) ; Timer/Counter A0 compare 0
 .equ EVSYS_GENERATOR_TCA0_CMP1_gc = (0x85<<0) ; Timer/Counter A0 compare 1
 .equ EVSYS_GENERATOR_TCA0_CMP2_gc = (0x86<<0) ; Timer/Counter A0 compare 2
-.equ EVSYS_GENERATOR_TCB0_CMP0_gc = (0xA0<<0) ; Timer/Counter B0 compare 0
-.equ EVSYS_GENERATOR_TCB1_CMP0_gc = (0xA2<<0) ; Timer/Counter B1 compare 0
-.equ EVSYS_GENERATOR_TCB2_CMP0_gc = (0xA4<<0) ; Timer/Counter B2 compare 0
-.equ EVSYS_GENERATOR_TCB3_CMP0_gc = (0xA6<<0) ; Timer/Counter B3 compare 0
+.equ EVSYS_GENERATOR_TCB0_CAPT_gc = (0xA0<<0) ; Timer/Counter B0 capture
+.equ EVSYS_GENERATOR_TCB1_CAPT_gc = (0xA2<<0) ; Timer/Counter B1 capture
+.equ EVSYS_GENERATOR_TCB2_CAPT_gc = (0xA4<<0) ; Timer/Counter B2 capture
+.equ EVSYS_GENERATOR_TCB3_CAPT_gc = (0xA6<<0) ; Timer/Counter B3 capture
 
 ; Software event on channels select
 .equ EVSYS_STROBE0_EV_STROBE_CH0_gc = (0x01<<0) ; 
@@ -2637,12 +2620,7 @@
 
 ; BOD Level select
 .equ FUSE_LVL_BODLEVEL0_gc = (0x00<<5)   ; 1.8 V
-.equ FUSE_LVL_BODLEVEL1_gc = (0x01<<5)   ; 2.1 V
 .equ FUSE_LVL_BODLEVEL2_gc = (0x02<<5)   ; 2.6 V
-.equ FUSE_LVL_BODLEVEL3_gc = (0x03<<5)   ; 2.9 V
-.equ FUSE_LVL_BODLEVEL4_gc = (0x04<<5)   ; 3.3 V
-.equ FUSE_LVL_BODLEVEL5_gc = (0x05<<5)   ; 3.7 V
-.equ FUSE_LVL_BODLEVEL6_gc = (0x06<<5)   ; 4.0 V
 .equ FUSE_LVL_BODLEVEL7_gc = (0x07<<5)   ; 4.2 V
 
 ; BOD Sample Frequency select
@@ -3058,6 +3036,8 @@
 .equ RTC_CLKSEL1_bp = 1                  ; Clock Select bit 1 position
 
 ; RTC_CTRLA masks
+.equ RTC_CORREN_bm = 0x04                ; Correction enable bit mask
+.equ RTC_CORREN_bp = 2                   ; Correction enable bit position
 .equ RTC_PRESCALER_gm = 0x78             ; Prescaling Factor group mask
 .equ RTC_PRESCALER_gp = 3                ; Prescaling Factor group position
 .equ RTC_PRESCALER0_bm = (1<<3)          ; Prescaling Factor bit 0 mask
@@ -4202,124 +4182,124 @@
 ; ***** INTERRUPT VECTORS, ABSOLUTE ADDRESSES ****************************
 
 ; CRCSCAN interrupt vectors
-.equ CRCSCAN_NMI_vect = 2                ; 
+.equ CRCSCAN_NMI_vect = 0x0002           ; 
 
 ; BOD interrupt vectors
-.equ BOD_VLM_vect = 4                    ; 
+.equ BOD_VLM_vect = 0x0004               ; 
 
 ; RTC interrupt vectors
-.equ RTC_CNT_vect = 6                    ; 
-.equ RTC_PIT_vect = 8                    ; 
+.equ RTC_CNT_vect = 0x0006               ; 
+.equ RTC_PIT_vect = 0x0008               ; 
 
 ; CCL interrupt vectors
-.equ CCL_CCL_vect = 10                   ; 
+.equ CCL_CCL_vect = 0x000A               ; 
 
 ; PORTA interrupt vectors
-.equ PORTA_PORT_vect = 12                ; 
+.equ PORTA_PORT_vect = 0x000C            ; 
 
 ; TCA0 interrupt vectors
-.equ TCA0_LUNF_vect = 14                 ; 
-.equ TCA0_OVF_vect = 14                  ; 
-.equ TCA0_HUNF_vect = 16                 ; 
-.equ TCA0_LCMP0_vect = 18                ; 
-.equ TCA0_CMP0_vect = 18                 ; 
-.equ TCA0_CMP1_vect = 20                 ; 
-.equ TCA0_LCMP1_vect = 20                ; 
-.equ TCA0_LCMP2_vect = 22                ; 
-.equ TCA0_CMP2_vect = 22                 ; 
+.equ TCA0_OVF_vect = 0x000E              ; 
+.equ TCA0_LUNF_vect = 0x000E             ; 
+.equ TCA0_HUNF_vect = 0x0010             ; 
+.equ TCA0_LCMP0_vect = 0x0012            ; 
+.equ TCA0_CMP0_vect = 0x0012             ; 
+.equ TCA0_CMP1_vect = 0x0014             ; 
+.equ TCA0_LCMP1_vect = 0x0014            ; 
+.equ TCA0_CMP2_vect = 0x0016             ; 
+.equ TCA0_LCMP2_vect = 0x0016            ; 
 
 ; TCB0 interrupt vectors
-.equ TCB0_INT_vect = 24                  ; 
+.equ TCB0_INT_vect = 0x0018              ; 
 
 ; TCB1 interrupt vectors
-.equ TCB1_INT_vect = 26                  ; 
+.equ TCB1_INT_vect = 0x001A              ; 
 
 ; TWI0 interrupt vectors
-.equ TWI0_TWIS_vect = 28                 ; 
-.equ TWI0_TWIM_vect = 30                 ; 
+.equ TWI0_TWIS_vect = 0x001C             ; 
+.equ TWI0_TWIM_vect = 0x001E             ; 
 
 ; SPI0 interrupt vectors
-.equ SPI0_INT_vect = 32                  ; 
+.equ SPI0_INT_vect = 0x0020              ; 
 
 ; USART0 interrupt vectors
-.equ USART0_RXC_vect = 34                ; 
-.equ USART0_DRE_vect = 36                ; 
-.equ USART0_TXC_vect = 38                ; 
+.equ USART0_RXC_vect = 0x0022            ; 
+.equ USART0_DRE_vect = 0x0024            ; 
+.equ USART0_TXC_vect = 0x0026            ; 
 
 ; PORTD interrupt vectors
-.equ PORTD_PORT_vect = 40                ; 
+.equ PORTD_PORT_vect = 0x0028            ; 
 
 ; AC0 interrupt vectors
-.equ AC0_AC_vect = 42                    ; 
+.equ AC0_AC_vect = 0x002A                ; 
 
 ; ADC0 interrupt vectors
-.equ ADC0_RESRDY_vect = 44               ; 
-.equ ADC0_WCOMP_vect = 46                ; 
+.equ ADC0_RESRDY_vect = 0x002C           ; 
+.equ ADC0_WCOMP_vect = 0x002E            ; 
 
 ; PORTC interrupt vectors
-.equ PORTC_PORT_vect = 48                ; 
+.equ PORTC_PORT_vect = 0x0030            ; 
 
 ; TCB2 interrupt vectors
-.equ TCB2_INT_vect = 50                  ; 
+.equ TCB2_INT_vect = 0x0032              ; 
 
 ; USART1 interrupt vectors
-.equ USART1_RXC_vect = 52                ; 
-.equ USART1_DRE_vect = 54                ; 
-.equ USART1_TXC_vect = 56                ; 
+.equ USART1_RXC_vect = 0x0034            ; 
+.equ USART1_DRE_vect = 0x0036            ; 
+.equ USART1_TXC_vect = 0x0038            ; 
 
 ; PORTF interrupt vectors
-.equ PORTF_PORT_vect = 58                ; 
+.equ PORTF_PORT_vect = 0x003A            ; 
 
 ; NVMCTRL interrupt vectors
-.equ NVMCTRL_EE_vect = 60                ; 
+.equ NVMCTRL_EE_vect = 0x003C            ; 
 
 ; USART2 interrupt vectors
-.equ USART2_RXC_vect = 62                ; 
-.equ USART2_DRE_vect = 64                ; 
-.equ USART2_TXC_vect = 66                ; 
+.equ USART2_RXC_vect = 0x003E            ; 
+.equ USART2_DRE_vect = 0x0040            ; 
+.equ USART2_TXC_vect = 0x0042            ; 
 
 ; PORTB interrupt vectors
-.equ PORTB_PORT_vect = 68                ; 
+.equ PORTB_PORT_vect = 0x0044            ; 
 
 ; PORTE interrupt vectors
-.equ PORTE_PORT_vect = 70                ; 
+.equ PORTE_PORT_vect = 0x0046            ; 
 
 ; TCB3 interrupt vectors
-.equ TCB3_INT_vect = 72                  ; 
+.equ TCB3_INT_vect = 0x0048              ; 
 
 ; USART3 interrupt vectors
-.equ USART3_RXC_vect = 74                ; 
-.equ USART3_DRE_vect = 76                ; 
-.equ USART3_TXC_vect = 78                ; 
+.equ USART3_RXC_vect = 0x004A            ; 
+.equ USART3_DRE_vect = 0x004C            ; 
+.equ USART3_TXC_vect = 0x004E            ; 
 
 
 
 ; ***** INTERRUPT VECTORS, MODULE BASES **********************************
 
-.equ CRCSCAN_vbase = 2
-.equ BOD_vbase = 4
-.equ RTC_vbase = 6
-.equ CCL_vbase = 10
-.equ PORTA_vbase = 12
-.equ TCA0_vbase = 14
-.equ TCB0_vbase = 24
-.equ TCB1_vbase = 26
-.equ TWI0_vbase = 28
-.equ SPI0_vbase = 32
-.equ USART0_vbase = 34
-.equ PORTD_vbase = 40
-.equ AC0_vbase = 42
-.equ ADC0_vbase = 44
-.equ PORTC_vbase = 48
-.equ TCB2_vbase = 50
-.equ USART1_vbase = 52
-.equ PORTF_vbase = 58
-.equ NVMCTRL_vbase = 60
-.equ USART2_vbase = 62
-.equ PORTB_vbase = 68
-.equ PORTE_vbase = 70
-.equ TCB3_vbase = 72
-.equ USART3_vbase = 74
+.equ CRCSCAN_vbase = 0x0002
+.equ BOD_vbase = 0x0004
+.equ RTC_vbase = 0x0006
+.equ CCL_vbase = 0x000A
+.equ PORTA_vbase = 0x000C
+.equ TCA0_vbase = 0x000E
+.equ TCB0_vbase = 0x0018
+.equ TCB1_vbase = 0x001A
+.equ TWI0_vbase = 0x001C
+.equ SPI0_vbase = 0x0020
+.equ USART0_vbase = 0x0022
+.equ PORTD_vbase = 0x0028
+.equ AC0_vbase = 0x002A
+.equ ADC0_vbase = 0x002C
+.equ PORTC_vbase = 0x0030
+.equ TCB2_vbase = 0x0032
+.equ USART1_vbase = 0x0034
+.equ PORTF_vbase = 0x003A
+.equ NVMCTRL_vbase = 0x003C
+.equ USART2_vbase = 0x003E
+.equ PORTB_vbase = 0x0044
+.equ PORTE_vbase = 0x0046
+.equ TCB3_vbase = 0x0048
+.equ USART3_vbase = 0x004A
 
 
 ; ***** INTERRUPT VECTORS, VECTOR OFFSETS ********************************
@@ -4335,7 +4315,7 @@
 ; RTC interrupt vector offsets
 
 .equ RTC_CNT_voffset = 0
-.equ RTC_PIT_voffset = 0
+.equ RTC_PIT_voffset = 2
 
 ; CCL interrupt vector offsets
 
@@ -4347,15 +4327,15 @@
 
 ; TCA0 interrupt vector offsets
 
-.equ TCA0_LUNF_voffset = 0
 .equ TCA0_OVF_voffset = 0
-.equ TCA0_HUNF_voffset = 0
-.equ TCA0_LCMP0_voffset = 0
-.equ TCA0_CMP0_voffset = 0
-.equ TCA0_CMP1_voffset = 0
-.equ TCA0_LCMP1_voffset = 0
-.equ TCA0_LCMP2_voffset = 0
-.equ TCA0_CMP2_voffset = 0
+.equ TCA0_LUNF_voffset = 0
+.equ TCA0_HUNF_voffset = 2
+.equ TCA0_LCMP0_voffset = 4
+.equ TCA0_CMP0_voffset = 4
+.equ TCA0_CMP1_voffset = 6
+.equ TCA0_LCMP1_voffset = 6
+.equ TCA0_CMP2_voffset = 8
+.equ TCA0_LCMP2_voffset = 8
 
 ; TCB0 interrupt vector offsets
 
@@ -4368,7 +4348,7 @@
 ; TWI0 interrupt vector offsets
 
 .equ TWI0_TWIS_voffset = 0
-.equ TWI0_TWIM_voffset = 0
+.equ TWI0_TWIM_voffset = 2
 
 ; SPI0 interrupt vector offsets
 
@@ -4377,8 +4357,8 @@
 ; USART0 interrupt vector offsets
 
 .equ USART0_RXC_voffset = 0
-.equ USART0_DRE_voffset = 0
-.equ USART0_TXC_voffset = 0
+.equ USART0_DRE_voffset = 2
+.equ USART0_TXC_voffset = 4
 
 ; PORTD interrupt vector offsets
 
@@ -4391,7 +4371,7 @@
 ; ADC0 interrupt vector offsets
 
 .equ ADC0_RESRDY_voffset = 0
-.equ ADC0_WCOMP_voffset = 0
+.equ ADC0_WCOMP_voffset = 2
 
 ; PORTC interrupt vector offsets
 
@@ -4404,8 +4384,8 @@
 ; USART1 interrupt vector offsets
 
 .equ USART1_RXC_voffset = 0
-.equ USART1_DRE_voffset = 0
-.equ USART1_TXC_voffset = 0
+.equ USART1_DRE_voffset = 2
+.equ USART1_TXC_voffset = 4
 
 ; PORTF interrupt vector offsets
 
@@ -4418,8 +4398,8 @@
 ; USART2 interrupt vector offsets
 
 .equ USART2_RXC_voffset = 0
-.equ USART2_DRE_voffset = 0
-.equ USART2_TXC_voffset = 0
+.equ USART2_DRE_voffset = 2
+.equ USART2_TXC_voffset = 4
 
 ; PORTB interrupt vector offsets
 
@@ -4436,8 +4416,8 @@
 ; USART3 interrupt vector offsets
 
 .equ USART3_RXC_voffset = 0
-.equ USART3_DRE_voffset = 0
-.equ USART3_TXC_voffset = 0
+.equ USART3_DRE_voffset = 2
+.equ USART3_TXC_voffset = 4
 
 
 
