@@ -9,11 +9,19 @@ MCU   =  atmega4809
 #BAUD  =  38400UL
 #CPPFLAGS = -DF_CPU=$(F_CPU) -DBAUD=$(BAUD) -I. 
 
-# Cross-compilation
-CC = ~/Samba/avr8-3.6.2/avr8-gnu-toolchain-linux_x86_64/bin/avr-gcc
-OBJCOPY = ~/Samba/avr8-3.6.2/avr8-gnu-toolchain-linux_x86_64/bin/avr-objcopy
-OBJDUMP = ~/Samba/avr8-3.6.2/avr8-gnu-toolchain-linux_x86_64/bin/avr-objdump
-SIZE = ~/Samba/avr8-3.6.2/avr8-gnu-toolchain-linux_x86_64/bin/avr-size
+# Cross-compilation (none will use the packaged toolchain)
+# SIDELOAD_TOOLCHAIN = ~/Samba/avr8-10.0.0.2020jan14
+# if not SIDELOAD
+#	CC = avr-gcc
+#	OBJCOPY = avr-objcopy
+#	OBJDUMP = avr-objdump
+#	SIZE = avr-size
+# else
+CC = ~/Samba/avr8-10.0.0.2020jan14/gcc-10-strip/bin/avr-gcc
+OBJCOPY = ~/Samba/avr8-10.0.0.2020jan14/gcc-10-strip/bin/avr-objcopy
+OBJDUMP = ~/Samba/avr8-10.0.0.2020jan14/gcc-10-strip/bin/avr-objdump
+SIZE = ~/Samba/avr8-10.0.0.2020jan14/gcc-10-strip/bin/avr-size
+# endif
 
 # UPDI is the programing interface, it is half-duplex UART based
 # Most USB to serial bridges show as /dev/ttyUSB0, 
@@ -36,17 +44,20 @@ CFLAGS += -ffunction-sections -fdata-sections
 
 # atmega4809 is not in the avr-gcc packaged for my OS so I used the sideloaded toolchain from Microchip
 # https://gcc.gnu.org/onlinedocs/gcc/Option-Summary.html
+# or for testing the new long double in gcc 10.0.0 https://www.avrfreaks.net/forum/avr-gcc-64-bit-double
 # option -Bprefix : This option specifies where to find the executables, libraries, include files, and data files of the compiler itself.
 # option -Ldir : Add directory dir to the list of directories to be searched for -l
 # option -I : These options specify directories to search for header files, for libraries and for parts of the compiler:
 # newer GCC  would want the -isystem option rather than -I
+# if not $(SIDELOAD_TOOLCHAIN)
+#	TARGET_ARCH = -mmcu=$(MCU)
+# else
 TARGET_ARCH = -mmcu=$(MCU) \
 -B $(LIBDIR)/Atmel.ATmega_DFP.1.4.331.atpack/gcc/dev/atmega4809/ \
--I ~/Samba/avr8-3.6.2/avr8-gnu-toolchain-linux_x86_64/avr/include/ \
--I ~/Samba/avr8-3.6.2/avr8-gnu-toolchain-linux_x86_64/lib/gcc/avr/5.4.0/include/ \
+-I ~/Samba/avr8-10.0.0.2020jan14/gcc-10-strip/avr/include/ \
+-I ~/Samba/avr8-10.0.0.2020jan14/gcc-10-strip/lib/gcc/avr/10.0.0/include/ \
 -I $(LIBDIR)/Atmel.ATmega_DFP.1.4.331.atpack/include/
-## if someday it is in mainline use
-##TARGET_ARCH = -mmcu=$(MCU)
+# endif
 
 
 LDFLAGS = -Wl,-Map,$(TARGET).map 
@@ -72,7 +83,7 @@ updi: $(TARGET).hex ## use the built in UPDI programing interface
 
 $(TARGET).elf: $(OBJECTS)
 	$(CC) $(LDFLAGS) $(TARGET_ARCH) $^ -o $@
-	$(SIZE) -C --mcu=$(MCU) $@
+#	$(SIZE) -C --mcu=$(MCU) $@
 	rm -f $(TARGET).o $(OBJECTS)
 
 clean: 

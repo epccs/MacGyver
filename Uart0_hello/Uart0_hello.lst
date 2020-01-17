@@ -3,31 +3,31 @@ Uart0_hello.elf:     file format elf32-avr
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
-  0 .data         00000000  00802800  00802800  000001c9  2**0
+  0 .data         00000000  00802800  00802800  000001d3  2**0
                   CONTENTS, ALLOC, LOAD, DATA
-  1 .text         00000146  00000000  00000000  00000074  2**1
+  1 .text         00000150  00000000  00000000  00000074  2**1
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  2 .rodata       0000000f  00004146  00000146  000001ba  2**0
+  2 .rodata       0000000f  00004150  00000150  000001c4  2**0
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  3 .comment      00000030  00000000  00000000  000001c9  2**0
+  3 .comment      0000002a  00000000  00000000  000001d3  2**0
                   CONTENTS, READONLY
-  4 .note.gnu.avr.deviceinfo 00000040  00000000  00000000  000001fc  2**2
+  4 .note.gnu.avr.deviceinfo 00000040  00000000  00000000  00000200  2**2
                   CONTENTS, READONLY
-  5 .debug_aranges 00000038  00000000  00000000  0000023c  2**0
+  5 .debug_aranges 00000038  00000000  00000000  00000240  2**0
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_info   00002954  00000000  00000000  00000274  2**0
+  6 .debug_info   0000294e  00000000  00000000  00000278  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_abbrev 0000248b  00000000  00000000  00002bc8  2**0
+  7 .debug_abbrev 000024b3  00000000  00000000  00002bc6  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_line   000003b6  00000000  00000000  00005053  2**0
+  8 .debug_line   0000050d  00000000  00000000  00005079  2**0
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_frame  00000068  00000000  00000000  0000540c  2**2
+  9 .debug_frame  00000074  00000000  00000000  00005588  2**2
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_str    00001246  00000000  00000000  00005474  2**0
+ 10 .debug_str    00001278  00000000  00000000  000055fc  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_loc    000000f4  00000000  00000000  000066ba  2**0
+ 11 .debug_loc    0000009d  00000000  00000000  00006874  2**0
                   CONTENTS, READONLY, DEBUGGING
- 12 .debug_ranges 00000028  00000000  00000000  000067ae  2**0
+ 12 .debug_ranges 00000058  00000000  00000000  00006911  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -81,8 +81,8 @@ Disassembly of section .text:
   a6:	cd bf       	out	0x3d, r28	; 61
   a8:	df e3       	ldi	r29, 0x3F	; 63
   aa:	de bf       	out	0x3e, r29	; 62
-  ac:	0e 94 93 00 	call	0x126	; 0x126 <main>
-  b0:	0c 94 a1 00 	jmp	0x142	; 0x142 <_exit>
+  ac:	0e 94 98 00 	call	0x130	; 0x130 <main>
+  b0:	0c 94 a6 00 	jmp	0x14c	; 0x14c <_exit>
 
 000000b4 <__bad_interrupt>:
   b4:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
@@ -116,10 +116,10 @@ void USART0_init(void)
   d4:	86 81       	ldd	r24, Z+6	; 0x06
   d6:	80 64       	ori	r24, 0x40	; 64
   d8:	86 83       	std	Z+6, r24	; 0x06
+}
   da:	08 95       	ret
 
 000000dc <USART0_sendChar>:
-}
 
 void USART0_sendChar(char c)
 {
@@ -132,78 +132,85 @@ void USART0_sendChar(char c)
     }        
     USART0.TXDATAL = c;
   e4:	80 93 02 08 	sts	0x0802, r24	; 0x800802 <__TEXT_REGION_LENGTH__+0x7f4802>
+}
   e8:	08 95       	ret
 
 000000ea <USART0_sendString>:
-}
 
 void USART0_sendString(char *str)
 {
-  ea:	0f 93       	push	r16
-  ec:	1f 93       	push	r17
-  ee:	cf 93       	push	r28
-  f0:	df 93       	push	r29
-  f2:	ec 01       	movw	r28, r24
+  ea:	ef 92       	push	r14
+  ec:	ff 92       	push	r15
+  ee:	0f 93       	push	r16
+  f0:	1f 93       	push	r17
+  f2:	cf 93       	push	r28
+  f4:	df 93       	push	r29
+  f6:	ec 01       	movw	r28, r24
     for(size_t i = 0; i < strlen(str); i++)
-  f4:	8c 01       	movw	r16, r24
-  f6:	fe 01       	movw	r30, r28
-  f8:	01 90       	ld	r0, Z+
-  fa:	00 20       	and	r0, r0
-  fc:	e9 f7       	brne	.-6      	; 0xf8 <USART0_sendString+0xe>
-  fe:	31 97       	sbiw	r30, 0x01	; 1
- 100:	ec 1b       	sub	r30, r28
- 102:	fd 0b       	sbc	r31, r29
- 104:	c8 01       	movw	r24, r16
- 106:	8c 1b       	sub	r24, r28
- 108:	9d 0b       	sbc	r25, r29
- 10a:	8e 17       	cp	r24, r30
- 10c:	9f 07       	cpc	r25, r31
- 10e:	30 f4       	brcc	.+12     	; 0x11c <__EEPROM_REGION_LENGTH__+0x1c>
+  f8:	7c 01       	movw	r14, r24
+  fa:	10 e0       	ldi	r17, 0x00	; 0
+  fc:	00 e0       	ldi	r16, 0x00	; 0
+  fe:	fe 01       	movw	r30, r28
+ 100:	01 90       	ld	r0, Z+
+ 102:	00 20       	and	r0, r0
+ 104:	e9 f7       	brne	.-6      	; 0x100 <__EEPROM_REGION_LENGTH__>
+ 106:	31 97       	sbiw	r30, 0x01	; 1
+ 108:	ec 1b       	sub	r30, r28
+ 10a:	fd 0b       	sbc	r31, r29
+ 10c:	0e 17       	cp	r16, r30
+ 10e:	1f 07       	cpc	r17, r31
+ 110:	38 f0       	brcs	.+14     	; 0x120 <__EEPROM_REGION_LENGTH__+0x20>
     {
         USART0_sendChar(str[i]);
- 110:	f8 01       	movw	r30, r16
- 112:	81 91       	ld	r24, Z+
- 114:	8f 01       	movw	r16, r30
- 116:	0e 94 6e 00 	call	0xdc	; 0xdc <USART0_sendChar>
- 11a:	ed cf       	rjmp	.-38     	; 0xf6 <USART0_sendString+0xc>
     }
 }
- 11c:	df 91       	pop	r29
- 11e:	cf 91       	pop	r28
- 120:	1f 91       	pop	r17
- 122:	0f 91       	pop	r16
- 124:	08 95       	ret
+ 112:	df 91       	pop	r29
+ 114:	cf 91       	pop	r28
+ 116:	1f 91       	pop	r17
+ 118:	0f 91       	pop	r16
+ 11a:	ff 90       	pop	r15
+ 11c:	ef 90       	pop	r14
+ 11e:	08 95       	ret
+        USART0_sendChar(str[i]);
+ 120:	f7 01       	movw	r30, r14
+ 122:	81 91       	ld	r24, Z+
+ 124:	7f 01       	movw	r14, r30
+ 126:	0e 94 6e 00 	call	0xdc	; 0xdc <USART0_sendChar>
+    for(size_t i = 0; i < strlen(str); i++)
+ 12a:	0f 5f       	subi	r16, 0xFF	; 255
+ 12c:	1f 4f       	sbci	r17, 0xFF	; 255
+ 12e:	e7 cf       	rjmp	.-50     	; 0xfe <USART0_sendString+0x14>
 
-00000126 <main>:
+00000130 <main>:
 
 int main(void)
 {
     USART0_init();
- 126:	0e 94 5c 00 	call	0xb8	; 0xb8 <USART0_init>
+ 130:	0e 94 5c 00 	call	0xb8	; 0xb8 <USART0_init>
     
     while (1) 
     {
         USART0_sendString("Hello World!\r\n");
- 12a:	86 e4       	ldi	r24, 0x46	; 70
- 12c:	91 e4       	ldi	r25, 0x41	; 65
- 12e:	0e 94 75 00 	call	0xea	; 0xea <USART0_sendString>
+ 134:	80 e5       	ldi	r24, 0x50	; 80
+ 136:	91 e4       	ldi	r25, 0x41	; 65
+ 138:	0e 94 75 00 	call	0xea	; 0xea <USART0_sendString>
 	#else
 		//round up by default
 		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
 	#endif
 
 	__builtin_avr_delay_cycles(__ticks_dc);
- 132:	25 e1       	ldi	r18, 0x15	; 21
- 134:	86 e1       	ldi	r24, 0x16	; 22
- 136:	95 e0       	ldi	r25, 0x05	; 5
- 138:	21 50       	subi	r18, 0x01	; 1
- 13a:	80 40       	sbci	r24, 0x00	; 0
- 13c:	90 40       	sbci	r25, 0x00	; 0
- 13e:	e1 f7       	brne	.-8      	; 0x138 <main+0x12>
- 140:	f4 cf       	rjmp	.-24     	; 0x12a <main+0x4>
+ 13c:	25 e1       	ldi	r18, 0x15	; 21
+ 13e:	86 e1       	ldi	r24, 0x16	; 22
+ 140:	95 e0       	ldi	r25, 0x05	; 5
+ 142:	21 50       	subi	r18, 0x01	; 1
+ 144:	80 40       	sbci	r24, 0x00	; 0
+ 146:	90 40       	sbci	r25, 0x00	; 0
+ 148:	e1 f7       	brne	.-8      	; 0x142 <main+0x12>
+ 14a:	f4 cf       	rjmp	.-24     	; 0x134 <main+0x4>
 
-00000142 <_exit>:
- 142:	f8 94       	cli
+0000014c <_exit>:
+ 14c:	f8 94       	cli
 
-00000144 <__stop_program>:
- 144:	ff cf       	rjmp	.-2      	; 0x144 <__stop_program>
+0000014e <__stop_program>:
+ 14e:	ff cf       	rjmp	.-2      	; 0x14e <__stop_program>
