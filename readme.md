@@ -33,6 +33,9 @@ The shared files for this board are in the /lib folder. Each example has files a
 
 [toolchain]: https://www.microchip.com/mplab/avr-support/avr-and-arm-toolchains-c-compilers
 [source]: https://www.microchip.com/mplab/avr-support/avr-and-sam-downloads-archive
+[Georg-Johann_Lay_10.0.0.pre]: https://www.avrfreaks.net/forum/avr-gcc-64-bit-double
+
+note: 10.0.0 has float/double/long_double (32/32/64).
 
 ```
 # the side load will do these packages gcc-avr binutils-avr gdb-avr avr-libc 
