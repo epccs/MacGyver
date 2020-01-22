@@ -79,3 +79,6 @@ I2C example
 
 https://github.com/arduino/ArduinoCore-megaavr/blob/master/libraries/Wire/src/utility/twi.c
 
+If the UPDI idea has problems Optiboot could be a workaround not that it support the m4809
+
+https://github.com/Optiboot/optiboot/blob/master/Wiki/CompilingOptiboot_x.md

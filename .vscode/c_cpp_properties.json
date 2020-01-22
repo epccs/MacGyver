@@ -8,7 +8,7 @@
                 "${workspaceFolder}",
                 "${default}"
             ],
-            "forcedInclude": [ "${workspaceFolder}/lib/Atmel.ATmega_DFP.1.4.331.atpack/include/avr/iom4809.h" ],
+            "forcedInclude": [ "${workspaceFolder}/lib/ATmega_DFP/include/avr/iom4809.h" ],
             "defines": ["__AVR_ATmega4809__"],
             "cStandard": "c11",
             "cppStandard": "c++17",

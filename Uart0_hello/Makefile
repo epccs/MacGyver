@@ -9,19 +9,17 @@ MCU   =  atmega4809
 #BAUD  =  38400UL
 #CPPFLAGS = -DF_CPU=$(F_CPU) -DBAUD=$(BAUD) -I. 
 
-# Cross-compilation (none will use the packaged toolchain)
+# Cross-compilation
 # SIDELOAD_TOOLCHAIN = ~/Samba/avr8-10.0.0.2020jan14
-# if not SIDELOAD
-#	CC = avr-gcc
-#	OBJCOPY = avr-objcopy
-#	OBJDUMP = avr-objdump
-#	SIZE = avr-size
-# else
 CC = ~/Samba/avr8-10.0.0.2020jan14/gcc-10-strip/bin/avr-gcc
 OBJCOPY = ~/Samba/avr8-10.0.0.2020jan14/gcc-10-strip/bin/avr-objcopy
 OBJDUMP = ~/Samba/avr8-10.0.0.2020jan14/gcc-10-strip/bin/avr-objdump
 SIZE = ~/Samba/avr8-10.0.0.2020jan14/gcc-10-strip/bin/avr-size
-# endif
+# if not SIDELOAD_TOOLCHAIN
+#	CC = avr-gcc
+#	OBJCOPY = avr-objcopy
+#	OBJDUMP = avr-objdump
+#	SIZE = avr-size
 
 # UPDI is the programing interface, it is half-duplex UART based
 # Most USB to serial bridges show as /dev/ttyUSB0, 
@@ -42,28 +40,24 @@ CFLAGS = -Os -g -std=gnu99 -Wall
 # CFLAGS += -fpack-struct -fshort-enums 
 CFLAGS += -ffunction-sections -fdata-sections 
 
-# atmega4809 is not in the avr-gcc packaged for my OS so I used the sideloaded toolchain from Microchip
-# https://gcc.gnu.org/onlinedocs/gcc/Option-Summary.html
-# or for testing the new long double in gcc 10.0.0 https://www.avrfreaks.net/forum/avr-gcc-64-bit-double
-# option -Bprefix : This option specifies where to find the executables, libraries, include files, and data files of the compiler itself.
-# option -Ldir : Add directory dir to the list of directories to be searched for -l
-# option -I : These options specify directories to search for header files, for libraries and for parts of the compiler:
-# newer GCC  would want the -isystem option rather than -I
-# if not $(SIDELOAD_TOOLCHAIN)
-#	TARGET_ARCH = -mmcu=$(MCU)
-# else
+# atmega4809 is not in the avr-gcc packaged for my OS 
 TARGET_ARCH = -mmcu=$(MCU) \
--B $(LIBDIR)/Atmel.ATmega_DFP.1.4.331.atpack/gcc/dev/atmega4809/ \
--I ~/Samba/avr8-10.0.0.2020jan14/gcc-10-strip/avr/include/ \
--I ~/Samba/avr8-10.0.0.2020jan14/gcc-10-strip/lib/gcc/avr/10.0.0/include/ \
--I $(LIBDIR)/Atmel.ATmega_DFP.1.4.331.atpack/include/
-# endif
-
+-B $(LIBDIR)/ATmega_DFP/gcc/dev/atmega4809/ \
+-I $(LIBDIR)/ATmega_DFP/include/
+## if someday it is in mainline use
+##TARGET_ARCH = -mmcu=$(MCU)
 
 LDFLAGS = -Wl,-Map,$(TARGET).map 
 LDFLAGS += -Wl,--gc-sections 
 
-all: $(TARGET).hex $(TARGET).lst
+.PHONY: help
+
+# some help for the make impaired
+# https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
+help:
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
+all: $(TARGET).hex $(TARGET).lst ## build the image and its related files
 
 $(TARGET): $(TARGET).hex
 
@@ -76,7 +70,7 @@ $(TARGET).hex: $(TARGET).elf
 # # place pyupdi next to your project repository
 # git clone https://github.com/mraardvark/pyupdi
 # # fuses, what, what?
-updi: $(TARGET).hex ## use the built in UPDI programing interface 
+updi: $(TARGET).hex ## upload with pyupid 
 	shell sh -c 'which python3 2>/dev/null || echo install python3'
 	shell sh -c 'ls ../../pyupdi/pyupdi.py 2>/dev/null || echo clone pyupdi'
 	python3 ../../pyupdi/pyupdi.py -v -d $(MCU) -c $(UPDI_PORT) -b 115200 -e -f $(TARGET).hex
@@ -84,9 +78,14 @@ updi: $(TARGET).hex ## use the built in UPDI programing interface
 $(TARGET).elf: $(OBJECTS)
 	$(CC) $(LDFLAGS) $(TARGET_ARCH) $^ -o $@
 #	$(SIZE) -C --mcu=$(MCU) $@
+# avr-size -C is not in mainline, it uses pramaters from a config file that needs added for each new chip
+# but the pramaters that allow showing % size are now in the elf, 
+# avr-objdump -s -j .note.gnu.avr.deviceinfo Uart0_hello.elf
+# https://www.eit.lth.se/fileadmin/eit/courses/edi021/Avr-libc-2.0.0/mem_sections.html#sec_dot_note
+	$(SIZE) $@
 	rm -f $(TARGET).o $(OBJECTS)
 
-clean: 
+clean: ## remove the image and its related files
 	rm -f $(TARGET).hex $(TARGET).map $(TARGET).elf $(TARGET).lst
  
 %.lst: %.elf

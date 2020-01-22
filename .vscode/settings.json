@@ -1,9 +1,10 @@
 {
-    "C_Cpp.errorSquiggles": "Disabled",
+    "C_Cpp.errorSquiggles": "Enabled",
     "C_Cpp.default.includePath": [
         "~/Samba/avr8-3.6.2/avr8-gnu-toolchain-linux_x86_64/avr/include/**",
         "~/Samba/avr8-3.6.2/avr8-gnu-toolchain-linux_x86_64/lib/gcc/avr/5.4.0/include/**",
         "{$workspaceFolder}/**"
     ],
-    "C_Cpp.intelliSenseEngine": "Default"
+    "C_Cpp.intelliSenseEngine": "Default",
+    "python.pythonPath": "/usr/bin/python3"
 }
