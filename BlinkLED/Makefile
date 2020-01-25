@@ -6,11 +6,9 @@ OBJECTS = main.o
 # Chip and project-specific global definitions
 MCU   =  atmega4809
 F_CPU = 1000000UL
-BAUD  =  38400UL
-#  preprocessing flags need placed after TARGET_ARCH, but that is not what CPPFLAGS does
-#CPPFLAGS = -DF_CPU=$(F_CPU) -DBAUD=$(BAUD)  -I.
-CPREPROCESSING = -DF_CPU=$(F_CPU) -DBAUD=$(BAUD)
-
+# BAUD  =  38400UL
+# remove -DBAUD=$(BAUD) since it is used in iom4809.h as register e.g., USART0.BAUD
+CPPFLAGS = -DF_CPU=$(F_CPU)
 
 # Cross-compilation
 # SIDELOAD_TOOLCHAIN = ~/Samba/avr8-10.0.0.2020jan14
@@ -48,15 +46,16 @@ CFLAGS = -Os -g -std=gnu99 -Wall
 # CFLAGS += -fpack-struct -fshort-enums 
 CFLAGS += -ffunction-sections -fdata-sections 
 
-# atmega4809 is not in the avr-gcc packaged for my OS 
+# atmega4809 is not in the avr-gcc packaged for my OS
+# -I see https://gcc.gnu.org/onlinedocs/gcc-8.2.0/gcc/Directory-Options.html#Directory-Options
+# -B see same as above
 TARGET_ARCH = -mmcu=$(MCU) \
 -B $(LIBDIR)/ATmega_DFP/gcc/dev/atmega4809/ \
--I $(LIBDIR)/ATmega_DFP/include/
+-I $(LIBDIR)/ATmega_DFP/include/ \
 ## if someday it is in mainline use
 ##TARGET_ARCH = -mmcu=$(MCU)
 
-LDFLAGS = -Wl,-Map,$(TARGET).map 
-LDFLAGS += -Wl,--gc-sections 
+LDFLAGS = -Wl,-Map,$(TARGET).map -Wl,--gc-sections 
 
 .PHONY: help
 
@@ -84,7 +83,7 @@ updi: $(TARGET).hex ## upload with pyupid
 	python3 ../../pyupdi/pyupdi.py -v -d $(MCU) -c $(UPDI_PORT) -b 115200 -e -f $(TARGET).hex
 
 $(TARGET).elf: $(OBJECTS)
-	$(CC) $(LDFLAGS) $(TARGET_ARCH) $(CPREPROCESSING) $^ -o $@
+	$(CC) $(LDFLAGS) $(TARGET_ARCH) $^ -o $@
 #	$(SIZE) -C --mcu=$(MCU) $@
 # avr-size -C is not in mainline, it uses pramaters from a config file that needs added for each new chip
 # but the pramaters that allow showing % size are now in the elf, 
