@@ -24,11 +24,11 @@ TBD
 
 Kicking the tires
 
-If you want to try PWM:
+The 4809 starts running at 20MHz/6 (3.33MHz) from factory, so to run at other frequancy we need to change the divider or select the other clock. 
 
-https://www.avrfreaks.net/forum/tutsoft-avr-01-series-setting-tca0-split-mode-pwm
+A fuse (OSCCFG) can be set to select a 16MHz base clock, but the factory default is 20MHz.
 
-Set clock with code that will always compile to meet a 4 cycle timing requirement.
+To set the clock with code requires meeting a 4 cycle timing requirement.
 
 ```
 // The magic is found in xmega.h and its use of consecutive OUT then STS in this sequence guarantee the timing.
@@ -44,7 +44,13 @@ Set clock with code that will always compile to meet a 4 cycle timing requiremen
 			 [val] "r" ((uint8_t)value))
 */
 
+// set clock to 20MHz (needs 5V on supply to function)
 void clock_init(void) {
-    _PROTECTED_WRITE(CLKCTRL.MCLKCTRLB, CLKCTRL_PDIV_10X_gc | CLKCTRL_PEN_bm);
+    _PROTECTED_WRITE(CLKCTRL.MCLKCTRLB, CLKCTRL_PDIV_1X_gc | CLKCTRL_PEN_bm);
 }
+
 ```
+
+This info was from 
+
+https://www.avrfreaks.net/forum/tutsoft-avr-01-series-setting-tca0-split-mode-pwm

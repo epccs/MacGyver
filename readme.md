@@ -4,7 +4,9 @@ From <https://github.com/epccs/PiUpdi>
 
 ## Overview
 
-Board used to connect a Raspberry Pi Zero (or W) 40 pin header to serial or UPDI port of an ATmega4809. 
+Board used to connect a Raspberry Pi Zero (or W) hardware serial port (from 40 pin header) to UPDI port of an ATmega4809. 
+
+The Raspberry Pi hardware UART does not have latency like a USB-serial bridge so that programming speed may be the best possible. Programing sends a lot of small sets of data back and forth, so latency is almost certainly the cause of most complaints about UPDI speed.
 
 
 ## Status
