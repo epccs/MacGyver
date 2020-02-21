@@ -9,7 +9,7 @@
                 "${default}"
             ],
             "forcedInclude": [ "${workspaceFolder}/lib/ATmega_DFP/include/avr/iom4809.h" ],
-            "defines": ["__AVR_ATmega4809__"],
+            "defines": ["__AVR_ATmega4809__","F_CPU = 20000000UL/6"],
             "cStandard": "c11",
             "cppStandard": "c++17",
             "browse": {

@@ -22,9 +22,9 @@ The compiler will reject code that is an incorrect type.
 #if defined(__AVR_ATmega4809__)
 
 // Direction is used to program the IO as an input or output
-typedef enum direction {
-    INPUT,
-    OUTPUT
+typedef enum DIRECTION_enum {
+    DIRECTION_INPUT,
+    DIRECTION_OUTPUT
 } DIRECTION_t;
 
 /* Configuration:  PORT.PIN0CTRL   has three bits for Input Sense Configuration ISC[2:0]
@@ -62,9 +62,9 @@ typedef enum PORT_INVERT_enum {
 } PORT_INVERT_t;
 
 // Logic Level
-typedef enum logic_level {
-    LOW,
-    HIGH
+typedef enum LOGIC_LEVEL_enum {
+    LOGIC_LEVEL_LOW,
+    LOGIC_LEVEL_HIGH
 } LOGIC_LEVEL_t;
 
 // enumeraiton names for MCU IO is on schematic
@@ -199,7 +199,7 @@ bool ioRead(IO_t io)
 // set or clear IO output
 static inline __attribute__((always_inline))
 void ioWrite(IO_t io, LOGIC_LEVEL_t level) {
-    if (level == HIGH) {
+    if (level == LOGIC_LEVEL_HIGH) {
         portReg(io)->OUTSET = ioMask(io);
     }
     else {
@@ -218,7 +218,7 @@ void ioToggle(IO_t io) {
 // set io direction (INPUT or OUTPUT).
 static inline __attribute__((always_inline))
 void ioDir(IO_t io, DIRECTION_t dir) {
-    if (dir == OUTPUT) {
+    if (dir == DIRECTION_OUTPUT) {
         portReg(io)->DIRSET = ioMask(io); // write bit n of the PORTx.DIR register to '1'
     }
     else {

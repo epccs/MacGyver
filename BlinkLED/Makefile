@@ -5,7 +5,7 @@ OBJECTS = main.o
 
 # Chip and project-specific global definitions
 MCU   =  atmega4809
-F_CPU = 1000000UL
+F_CPU = 2000000UL/6
 # BAUD  =  38400UL
 # remove -DBAUD=$(BAUD) since it is used in iom4809.h as register e.g., USART0.BAUD
 CPPFLAGS = -DF_CPU=$(F_CPU)

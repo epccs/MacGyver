@@ -22,8 +22,8 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 int main(void)
 {
     ioCntl(AIN0, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
-    ioDir(AIN0,OUTPUT);
-    ioWrite(AIN0,HIGH);
+    ioDir(AIN0, DIRECTION_OUTPUT);
+    ioWrite(AIN0,LOGIC_LEVEL_HIGH);
 
     while (1)
     {
