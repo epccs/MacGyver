@@ -1,7 +1,8 @@
 # Uart0_hello is used to kick the tires
 TARGET = BlinkLED
 LIBDIR = ../lib
-OBJECTS = main.o 
+OBJECTS = main.o \
+	$(LIBDIR)/twi0_mc.o
 
 # Chip and project-specific global definitions
 MCU   =  atmega4809

@@ -14,7 +14,11 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%22)
 
 Editors like VScode with IntelliSense can show appropriate options.
-The compiler will reject code that is an incorrect type.
+Some compilers can reject code that is an incorrect type.
+
+Some referance material to help get the needed SBI/CBI instructions
+https://www.avrfreaks.net/forum/c-gpio-class-inheritance-problems
+https://github.com/greiman/SdFat-beta/blob/master/src/DigitalIO/DigitalPin.h
 */
 #ifndef IO_Enum_h
 #define IO_Enum_h
@@ -22,7 +26,8 @@ The compiler will reject code that is an incorrect type.
 #if defined(__AVR_ATmega4809__)
 
 // Direction is used to program the IO as an input or output
-typedef enum DIRECTION_enum {
+typedef enum DIRECTION_enum 
+{
     DIRECTION_INPUT,
     DIRECTION_OUTPUT
 } DIRECTION_t;
@@ -39,13 +44,14 @@ typedef enum PORT_ISC_enum
     PORT_ISC_BOTHEDGES_gc = (0x01<<0),  // Sense Both Edges 
     PORT_ISC_RISING_gc = (0x02<<0),  // Sense Rising Edge
     PORT_ISC_FALLING_gc = (0x03<<0),  // Sense Falling Edge
-    PORT_ISC_INPUT_DISABLE_gc = (0x04<<0),  // Digital Input Buffer disabled
+    PORT_ISC_INPUT_DISABLE_gc = (0x04<<0),  // GPIO Input Buffer disabled
     PORT_ISC_LEVEL_gc = (0x05<<0),  // Sense low Level
 } PORT_ISC_t;
 */
 
 // Configuration:  PORT.PIN0CTRL   has one bit (3) for Pullup Enable
-typedef enum PORT_PULLUP_enum {
+typedef enum PORT_PULLUP_enum 
+{
     // Pullup disabled
     PORT_PULLUP_DISABLE = 0,
     // Pullup enabled
@@ -54,7 +60,8 @@ typedef enum PORT_PULLUP_enum {
 
 /* Configuration:  PORT.PIN0CTRL   has one bit (7) for Inverted I/O
 */
-typedef enum PORT_INVERT_enum {
+typedef enum PORT_INVERT_enum 
+{
     // Input and output values are not inverted
     PORT_INVERT_NORMAL = 0,
     // Input and output values are inverted
@@ -62,49 +69,51 @@ typedef enum PORT_INVERT_enum {
 } PORT_INVERT_t;
 
 // Logic Level
-typedef enum LOGIC_LEVEL_enum {
+typedef enum LOGIC_LEVEL_enum 
+{
     LOGIC_LEVEL_LOW,
     LOGIC_LEVEL_HIGH
 } LOGIC_LEVEL_t;
 
-// enumeraiton names for MCU IO is on schematic
-typedef enum mcu_io {
-    AIN0,
-    AIN1,
-    AIN2,
-    AIN3,
-    AIN4,
-    AIN5,
-    AIN6,
-    AIN7,
-    AIN8,
-    AIN9,
-    AIN10,
-    AIN11,
-    SDA1, // TWI slave only
-    SCL1, // TWI slave only
-    AIN14,
-    AIN15,
-    TX0,
-    RX0,
-    SDA0,  // TWI master or slave
-    SCL0,  // TWI master or slave
-    MOSI,
-    MISO,
-    SCK,
-    nSS,
-    TX1,
-    RX1,
-    PWR_RPI_CNTL, // pull LOW to set latch, floating latch will hold, pull HIGH to clear latch and stop power
-    SHUTDOWN_CNTL, // set with weak pull up to allow manual swithch to control, pull down to hault R-Pi 
-    PC4,
-    PC5,
-    TX2,
-    RX2,
-    nRESET,  // GPIO if SYSCFG0 bit 3 RSTPINCFG reads as 1 thus  fuse is unprogrammed and pin is in GPIO mode.
+// enumeraiton names for the MCU_IO_<node> is on schematic
+typedef enum MCU_IO_enum 
+{
+    MCU_IO_AIN0, // Analog channel 0, PD0 GPIO
+    MCU_IO_AIN1, // Analog channel 1, PD1 GPIO
+    MCU_IO_AIN2, // Analog channel 2, PD2 GPIO
+    MCU_IO_AIN3, // Analog channel 3, PD3 GPIO
+    MCU_IO_AIN4, // Analog channel 4, PD4 GPIO
+    MCU_IO_AIN5, // Analog channel 5, PD5 GPIO
+    MCU_IO_AIN6, // Analog channel 6, PD6 GPIO
+    MCU_IO_AIN7, // Analog channel 7, PD7 GPIO
+    MCU_IO_AIN8, // Analog channel 8, PE0 GPIO
+    MCU_IO_AIN9, // Analog channel 9, PE1 GPIO
+    MCU_IO_AIN10, // Analog channel 10, PE2 GPIO
+    MCU_IO_AIN11, // Analog channel 11, PE3 GPIO
+    MCU_IO_SDA1, // TWI1 slave only, Analog ch 12, PF2 GPIO
+    MCU_IO_SCL1, // TWI1 slave only, Analog ch 13, PF3 GPIO
+    MCU_IO_AIN14, // Analog channel 14, PF4 GPIO
+    MCU_IO_AIN15, // Analog channel 15, PF5 GPIO
+    MCU_IO_TX0, // UART0 TX, PA0 GPIO
+    MCU_IO_RX0, // UART0 RX, PA1 GPIO
+    MCU_IO_SDA0, // TWI0 master or slave (or multi-master?), PA2 GPIO
+    MCU_IO_SCL0, // TWI0 master or slave (or multi-master?), PA3 GPIO
+    MCU_IO_MOSI, // SPI0 Master Out Slave In, PA4 GPIO
+    MCU_IO_MISO, // SPI0 Master In Slave Out, PA5 GPIO
+    MCU_IO_SCK, // SPI0 synchronous clock from master, PA6 GPIO
+    MCU_IO_nSS, // SPI0 not slave select (same as nCE), PA7 GPIO
+    MCU_IO_TX1, // UART1 Tx, PC0 GPIO
+    MCU_IO_RX1, // UART1 Rx, PC1 GPIO
+    MCU_IO_PWR_RPI_CNTL, // PC2 GPIO pull LOW to set latch, floating and latch will hold, pull HIGH to clear latch and stop power
+    MCU_IO_SHUTDOWN_CNTL, // PC3 GPIO set with weak pull up to allow manual switch to control, pull PC3 LOW to hault R-Pi 
+    MCU_IO_PC4, // PC4 GPIO
+    MCU_IO_PC5, // PC5 GPIO
+    MCU_IO_TX2, // UART2 Tx, PF0 GPIO
+    MCU_IO_RX2, // UART2 Rx, PF1 GPIO
+    MCU_IO_nRESET,  // PF6 GPIO if SYSCFG0 bit 3 RSTPINCFG reads as 1 then fuse is unprogrammed and thus pin is in GPIO mode.
                   // https://www.avrfreaks.net/forum/atmega4809-reset-pin-fuse-bug
-    END_OF_IO
-} IO_t;
+    MCU_IO_END
+} MCU_IO_t;
 
 /* The port and pin mask are needed.  iom4809.h has a PORT_struct that the io functions use to map the register functions.
 
@@ -133,45 +142,46 @@ typedef struct PORT_struct
     register8_t reserved_2[8];
 } PORT_t;
 */
-struct IO_Map { // https://yarchive.net/comp/linux/typedefs.html
+struct IO_Map { 
+    // https://yarchive.net/comp/linux/typedefs.html
     PORT_t *port; // pointer to above struct
     uint8_t mask; // Generic Port Pin mask 
 };
 
-const static struct IO_Map ioMap[END_OF_IO] = {
-    [AIN0] = { .port= &PORTD, .mask= PIN0_bm },
-    [AIN1] = { .port= &PORTD, .mask= PIN1_bm },
-    [AIN2] = { .port= &PORTD, .mask= PIN2_bm },
-    [AIN3] = { .port= &PORTD, .mask= PIN3_bm },
-    [AIN4] = { .port= &PORTD, .mask= PIN4_bm },
-    [AIN5] = { .port= &PORTD, .mask= PIN5_bm },
-    [AIN6] = { .port= &PORTD, .mask= PIN6_bm },
-    [AIN7] = { .port= &PORTD, .mask= PIN7_bm },
-    [AIN8] = { .port= &PORTE, .mask= PIN0_bm },
-    [AIN9] = { .port= &PORTE, .mask= PIN1_bm },
-    [AIN10] = { .port= &PORTE, .mask= PIN2_bm },
-    [AIN11] = { .port= &PORTE, .mask= PIN3_bm },
-    [SDA1] = { .port= &PORTF, .mask= PIN2_bm },
-    [SCL1] = { .port= &PORTF, .mask= PIN3_bm },
-    [AIN14] = { .port= &PORTF, .mask= PIN4_bm },
-    [AIN15] = { .port= &PORTF, .mask= PIN5_bm },
-    [TX0] = { .port= &PORTA, .mask= PIN0_bm },
-    [RX0] = { .port= &PORTA, .mask= PIN1_bm },
-    [SDA0] = { .port= &PORTA, .mask= PIN2_bm },
-    [SCL0] = { .port= &PORTA, .mask= PIN3_bm },
-    [MOSI] = { .port= &PORTA, .mask= PIN4_bm },
-    [MISO] = { .port= &PORTA, .mask= PIN5_bm },
-    [SCK] = { .port= &PORTA, .mask= PIN6_bm },
-    [nSS] = { .port= &PORTA, .mask= PIN7_bm },
-    [TX1] = { .port= &PORTC, .mask= PIN0_bm },
-    [RX1] = { .port= &PORTC, .mask= PIN1_bm },
-    [PWR_RPI_CNTL] = { .port= &PORTC, .mask= PIN2_bm }, 
-    [SHUTDOWN_CNTL] = { .port= &PORTC, .mask= PIN3_bm },
-    [PC4] = { .port= &PORTC, .mask= PIN4_bm },
-    [PC5] = { .port= &PORTC, .mask= PIN5_bm },
-    [TX2] = { .port= &PORTF, .mask= PIN0_bm },
-    [RX2] = { .port= &PORTF, .mask= PIN1_bm },
-    [nRESET] = { .port= &PORTF, .mask= PIN6_bm }
+const static struct IO_Map ioMap[MCU_IO_END] = {
+    [MCU_IO_AIN0] = { .port= &PORTD, .mask= PIN0_bm },
+    [MCU_IO_AIN1] = { .port= &PORTD, .mask= PIN1_bm },
+    [MCU_IO_AIN2] = { .port= &PORTD, .mask= PIN2_bm },
+    [MCU_IO_AIN3] = { .port= &PORTD, .mask= PIN3_bm },
+    [MCU_IO_AIN4] = { .port= &PORTD, .mask= PIN4_bm },
+    [MCU_IO_AIN5] = { .port= &PORTD, .mask= PIN5_bm },
+    [MCU_IO_AIN6] = { .port= &PORTD, .mask= PIN6_bm },
+    [MCU_IO_AIN7] = { .port= &PORTD, .mask= PIN7_bm },
+    [MCU_IO_AIN8] = { .port= &PORTE, .mask= PIN0_bm },
+    [MCU_IO_AIN9] = { .port= &PORTE, .mask= PIN1_bm },
+    [MCU_IO_AIN10] = { .port= &PORTE, .mask= PIN2_bm },
+    [MCU_IO_AIN11] = { .port= &PORTE, .mask= PIN3_bm },
+    [MCU_IO_SDA1] = { .port= &PORTF, .mask= PIN2_bm },
+    [MCU_IO_SCL1] = { .port= &PORTF, .mask= PIN3_bm },
+    [MCU_IO_AIN14] = { .port= &PORTF, .mask= PIN4_bm },
+    [MCU_IO_AIN15] = { .port= &PORTF, .mask= PIN5_bm },
+    [MCU_IO_TX0] = { .port= &PORTA, .mask= PIN0_bm },
+    [MCU_IO_RX0] = { .port= &PORTA, .mask= PIN1_bm },
+    [MCU_IO_SDA0] = { .port= &PORTA, .mask= PIN2_bm },
+    [MCU_IO_SCL0] = { .port= &PORTA, .mask= PIN3_bm },
+    [MCU_IO_MOSI] = { .port= &PORTA, .mask= PIN4_bm },
+    [MCU_IO_MISO] = { .port= &PORTA, .mask= PIN5_bm },
+    [MCU_IO_SCK] = { .port= &PORTA, .mask= PIN6_bm },
+    [MCU_IO_nSS] = { .port= &PORTA, .mask= PIN7_bm },
+    [MCU_IO_TX1] = { .port= &PORTC, .mask= PIN0_bm },
+    [MCU_IO_RX1] = { .port= &PORTC, .mask= PIN1_bm },
+    [MCU_IO_PWR_RPI_CNTL] = { .port= &PORTC, .mask= PIN2_bm }, 
+    [MCU_IO_SHUTDOWN_CNTL] = { .port= &PORTC, .mask= PIN3_bm },
+    [MCU_IO_PC4] = { .port= &PORTC, .mask= PIN4_bm },
+    [MCU_IO_PC5] = { .port= &PORTC, .mask= PIN5_bm },
+    [MCU_IO_TX2] = { .port= &PORTF, .mask= PIN0_bm },
+    [MCU_IO_RX2] = { .port= &PORTF, .mask= PIN1_bm },
+    [MCU_IO_nRESET] = { .port= &PORTF, .mask= PIN6_bm }
 };
 
 #else
@@ -180,29 +190,34 @@ const static struct IO_Map ioMap[END_OF_IO] = {
 
 
 static inline __attribute__((always_inline))
-volatile PORT_t* portReg(IO_t io) {
+volatile PORT_t* portReg(MCU_IO_t io) 
+{
   return ioMap[io].port;
 }
 
 static inline __attribute__((always_inline))
-uint8_t ioMask(IO_t io) {
+uint8_t ioMask(MCU_IO_t io) 
+{
   return ioMap[io].mask;
 }
 
 // read value from IO input bit and return its bool value
 static inline __attribute__((always_inline))
-bool ioRead(IO_t io) 
+bool ioRead(MCU_IO_t io) 
 {
     return (portReg(io)->IN & ioMask(io));
 }
 
 // set or clear IO output
 static inline __attribute__((always_inline))
-void ioWrite(IO_t io, LOGIC_LEVEL_t level) {
-    if (level == LOGIC_LEVEL_HIGH) {
+void ioWrite(MCU_IO_t io, LOGIC_LEVEL_t level) 
+{
+    if (level == LOGIC_LEVEL_HIGH) 
+    {
         portReg(io)->OUTSET = ioMask(io);
     }
-    else {
+    else 
+    {
         portReg(io)->OUTCLR = ioMask(io);
     }
 }
@@ -211,24 +226,29 @@ void ioWrite(IO_t io, LOGIC_LEVEL_t level) {
 //  Toggling an INVERTED pin causes an edge, which can be detected by 
 //  all peripherals using the pin, and by interrupts or Events if enabled.
 static inline __attribute__((always_inline))
-void ioToggle(IO_t io) {
+void ioToggle(MCU_IO_t io) 
+{
     portReg(io)->OUTTGL = ioMask(io);
 }
 
 // set io direction (INPUT or OUTPUT).
 static inline __attribute__((always_inline))
-void ioDir(IO_t io, DIRECTION_t dir) {
-    if (dir == DIRECTION_OUTPUT) {
+void ioDir(MCU_IO_t io, DIRECTION_t dir) 
+{
+    if (dir == DIRECTION_OUTPUT) 
+    {
         portReg(io)->DIRSET = ioMask(io); // write bit n of the PORTx.DIR register to '1'
     }
-    else {
+    else 
+    {
         portReg(io)->DIRCLR = ioMask(io); // write bit n of the PORTx.DIR register to '0'
     }
 }
 
 // io control settings
 static inline __attribute__((always_inline))
-void ioCntl(IO_t io, PORT_ISC_t isc, PORT_PULLUP_t pu, PORT_INVERT_t inv) {
+void ioCntl(MCU_IO_t io, PORT_ISC_t isc, PORT_PULLUP_t pu, PORT_INVERT_t inv) 
+{
     // is there a better way? should PINnCTRL be in ioMap array (it would use more memory I think)
     if (ioMask(io) == PIN0_bm) portReg(io)->PIN0CTRL = (register8_t) (isc+pu+inv);
     if (ioMask(io) == PIN1_bm) portReg(io)->PIN1CTRL = (register8_t) (isc+pu+inv);
