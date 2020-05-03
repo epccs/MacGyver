@@ -1,4 +1,4 @@
-# Uart0_hello is used to kick the tires
+# used to kick the tires
 TARGET = BlinkLED
 LIBDIR = ../lib
 OBJECTS = main.o \
@@ -72,7 +72,7 @@ $(TARGET): $(TARGET).hex
 $(TARGET).hex: $(TARGET).elf
 	$(OBJCOPY) -j .text -j .data -O ihex $< $@
 
-# # This part has a built in uploader as part of UPDI, so no bootloader is needed but avrdude is not set up to upload to this interface so...
+# # This MCU has a built in uploader as part of UPDI, so no bootloader is needed but avrdude is not set up to upload to this interface so...
 # sudo apt install python3-pip
 # pip3 install serial
 # # place pyupdi next to your project repository

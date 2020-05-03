@@ -53,8 +53,8 @@ int main(void)
 
     while (1)
     {
-	    _delay_ms(500); // need to do Timer0 OVF tick clock so I don't have to block
-	    ioToggle(MCU_IO_AIN0);
+        _delay_ms(500); // need to do Timer0 OVF tick clock so I don't have to block
+        ioToggle(MCU_IO_AIN0);
         i2c_ping(); // That poor I2C address is going to lose it.
     }
 }
