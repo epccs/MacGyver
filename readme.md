@@ -4,7 +4,7 @@ From <https://github.com/epccs/PiUpdi>
 
 ## Overview
 
-Board used to connect a Raspberry Pi Zero (or W) hardware serial port (from 40 pin header) to UPDI port of an ATmega4809. 
+Board used to connect a Raspberry Pi Zero (or W) hardware serial port (from 40 pin header) to UPDI port of an AVR128DA28. 
 
 The Raspberry Pi hardware UART does not have latency like a USB-serial bridge so that programming speed may be the best possible. Programing sends a lot of small sets of data back and forth, so latency is almost certainly the cause of most complaints about UPDI speed.
 
@@ -24,18 +24,19 @@ Hardware files include schematic and board images, bill of materials, and my not
 TBD
 
 
-The Pi Zero needs a way to manualy [halt] from a push button, and start (when the AVR fails to start it).
+The Pi Zero needs a way to manualy [halt] from a push button, and start (when the AVR does not start it).
 
 [halt]: ./Shutdown
 
 
 ## AVR toolchain
 
-The shared files for this board are in the /lib folder. Each example has files and a Makefile in its folder. Since the packaged toolchain does not support the m4809 device, I will evaluate it with the Microchip [toolchain] sideloaded into a folder in my home directory (~/Samba/avr8-3.6.2). Note the [source] (atm AVR GCC 3.6.2) for the new toolchain has been moved from where Atmel use to keep them.
+The shared files for this board are in the /lib folder. Each example has files and a Makefile in its folder. Hear are some toolchain links for referance (The AVR128DA should work with the packaged toolchain on R-Pi).
 
-[toolchain]: https://www.microchip.com/mplab/avr-support/avr-and-arm-toolchains-c-compilers
-[source]: https://www.microchip.com/mplab/avr-support/avr-and-sam-downloads-archive
-[Georg-Johann_Lay_10.0.0.pre]: https://www.avrfreaks.net/forum/avr-gcc-64-bit-double
+toolchain: https://www.microchip.com/mplab/avr-support/avr-and-arm-toolchains-c-compilers
+source: https://www.microchip.com/mplab/avr-support/avr-and-sam-downloads-archive
+arduino7: wget http://downloads.arduino.cc/tools/avr-gcc-7.3.0-atmel3.6.1-arduino7-x86_64-pc-linux-gnu.tar.bz2
+Georg-Johann_Lay_10.0.0.pre: https://www.avrfreaks.net/forum/avr-gcc-64-bit-double
 
 note: 10.0.0 has float/double/long_double (32/32/64).
 
@@ -50,6 +51,10 @@ cd Samba
 mkdir avr8-3.6.2
 tar -xzvf avr8-gnu-toolchain-3.6.2.1759-linux.any.x86_64.tar.gz -C avr8-3.6.2
 git clone https://github.com/epccs/PiUpdi
+# arduino has a toolchain form (bzip2 compression)
+wget http://downloads.arduino.cc/tools/avr-gcc-7.3.0-atmel3.6.1-arduino7-x86_64-pc-linux-gnu.tar.bz2
+# which is from https://github.com/arduino/toolchain-avr/tree/staging
+tar -xjvf avr-gcc-7.3.0-atmel3.6.1-arduino7-x86_64-pc-linux-gnu.tar.bz2 -C avr-gcc-7.3.0-atmel3.6.1-arduino7
 ```
 
 I also included some device-specific files from the [atpack] in my repository.
@@ -59,9 +64,9 @@ I also included some device-specific files from the [atpack] in my repository.
 I prefer using a package toolchain, this is almost enough pain to prefer AS7 (but that is a dead end tool).
 
 
-## Application Notes for ATmega4809
+## Application Notes
 
-Microchip has been doing some [guides].
+Microchip has been doing some [guides]. The m4809 has an xmega3 core, while the 128DA has an xmega4 core, so some differences should be expected.
 
 [guides]: https://www.avrfreaks.net/forum/getting-started-attiny-1-0-series-application-notes
 
