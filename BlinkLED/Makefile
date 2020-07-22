@@ -1,32 +1,32 @@
 # used to kick the tires
 TARGET = BlinkLED
 LIBDIR = ../lib
-OBJECTS = main.o \
-	$(LIBDIR)/twi0_mc.o
+OBJECTS = main.o 
+#	$(LIBDIR)/twi0_mc.o
 
 # Chip and project-specific global definitions
-MCU   =  atmega4809
+MCU   =  avr128da28
 F_CPU = 2000000UL/6
 # BAUD  =  38400UL
 # remove -DBAUD=$(BAUD) since it is used in iom4809.h as register e.g., USART0.BAUD
 CPPFLAGS = -DF_CPU=$(F_CPU)
 
 # Cross-compilation
-# SIDELOAD_TOOLCHAIN = ~/Samba/avr8-10.0.0.2020jan14
+# if SIDELOAD_TOOLCHAIN = ~/Samba/avr8-10.0.0.2020jan14
 #CC = ~/Samba/avr8-10.0.0.2020jan14/gcc-10-strip/bin/avr-gcc
 #OBJCOPY = ~/Samba/avr8-10.0.0.2020jan14/gcc-10-strip/bin/avr-objcopy
 #OBJDUMP = ~/Samba/avr8-10.0.0.2020jan14/gcc-10-strip/bin/avr-objdump
 #SIZE = ~/Samba/avr8-10.0.0.2020jan14/gcc-10-strip/bin/avr-size
-# SIDELOAD_TOOLCHAIN = ~/Samba/avr8-3.6.2/avr8-gnu-toolchain-linux_x86_64
-CC = ~/Samba/avr8-3.6.2/avr8-gnu-toolchain-linux_x86_64/bin/avr-gcc
-OBJCOPY = ~/Samba/avr8-3.6.2/avr8-gnu-toolchain-linux_x86_64/bin/avr-objcopy
-OBJDUMP = ~/Samba/avr8-3.6.2/avr8-gnu-toolchain-linux_x86_64/bin/avr-objdump
-SIZE = ~/Samba/avr8-3.6.2/avr8-gnu-toolchain-linux_x86_64/bin/avr-size
+# if SIDELOAD_TOOLCHAIN = ~/Samba/avr8-3.6.2/avr8-gnu-toolchain-linux_x86_64
+#CC = ~/Samba/avr8-3.6.2/avr8-gnu-toolchain-linux_x86_64/bin/avr-gcc
+#OBJCOPY = ~/Samba/avr8-3.6.2/avr8-gnu-toolchain-linux_x86_64/bin/avr-objcopy
+#OBJDUMP = ~/Samba/avr8-3.6.2/avr8-gnu-toolchain-linux_x86_64/bin/avr-objdump
+#SIZE = ~/Samba/avr8-3.6.2/avr8-gnu-toolchain-linux_x86_64/bin/avr-size
 # if not SIDELOAD_TOOLCHAIN
-#	CC = avr-gcc
-#	OBJCOPY = avr-objcopy
-#	OBJDUMP = avr-objdump
-#	SIZE = avr-size
+CC = avr-gcc
+OBJCOPY = avr-objcopy
+OBJDUMP = avr-objdump
+SIZE = avr-size
 
 # UPDI is the programing interface, it is half-duplex UART based
 # Most USB to serial bridges show as /dev/ttyUSB0, 
@@ -51,8 +51,8 @@ CFLAGS += -ffunction-sections -fdata-sections
 # -I see https://gcc.gnu.org/onlinedocs/gcc-8.2.0/gcc/Directory-Options.html#Directory-Options
 # -B see same as above
 TARGET_ARCH = -mmcu=$(MCU) \
--B $(LIBDIR)/ATmega_DFP/gcc/dev/atmega4809/ \
--I $(LIBDIR)/ATmega_DFP/include/ \
+-B $(LIBDIR)/AVR-Dx_DFP/gcc/dev/avr128da28/ \
+-I $(LIBDIR)/AVR-Dx_DFP/include/ \
 ## if someday it is in mainline use
 ##TARGET_ARCH = -mmcu=$(MCU)
 

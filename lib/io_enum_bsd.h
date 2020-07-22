@@ -23,7 +23,7 @@ https://github.com/greiman/SdFat-beta/blob/master/src/DigitalIO/DigitalPin.h
 #ifndef IO_Enum_h
 #define IO_Enum_h
 
-#if defined(__AVR_ATmega4809__)
+#if defined(__AVR_AVR128DA28__)
 
 // Direction is used to program the IO as an input or output
 typedef enum DIRECTION_enum 
@@ -37,7 +37,7 @@ typedef enum DIRECTION_enum
     enum can only promote to an integer but these (io_config_isc+io_config_pullup+io_config_invert)  
     need to be cast into type register8_t.
 
-// this is in iom4809.h
+// Input/Sense Configuration select is in ioavr128da28.h
 typedef enum PORT_ISC_enum
 {
     PORT_ISC_INTDISABLE_gc = (0x00<<0),  // Interrupt disabled but input buffer enabled 
@@ -55,7 +55,7 @@ typedef enum PORT_PULLUP_enum
     // Pullup disabled
     PORT_PULLUP_DISABLE = 0,
     // Pullup enabled
-    PORT_PULLUP_ENABLE = 0x08
+    PORT_PULLUP_ENABLE = PORT_PULLUPEN_bm 
 } PORT_PULLUP_t;
 
 /* Configuration:  PORT.PIN0CTRL   has one bit (7) for Inverted I/O
@@ -65,7 +65,7 @@ typedef enum PORT_INVERT_enum
     // Input and output values are not inverted
     PORT_INVERT_NORMAL = 0,
     // Input and output values are inverted
-    PORT_INVERT_INVERTED = 0x80
+    PORT_INVERT_INVERTED = PORT_INVEN_bm
 } PORT_INVERT_t;
 
 // Logic Level
@@ -86,16 +86,15 @@ typedef enum MCU_IO_enum
     MCU_IO_AIN5, // Analog channel 5, PD5 GPIO
     MCU_IO_AIN6, // Analog channel 6, PD6 GPIO
     MCU_IO_AIN7, // Analog channel 7, PD7 GPIO
-    MCU_IO_AIN8, // Analog channel 8, PE0 GPIO
-    MCU_IO_AIN9, // Analog channel 9, PE1 GPIO
-    MCU_IO_AIN10, // Analog channel 10, PE2 GPIO
-    MCU_IO_AIN11, // Analog channel 11, PE3 GPIO
-    MCU_IO_SDA1, // TWI1 slave only, Analog ch 12, PF2 GPIO
-    MCU_IO_SCL1, // TWI1 slave only, Analog ch 13, PF3 GPIO
-    MCU_IO_AIN14, // Analog channel 14, PF4 GPIO
-    MCU_IO_AIN15, // Analog channel 15, PF5 GPIO
+    MCU_IO_TX2, // UART2 Tx, PF0 GPIO
+    MCU_IO_RX2, // UART2 Rx, PF1 GPIO
+    MCU_IO_nRESET,  // PF6 GPIO if SYSCFG0 bit 3 RSTPINCFG reads as 1 then fuse is unprogrammed and thus pin is in GPIO mode.
+                  // https://www.avrfreaks.net/forum/atmega4809-reset-pin-fuse-bug
     MCU_IO_TX0, // UART0 TX, PA0 GPIO
     MCU_IO_RX0, // UART0 RX, PA1 GPIO
+    // UPDI pin is not mapped
+    MCU_IO_PWR_RPI_CNTL, // PC2 GPIO pull LOW to set latch, floating and latch will hold, pull HIGH to clear latch and stop power
+    MCU_IO_SHUTDOWN_CNTL, // PC3 GPIO set with weak pull up to allow manual switch to control, pull PC3 LOW to hault R-Pi 
     MCU_IO_SDA0, // TWI0 master or slave (or multi-master?), PA2 GPIO
     MCU_IO_SCL0, // TWI0 master or slave (or multi-master?), PA3 GPIO
     MCU_IO_MOSI, // SPI0 Master Out Slave In, PA4 GPIO
@@ -104,14 +103,6 @@ typedef enum MCU_IO_enum
     MCU_IO_nSS, // SPI0 not slave select (same as nCE), PA7 GPIO
     MCU_IO_TX1, // UART1 Tx, PC0 GPIO
     MCU_IO_RX1, // UART1 Rx, PC1 GPIO
-    MCU_IO_PWR_RPI_CNTL, // PC2 GPIO pull LOW to set latch, floating and latch will hold, pull HIGH to clear latch and stop power
-    MCU_IO_SHUTDOWN_CNTL, // PC3 GPIO set with weak pull up to allow manual switch to control, pull PC3 LOW to hault R-Pi 
-    MCU_IO_PC4, // PC4 GPIO
-    MCU_IO_PC5, // PC5 GPIO
-    MCU_IO_TX2, // UART2 Tx, PF0 GPIO
-    MCU_IO_RX2, // UART2 Rx, PF1 GPIO
-    MCU_IO_nRESET,  // PF6 GPIO if SYSCFG0 bit 3 RSTPINCFG reads as 1 then fuse is unprogrammed and thus pin is in GPIO mode.
-                  // https://www.avrfreaks.net/forum/atmega4809-reset-pin-fuse-bug
     MCU_IO_END
 } MCU_IO_t;
 
@@ -157,14 +148,6 @@ const static struct IO_Map ioMap[MCU_IO_END] = {
     [MCU_IO_AIN5] = { .port= &PORTD, .mask= PIN5_bm },
     [MCU_IO_AIN6] = { .port= &PORTD, .mask= PIN6_bm },
     [MCU_IO_AIN7] = { .port= &PORTD, .mask= PIN7_bm },
-    [MCU_IO_AIN8] = { .port= &PORTE, .mask= PIN0_bm },
-    [MCU_IO_AIN9] = { .port= &PORTE, .mask= PIN1_bm },
-    [MCU_IO_AIN10] = { .port= &PORTE, .mask= PIN2_bm },
-    [MCU_IO_AIN11] = { .port= &PORTE, .mask= PIN3_bm },
-    [MCU_IO_SDA1] = { .port= &PORTF, .mask= PIN2_bm },
-    [MCU_IO_SCL1] = { .port= &PORTF, .mask= PIN3_bm },
-    [MCU_IO_AIN14] = { .port= &PORTF, .mask= PIN4_bm },
-    [MCU_IO_AIN15] = { .port= &PORTF, .mask= PIN5_bm },
     [MCU_IO_TX0] = { .port= &PORTA, .mask= PIN0_bm },
     [MCU_IO_RX0] = { .port= &PORTA, .mask= PIN1_bm },
     [MCU_IO_SDA0] = { .port= &PORTA, .mask= PIN2_bm },
@@ -177,8 +160,6 @@ const static struct IO_Map ioMap[MCU_IO_END] = {
     [MCU_IO_RX1] = { .port= &PORTC, .mask= PIN1_bm },
     [MCU_IO_PWR_RPI_CNTL] = { .port= &PORTC, .mask= PIN2_bm }, 
     [MCU_IO_SHUTDOWN_CNTL] = { .port= &PORTC, .mask= PIN3_bm },
-    [MCU_IO_PC4] = { .port= &PORTC, .mask= PIN4_bm },
-    [MCU_IO_PC5] = { .port= &PORTC, .mask= PIN5_bm },
     [MCU_IO_TX2] = { .port= &PORTF, .mask= PIN0_bm },
     [MCU_IO_RX2] = { .port= &PORTF, .mask= PIN1_bm },
     [MCU_IO_nRESET] = { .port= &PORTF, .mask= PIN6_bm }

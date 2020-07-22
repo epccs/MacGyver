@@ -19,9 +19,9 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 #include <util/atomic.h>
 #include <avr/io.h>
 #include "../lib/io_enum_bsd.h"
-#include "../lib/twi0_mc.h"
+//#include "../lib/twi0_mc.h"
 
-// cycle the twi state machine on both the master and slave(s)
+/* cycle the twi state machine on both the master and slave(s)
 void i2c_ping(void)
 { 
     // ping I2C for an RPU bus manager 
@@ -38,6 +38,7 @@ void i2c_ping(void)
     }
     return; 
 }
+*/
 
 int main(void)
 {
@@ -46,7 +47,7 @@ int main(void)
     ioWrite(MCU_IO_AIN0,LOGIC_LEVEL_HIGH);
 
     // init i2c master with normal 100k clock
-    TWI_MasterInit(100000UL);
+    //TWI_MasterInit(100000UL);
 
     // Enable global interrupts to start I2C
     sei();
@@ -55,7 +56,7 @@ int main(void)
     {
         _delay_ms(500); // need to do Timer0 OVF tick clock so I don't have to block
         ioToggle(MCU_IO_AIN0);
-        i2c_ping(); // That poor I2C address is going to lose it.
+        //i2c_ping(); // That poor I2C address is going to lose it.
     }
 }
 

@@ -33,10 +33,10 @@ The Pi Zero needs a way to manualy [halt] from a push button, and start (when th
 
 The shared files for this board are in the /lib folder. Each example has files and a Makefile in its folder. Hear are some toolchain links for referance (The AVR128DA should work with the packaged toolchain on R-Pi).
 
-toolchain: https://www.microchip.com/mplab/avr-support/avr-and-arm-toolchains-c-compilers
-source: https://www.microchip.com/mplab/avr-support/avr-and-sam-downloads-archive
-arduino7: wget http://downloads.arduino.cc/tools/avr-gcc-7.3.0-atmel3.6.1-arduino7-x86_64-pc-linux-gnu.tar.bz2
-Georg-Johann_Lay_10.0.0.pre: https://www.avrfreaks.net/forum/avr-gcc-64-bit-double
+* toolchain: https://www.microchip.com/mplab/avr-support/avr-and-arm-toolchains-c-compilers
+* source: https://www.microchip.com/mplab/avr-support/avr-and-sam-downloads-archive
+* arduino7: wget http://downloads.arduino.cc/tools/avr-gcc-7.3.0-atmel3.6.1-arduino7-x86_64-pc-linux-gnu.tar.bz2
+* Georg-Johann_Lay_10.0.0.pre: https://www.avrfreaks.net/forum/avr-gcc-64-bit-double
 
 note: 10.0.0 has float/double/long_double (32/32/64).
 
@@ -61,7 +61,7 @@ I also included some device-specific files from the [atpack] in my repository.
 
 [atpack]: http://packs.download.atmel.com/
 
-I prefer using a package toolchain, this is almost enough pain to prefer AS7 (but that is a dead end tool).
+With the m4809, I had to sideload the toolchain, since the packaged one lacked xmega3 core. However, AVR128DA28 has an xmega4 core, and that is in older toolchains. I prefer using a package toolchain; having to sideload it is to much pain.
 
 
 ## Application Notes
