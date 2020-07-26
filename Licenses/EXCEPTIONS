@@ -1,12 +1,12 @@
 License Exception:
 
 Even though PiUpdi (product) in general is covered by the Licenses, 
-this does *not* cover the so-called "applications" that use product 
+this does *not* cover the so-called "applications" that use the 
 "bootloader" or "UPDI" service by means of a jump table or access port 
 provided exactly for the purpose - this is merely considered normal 
 use of the product, and does *not* fall under the heading of "derived work".
 
-The header files define the interfaces.  Including these (unmodified) header 
+The header files define the interfaces. Including these header 
 files in another file is considered normal use of the product, and does 
 *not* fall under the heading of "derived work."
 -- Ronald Sutherland

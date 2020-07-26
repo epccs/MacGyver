@@ -29,11 +29,11 @@ OF FEES, IF ANY, THAT YOU HAVE PAID DIRECTLY TO RONALD SUTHERLAND FOR THIS
 SOFTWARE.
 ```
 
-Each source file that can be compiled into an Executable and Linkable Format (e.g., ELF) and then linked with an application has a license within its source. Linking objects that have LGPL source, with objects that have another license is allowed. I have more rights reserved for the *manager* software, it is not free, and you should not be using it on your projects (unless it is a product from Ronald Sutherland). The *manager* firmware runs on the products *manager* microcontroller. 
+Each source file that can be compiled into an Executable and Linkable Format (e.g., ELF) and then linked with an application has a license within its source. 
 
-A BSD license is used on the example software that runs on the *application* microcontroller; a developer can derive their software from it and then distribute the object (ELF) in any way chosen. If an example links with an LGPL source, the developer needs to publish their objects and build scripts so that the recipient can modify the LGPL source and link with the distributers provided object (ELF) file. 
+A BSD license is used on the example software that runs on the *application* microcontroller; a developer can derive their software from it and then distribute the object (ELF) in any way chosen. If an example links with an LGPL source, the developer needs to publish their objects and build scripts so that the recipient can modify the LGPL source and link with the distributers provided object (ELF) file. Note my files should not be LGPL; let me know if I have made a mistake.
 
-The application microcontroller may have a bootloader that has a GPL license and an exception that makes it extra clear that when it loads firmware, the result is not a derivative. The application microcontroller may have a UPDI port that can upload and interact with the machine resources in complex and proprietary ways, but the result is again not a derivative.
+If the application microcontroller has a bootloader that is a GPL license, there should be an exception that makes it clear that when it loads the firmware, the result is not a derivative. The application microcontroller may have a UPDI port that can upload and interact with the machine resources in sophisticated and proprietary ways, but the result is again not a derivative.
 
 ![LGPL](../Hardware/Documents/Practical_GPL_Compliance_Digital_page62.png "LGPL")
 

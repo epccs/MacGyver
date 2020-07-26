@@ -1,8 +1,8 @@
 # used to kick the tires
 TARGET = BlinkLED
 LIBDIR = ../lib
-OBJECTS = main.o 
-#	$(LIBDIR)/twi0_mc.o
+OBJECTS = main.o \
+	$(LIBDIR)/twi0_mc.o
 
 # Chip and project-specific global definitions
 MCU   =  avr128da28
@@ -52,7 +52,7 @@ CFLAGS += -ffunction-sections -fdata-sections
 # -B see same as above
 TARGET_ARCH = -mmcu=$(MCU) \
 -B $(LIBDIR)/AVR-Dx_DFP/gcc/dev/avr128da28/ \
--I $(LIBDIR)/AVR-Dx_DFP/include/ \
+-I $(LIBDIR)/AVR-Dx_DFP/include/
 ## if someday it is in mainline use
 ##TARGET_ARCH = -mmcu=$(MCU)
 

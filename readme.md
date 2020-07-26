@@ -41,12 +41,13 @@ The shared files for this board are in the /lib folder. Each example has files a
 note: 10.0.0 has float/double/long_double (32/32/64).
 
 ```
-# the side load will do these packages gcc-avr binutils-avr gdb-avr avr-libc 
-sudo apt-get install git make avrdude
-# wget avr8-gnu-toolchain-3.6.2.1759-linux.any.x86_64.tar.gz
+# if side load tools are used skip these packages: gcc-avr binutils-avr gdb-avr avr-libc 
+sudo apt-get install git make avrdude gcc-avr binutils-avr gdb-avr avr-libc
+# to side load avr8-gnu-toolchain-3.6.2.1759-linux.any.x86_64.tar.gz
 wget https://www.microchip.com/mymicrochip/filehandler.aspx?ddocname=en607660
 cp 'filehandler.aspx?ddocname=en607660' Samba/avr8-gnu-toolchain-3.6.2.1759-linux.any.x86_64.tar.gz
 cd Samba
+# <cynical>That was not obfuscated at all.</cynical>
 # I got to this point from a remote Windows machine so sorry if the wget stuff does not work.
 mkdir avr8-3.6.2
 tar -xzvf avr8-gnu-toolchain-3.6.2.1759-linux.any.x86_64.tar.gz -C avr8-3.6.2
@@ -61,7 +62,7 @@ I also included some device-specific files from the [atpack] in my repository.
 
 [atpack]: http://packs.download.atmel.com/
 
-With the m4809, I had to sideload the toolchain, since the packaged one lacked xmega3 core. However, AVR128DA28 has an xmega4 core, and that is in older toolchains. I prefer using a package toolchain; having to sideload it is to much pain.
+With the m4809, I had to sideload the toolchain, since the packaged one lacked xmega3 core. However, AVR128DA28 has an xmega4 core, and that is in older toolchains. I prefer using a package toolchain.
 
 
 ## Application Notes
@@ -81,14 +82,14 @@ Microchip has been doing some [guides]. The m4809 has an xmega3 core, while the 
 * [AN2451 - Getting Started with Core Independent Peripherals on AVR Microcontrollers](http://ww1.microchip.com/downloads/en/AppNotes/Getting-Started-with-Peripherals-on-AVR-MCU-00002451C.pdf)
 * [AVR1000: Getting Started with Writing C-Code for XMEGA](http://ww1.microchip.com/downloads/en/AppNotes/doc8075.pdf)
 
-Microchip also has some examples on Github
+Microchip also has examples on Github (and they are for the AVR128da)
 
-https://github.com/MicrochipTech/TB3216_Getting_Started_with_USART
+https://github.com/search?q=org%3AMicrochipTech+avr128da&unscoped_q=avr128da
 
-I2C example
+The Arduino m4809 I2C example can probably made to work on the AVR128DA's
 
 https://github.com/arduino/ArduinoCore-megaavr/blob/master/libraries/Wire/src/utility/twi.c
 
-If the UPDI idea has problems Optiboot could be a workaround not that it support the m4809
+If the UPDI idea has problems Optiboot could be a workaround
 
 https://github.com/Optiboot/optiboot/blob/master/Wiki/CompilingOptiboot_x.md

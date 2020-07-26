@@ -4,22 +4,22 @@ LIBDIR = ../lib
 OBJECTS = main.o 
 
 # Chip and project-specific global definitions
-MCU   =  atmega4809
-#F_CPU = 16000000UL  
+MCU   =  avr128da28
+F_CPU = 2000000UL/6
 #BAUD  =  38400UL
 #CPPFLAGS = -DF_CPU=$(F_CPU) -DBAUD=$(BAUD) -I. 
 
 # Cross-compilation
 # SIDELOAD_TOOLCHAIN = ~/Samba/avr8-10.0.0.2020jan14
-CC = ~/Samba/avr8-10.0.0.2020jan14/gcc-10-strip/bin/avr-gcc
-OBJCOPY = ~/Samba/avr8-10.0.0.2020jan14/gcc-10-strip/bin/avr-objcopy
-OBJDUMP = ~/Samba/avr8-10.0.0.2020jan14/gcc-10-strip/bin/avr-objdump
-SIZE = ~/Samba/avr8-10.0.0.2020jan14/gcc-10-strip/bin/avr-size
+#CC = ~/Samba/avr8-10.0.0.2020jan14/gcc-10-strip/bin/avr-gcc
+#OBJCOPY = ~/Samba/avr8-10.0.0.2020jan14/gcc-10-strip/bin/avr-objcopy
+#OBJDUMP = ~/Samba/avr8-10.0.0.2020jan14/gcc-10-strip/bin/avr-objdump
+#SIZE = ~/Samba/avr8-10.0.0.2020jan14/gcc-10-strip/bin/avr-size
 # if not SIDELOAD_TOOLCHAIN
-#	CC = avr-gcc
-#	OBJCOPY = avr-objcopy
-#	OBJDUMP = avr-objdump
-#	SIZE = avr-size
+CC = avr-gcc
+OBJCOPY = avr-objcopy
+OBJDUMP = avr-objdump
+SIZE = avr-size
 
 # UPDI is the programing interface, it is half-duplex UART based
 # Most USB to serial bridges show as /dev/ttyUSB0, 
@@ -42,8 +42,8 @@ CFLAGS += -ffunction-sections -fdata-sections
 
 # atmega4809 is not in the avr-gcc packaged for my OS 
 TARGET_ARCH = -mmcu=$(MCU) \
--B $(LIBDIR)/ATmega_DFP/gcc/dev/atmega4809/ \
--I $(LIBDIR)/ATmega_DFP/include/
+-B $(LIBDIR)/AVR-Dx_DFP/gcc/dev/avr128da28/ \
+-I $(LIBDIR)/AVR-Dx_DFP/include/
 ## if someday it is in mainline use
 ##TARGET_ARCH = -mmcu=$(MCU)
 
