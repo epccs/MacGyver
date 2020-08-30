@@ -148,6 +148,8 @@ void twi0_acknowledge(TWI_ACK_t ack)
     }
 }
 
+// for a referance that does not use avr-libc
+//  http://www.chrisherring.net/all/tutorial-interrupt-driven-twi-interface-for-avr-part1/
 ISR(TWI0_vect)
 {
     switch(TWSR0 & TW_STATUS_MASK) // TW_STATUS can be used for part with one TWI

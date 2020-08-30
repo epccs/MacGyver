@@ -39,9 +39,16 @@ This board connects a Pi Zero [W] to an AVR128DA28 by way of serial or UPDI.
 ![Status](./status_icon.png "Status")
 
 ```
-        ^1  Done: Design, Layout,
-            WIP: BOM,
-            Todo: Review* (#= done), Order Boards, Assembly, Testing, Evaluation.
+        ^2  Done: 
+            WIP: 
+            Todo: Design, Layout, BOM, Review* (#= done), Order Boards, Assembly, Testing, Evaluation.
+            *during review the Design may change without changing the revision.
+            3-state fuffer? https://www.diodes.com/assets/product-showcases/Automotive-compliant-Single-Gate-LVC-Logic-Family.pdf
+            AVR128DB has two power domains after a fuse is set, but the logistics of the fuse and keeping it fixed that way...
+
+        ^1  Done: Design, Layout, BOM, Review* (#= done), Order Boards,
+            WIP: Assembly, 
+            Todo: Testing, Evaluation.
             *during review the Design may change without changing the revision.
             # swap the m4809 for a AVR128DA28
             # UART0 crossover connection to R-Pi
