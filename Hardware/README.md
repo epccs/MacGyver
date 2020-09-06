@@ -44,6 +44,7 @@ This board connects a Pi Zero [W] to an AVR128DA28 by way of serial or UPDI.
             Todo: Design, Layout, BOM, Review* (#= done), Order Boards, Assembly, Testing, Evaluation.
             *during review the Design may change without changing the revision.
             3-state fuffer? https://www.diodes.com/assets/product-showcases/Automotive-compliant-Single-Gate-LVC-Logic-Family.pdf
+            Name change MacGyver Board?
             AVR128DB has two power domains after a fuse is set, but the logistics of the fuse and keeping it fixed that way...
 
         ^1  Done: Design, Layout, BOM, Review* (#= done), Order Boards,
@@ -52,7 +53,7 @@ This board connects a Pi Zero [W] to an AVR128DA28 by way of serial or UPDI.
             *during review the Design may change without changing the revision.
             # swap the m4809 for a AVR128DA28
             # UART0 crossover connection to R-Pi
-            (test) check if AREF can be pulled down by the pins push-pull hardware it is sharing (https://www.avrfreaks.net/comment/2922081)
+            the AREF can not be pulled down by the pins push-pull hardware it is sharing without removing setting.
 
             ^0  Done: Design, Layout, BOM, Review*, Order Boards,
             WIP: Assembly (will not do),

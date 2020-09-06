@@ -5,17 +5,12 @@ OBJECTS = main.o
 
 # Chip and project-specific global definitions
 MCU   =  avr128da28
-F_CPU = 2000000UL/6
+# default 4MHz; Internal High-Frequency Oscillator Control A (OSCHFCTRLA) bitfield FRQSEL[3:0]
+F_CPU = 4000000UL
 #BAUD  =  38400UL
-#CPPFLAGS = -DF_CPU=$(F_CPU) -DBAUD=$(BAUD) -I. 
+CPPFLAGS = -DF_CPU=$(F_CPU) -I. 
 
 # Cross-compilation
-# SIDELOAD_TOOLCHAIN = ~/Samba/avr8-10.0.0.2020jan14
-#CC = ~/Samba/avr8-10.0.0.2020jan14/gcc-10-strip/bin/avr-gcc
-#OBJCOPY = ~/Samba/avr8-10.0.0.2020jan14/gcc-10-strip/bin/avr-objcopy
-#OBJDUMP = ~/Samba/avr8-10.0.0.2020jan14/gcc-10-strip/bin/avr-objdump
-#SIZE = ~/Samba/avr8-10.0.0.2020jan14/gcc-10-strip/bin/avr-size
-# if not SIDELOAD_TOOLCHAIN
 CC = avr-gcc
 OBJCOPY = avr-objcopy
 OBJDUMP = avr-objdump
@@ -64,24 +59,25 @@ $(TARGET): $(TARGET).hex
 $(TARGET).hex: $(TARGET).elf
 	$(OBJCOPY) -j .text -j .data -O ihex $< $@
 
-# # This part has a built in uploader as part of UPDI, so no bootloader is needed but avrdude is not set up to upload to this interface so...
+# # This part has a built in UART based uploader (UPDI), so no bootloader is needed. Unfortunalty avrdude is not set up for this interface so...
 # sudo apt install python3-pip
-# pip3 install serial
-# # place pyupdi next to your project repository
-# git clone https://github.com/mraardvark/pyupdi
-# # fuses, what, what?
-updi: $(TARGET).hex ## upload with pyupid 
-	shell sh -c 'which python3 2>/dev/null || echo install python3'
-	shell sh -c 'ls ../../pyupdi/pyupdi.py 2>/dev/null || echo clone pyupdi'
-	python3 ../../pyupdi/pyupdi.py -v -d $(MCU) -c $(UPDI_PORT) -b 115200 -e -f $(TARGET).hex
+# pip3 install serial intelhex pylint
+# pip3 install https://github.com/mraardvark/pyupdi/archive/master.zip
+# # place RPUusb next to this project since the BCM24 pin needs controled
+# git clone https://github.com/epccs/RPUusb
+# # This program expects oem fuses
+updi: ## upload with pyupid
+	@echo testing for prerequesetits a false will stop make
+	which python3 2>/dev/null || false
+	which pyupdi 2>/dev/null || false
+	ls ../../RPUusb/BCM24cntl/UPDImode.py 2>/dev/null || false
+	ls ../../RPUusb/BCM24cntl/UARTmode.py 2>/dev/null || false
+	python3 ../../RPUusb/BCM24cntl/UPDImode.py
+	pyupdi -v -d $(MCU) -c $(UPDI_PORT) -b 115200 -e -f $(TARGET).hex
+	python3 ../../RPUusb/BCM24cntl/UARTmode.py
 
 $(TARGET).elf: $(OBJECTS)
 	$(CC) $(LDFLAGS) $(TARGET_ARCH) $^ -o $@
-#	$(SIZE) -C --mcu=$(MCU) $@
-# avr-size -C is not in mainline, it uses pramaters from a config file that needs added for each new chip
-# but the pramaters that allow showing % size are now in the elf, 
-# avr-objdump -s -j .note.gnu.avr.deviceinfo Uart0_hello.elf
-# https://www.eit.lth.se/fileadmin/eit/courses/edi021/Avr-libc-2.0.0/mem_sections.html#sec_dot_note
 	$(SIZE) $@
 	rm -f $(TARGET).o $(OBJECTS)
 

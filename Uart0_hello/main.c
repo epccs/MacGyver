@@ -40,7 +40,7 @@ void USART0_init(void)
     PORTA.DIR &= ~PIN1_bm;
     PORTA.DIR |= PIN0_bm;
     
-    USART0.BAUD = (uint16_t)USART0_BAUD_RATE(9600);
+    USART0.BAUD = (uint16_t)USART0_BAUD_RATE(38400);
 
     USART0.CTRLB |= USART_TXEN_bm; 
 }
@@ -69,7 +69,7 @@ int main(void)
     while (1) 
     {
         USART0_sendString("Hello World!\r\n");
-        _delay_ms(500);
+        _delay_ms(5000);
     }
 }
 
