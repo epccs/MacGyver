@@ -1,6 +1,6 @@
 # Description
 
-This is a list of Test preformed on each PiUpdi after assembly.
+This is a list of Test preformed on each MacGyver after assembly.
 
 # Table of References
 
@@ -17,7 +17,7 @@ This is a list of Test preformed on each PiUpdi after assembly.
 
 ## Basics
 
-These tests are for an SMD assembled PiUpid board 19260^0 which may be referred to as a Unit Under Test (UUT). If the UUT fails and can be reworked then do so, otherwise it needs to be scraped. 
+These tests are for an SMD assembled MacGyver board 19260^0 which may be referred to as a Unit Under Test (UUT). If the UUT fails and can be reworked then do so, otherwise it needs to be scraped. 
 
 **Warning: never use a soldering iron to rework ceramic capacitors due to the thermal shock.**
     

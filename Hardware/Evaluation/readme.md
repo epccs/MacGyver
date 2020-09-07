@@ -1,6 +1,6 @@
 # Description
 
-This shows the setup and methods used for evaluation of PiUpdi.
+This shows the setup and methods used for evaluation of MacGyver.
 
 # Table of References
 

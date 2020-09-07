@@ -1,7 +1,7 @@
 #  License
 
 ```
-PiUpdi (product) is a collection of Software provided by Ronald Sutherland. Each software has a 
+MacGyver (repository) is a collection of Software provided by Ronald Sutherland. Each software has a 
 license that will grant permissions. Subject to your compliance with the software terms, you may use 
 it and derivatives. It is your responsibility to comply with the license terms applicable to your use of 
 the software (including third party software) that accompany Ronald Sutherland software.

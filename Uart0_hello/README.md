@@ -401,4 +401,4 @@ Hello World!
 Hello World!
 ```
 
-Problem if the UPDI interface is left in a bad state (e.g., baud rate error) it has to be power cycled to clear.
+Problem if the UPDI interface is left in a bad state (e.g., baud rate error) it has to be power cycled to clear. I guess pyupdi sends two breaks (slow baud rate nulls) after this is found and the next upload can work if the baud rate is corrected (not yet tested).

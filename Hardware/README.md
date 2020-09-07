@@ -2,7 +2,7 @@
 
 ## Overview
 
-This board connects a Pi Zero [W] to an AVR128DA28 by way of serial or UPDI.
+This board allows a Pi Zero [W] serial to interface an AVR128DA28 with either it's UART0 or UPDI port.
 
 
 ## Inputs/Outputs/Functions
@@ -43,8 +43,8 @@ This board connects a Pi Zero [W] to an AVR128DA28 by way of serial or UPDI.
             WIP: 
             Todo: Design, Layout, BOM, Review* (#= done), Order Boards, Assembly, Testing, Evaluation.
             *during review the Design may change without changing the revision.
-            3-state fuffer? https://www.diodes.com/assets/product-showcases/Automotive-compliant-Single-Gate-LVC-Logic-Family.pdf
-            Name change MacGyver Board?
+            3-state buffer? https://www.diodes.com/assets/product-showcases/Automotive-compliant-Single-Gate-LVC-Logic-Family.pdf
+            change name on board to MacGyver
             AVR128DB has two power domains after a fuse is set, but the logistics of the fuse and keeping it fixed that way...
 
         ^1  Done: Design, Layout, BOM, Review* (#= done), Order Boards,

@@ -61,7 +61,7 @@ $(TARGET).hex: $(TARGET).elf
 
 # # This part has a built in UART based uploader (UPDI), so no bootloader is needed. Unfortunalty avrdude is not set up for this interface so...
 # sudo apt install python3-pip
-# pip3 install serial intelhex pylint
+# pip3 install pyserial intelhex pylint
 # pip3 install https://github.com/mraardvark/pyupdi/archive/master.zip
 # # place RPUusb next to this project since the BCM24 pin needs controled
 # git clone https://github.com/epccs/RPUusb

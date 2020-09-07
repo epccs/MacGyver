@@ -1,10 +1,15 @@
 # Description
 
-Some lessons I learned doing PiUpdi.
+Some lessons I learned doing MacGyver.
 
 # Table Of Contents:
 
 1. ^0 Serial 0 Does Not Crossover
+
+
+## ^1 Name
+
+PiUpdi (the original name) is almost the same as the upload tool (pyupdi), don't do that. There are lots of unintentional consequences that happen after naming a thing. If I am getting confused, then others may also, it is best just to change the name. I have seen letter combinations that did not previously exist on the internet turn into unpleasant references, so I would preferably use a word that is in regular use, even though it makes the board invisible (I guess search for "MacGyver AVR"). I don't recall watching many of the TV shows, but some of the memes seem fitting. 
 
 
 ## ^0 Serial 0 Does Not Crossover
