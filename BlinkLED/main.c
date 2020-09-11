@@ -47,12 +47,13 @@ void i2c_ping(void)
 void blink(void)
 {
     unsigned long kRuntime = elapsed(&blink_started_at);
-    if ( kRuntime > BLINK_DELAY)
+    unsigned long blink_delay = cnvrt_milli(BLINK_DELAY);
+    if ( kRuntime > blink_delay)
     {
         ioToggle(MCU_IO_AIN0);
         
         // next toggle 
-        blink_started_at += BLINK_DELAY; 
+        blink_started_at += blink_delay; 
     }
 }
 
@@ -126,7 +127,8 @@ int main(void)
     // Enable global interrupts to start Timers and I2C
     sei();
 
-    blink_started_at = milliseconds();
+    // tick count is not milliseconds use cnvrt_milli() to convert time into ticks, thus tickAtomic()/cnvrt_milli(1000) gives seconds
+    blink_started_at = tickAtomic();
 
     while (1)
     {

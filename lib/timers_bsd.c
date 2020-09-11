@@ -27,8 +27,8 @@ static unsigned long millisec = 0;
 #endif
 
 #ifndef USE_TIMERRTC
-volatile uint32_t tick = 0;
-static uint32_t millisec_tick_last_used = 0;
+volatile unsigned long tick = 0;
+static unsigned long millisec_tick_last_used = 0;
 static uint16_t uS_balance = 0;
 #else
 volatile uint16_t tick = 0;
@@ -40,7 +40,7 @@ ISR(TCA0_HUNF_vect)
 #elif defined(USE_TIMERRTC)
 ISR(RTC_CNT_vect)
 #else
-  #error "no millis timer selected"
+  #error "no millisec timer selected"
 #endif
 {
     // swap to local since volatile has to be read from memory on every access
@@ -128,14 +128,17 @@ void initTimers()
     TCA0.SPLIT.CTRLA = (TCA_SPLIT_CLKSEL_DIV64_gc) | (TCA_SINGLE_ENABLE_bm);
 #define MICROSEC_TICK_CORRECTION (( (64 * 256) / ( F_CPU / 1000000UL ) ) % 1000UL)
 #define TICK_CORRECTION (( (64 * 256) / ( F_CPU / 1000UL ) ))
+#define TIME_CORRECTION ( ( F_CPU ) / (64 * 256) )
 #elif (F_CPU > 1000000)
     TCA0.SPLIT.CTRLA = (TCA_SPLIT_CLKSEL_DIV16_gc) | (TCA_SINGLE_ENABLE_bm);
 #define MICROSEC_TICK_CORRECTION (( (16 * 256) / ( F_CPU / 1000000UL ) ) % 1000UL)
 #define TICK_CORRECTION (( (16 * 256) / ( F_CPU / 1000UL ) ))
+#define TIME_CORRECTION ( ( F_CPU ) / (16 * 256) )
 #else
     TCA0.SPLIT.CTRLA = (TCA_SPLIT_CLKSEL_DIV8_gc) | (TCA_SINGLE_ENABLE_bm);
 #define MICROSEC_TICK_CORRECTION (( (8 * 256) / ( F_CPU / 1000000UL ) ) % 1000UL)
 #define TICK_CORRECTION (( (8 * 256) / ( F_CPU / 1000UL ) ))
+#define TIME_CORRECTION ( ( F_CPU ) / (8 * 256) )
 #endif
 
 #ifdef TCA1
@@ -230,11 +233,11 @@ void initTimers()
 #endif // USE_TIMERA0 or USE_TIMERRTC
 }
 
-// returns a uint32 count of Timer0 overflow events.
-// each tick is (64 * 256) = 16,384 crystal counts or 1.024mSec
-uint32_t tickAtomic()
+// returns a uint32 count of Timer A underflow events.
+// each tick is (64 * 256) = 16,384 crystal counts or 1.024mSec with F_CPU at 16MHz
+unsigned long tickAtomic()
 {
-    uint32_t local;
+    unsigned long local;
     ATOMIC_BLOCK ( ATOMIC_RESTORESTATE )
     {
         local = tick;
@@ -243,10 +246,25 @@ uint32_t tickAtomic()
     return local;
 }
 
-// return the elapsed milliseconds given a pointer to a past time
+// convert up to 4 million milliseconds (1hr) to ticks
+unsigned long cnvrt_milli(unsigned long millisec)
+{
+    unsigned long ticks = ( (millisec) * TIME_CORRECTION) / 1000;
+    return ticks;
+}
+
+// convert time in milliseconds to ticks, slow and bulky
+unsigned long cnvrt_milli_lrg(unsigned long m)
+{
+    uint64_t millisec = m;
+    unsigned long ticks = (millisec * TIME_CORRECTION) / 1000;
+    return ticks;
+}
+
+// return the elapsed ticks given a pointer to a past time
 unsigned long elapsed(unsigned long *past)
 {
-    unsigned long now = milliseconds(); //this will convert TIMER0_OVF ticks into corrected time
+    unsigned long now = tickAtomic();
     return now - *past;
 }
 
@@ -262,7 +280,7 @@ unsigned long milliseconds(void)
     SREG = status; // restore the Global Interrupt Enable Bit if it was set by sei()
 
     // differance between now and last tick used
-    uint32_t ktick = now_tick - millisec_tick_last_used;
+    unsigned long ktick = now_tick - millisec_tick_last_used;
     uint8_t ktick_byt;
     if (ktick > 250) //limit looping delays
     {

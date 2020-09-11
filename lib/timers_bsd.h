@@ -10,8 +10,10 @@
 #define USE_TIMERA0
 
 extern void initTimers(void);
-extern uint32_t tickAtomic(void);
-extern unsigned long milliseconds(void);
-unsigned long elapsed(unsigned long *);
+extern unsigned long tickAtomic(void);
+extern unsigned long milliseconds(void); // not recomended
+unsigned long elapsed(unsigned long *past);
+unsigned long cnvrt_milli(unsigned long millisec);
+unsigned long cnvrt_milli_lrg(unsigned long millisec);
 
 #endif // TimersTick_h
