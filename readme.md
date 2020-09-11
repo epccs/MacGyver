@@ -1,12 +1,15 @@
-# PiUpdi
+# MacGyver
 
-From <https://github.com/epccs/PiUpdi>
+From <https://github.com/epccs/MacGyver>
+
 
 ## Overview
 
-Board used to connect a Raspberry Pi Zero (or W) hardware serial port (from 40 pin header) to UPDI port of an AVR128DA28. 
+The board name was PiUpdi, but that is confusing (with pyupdi), which was causing self-inflicted pain. I have mcgyvered (improvised use of IOFF buffer) the UPDI programming interface so that an Raspberry Pi pin can select it; in effect, it results in a UART mode or a UPDI mode from the R-Pi hardware serial port.
 
-The Raspberry Pi hardware UART does not have latency like a USB-serial bridge so that programming speed may be the best possible. Programing sends a lot of small sets of data back and forth, so latency is almost certainly the cause of most complaints about UPDI speed.
+Board is used to connect a Raspberry Pi Zero (or W) hardware serial port (from 40 pin header) to ether the UPDI or UART0 port of an AVR128DA28. 
+
+The Raspberry Pi hardware UART does not have latency like a USB-serial bridge, so its programming speed may be the best possible. Programing sends a lot of small sets of data back and forth; USB latency is almost certainly the cause of most complaints about UPDI speed.
 
 
 ## Status
@@ -41,8 +44,11 @@ The shared files for this board are in the /lib folder. Each example has files a
 note: 10.0.0 has float/double/long_double (32/32/64).
 
 ```
-# if side load tools are used skip these packages: gcc-avr binutils-avr gdb-avr avr-libc 
-sudo apt-get install git make avrdude gcc-avr binutils-avr gdb-avr avr-libc
+# if side load tools are used skip packages: gcc-avr binutils-avr gdb-avr avr-libc 
+sudo apt-get install git make avrdude gcc-avr binutils-avr gdb-avr avr-libc python3-pip
+pip3 install pyserial intelhex pylint
+pip3 install https://github.com/mraardvark/pyupdi/archive/master.zip
+# [optional side loaded toolchain(s)]
 # to side load avr8-gnu-toolchain-3.6.2.1759-linux.any.x86_64.tar.gz
 wget https://www.microchip.com/mymicrochip/filehandler.aspx?ddocname=en607660
 cp 'filehandler.aspx?ddocname=en607660' Samba/avr8-gnu-toolchain-3.6.2.1759-linux.any.x86_64.tar.gz
@@ -51,18 +57,32 @@ cd Samba
 # I got to this point from a remote Windows machine so sorry if the wget stuff does not work.
 mkdir avr8-3.6.2
 tar -xzvf avr8-gnu-toolchain-3.6.2.1759-linux.any.x86_64.tar.gz -C avr8-3.6.2
-git clone https://github.com/epccs/PiUpdi
+git clone https://github.com/epccs/MacGyver
 # arduino has a toolchain form (bzip2 compression)
 wget http://downloads.arduino.cc/tools/avr-gcc-7.3.0-atmel3.6.1-arduino7-x86_64-pc-linux-gnu.tar.bz2
 # which is from https://github.com/arduino/toolchain-avr/tree/staging
 tar -xjvf avr-gcc-7.3.0-atmel3.6.1-arduino7-x86_64-pc-linux-gnu.tar.bz2 -C avr-gcc-7.3.0-atmel3.6.1-arduino7
 ```
 
-I also included some device-specific files from the [atpack] in my repository.
+Some device-specific files from the [atpack] are also added to this repo.
 
 [atpack]: http://packs.download.atmel.com/
 
-With the m4809, I had to sideload the toolchain, since the packaged one lacked xmega3 core. However, AVR128DA28 has an xmega4 core, and that is in older toolchains. I prefer using a package toolchain.
+With the m4809, I had to sideload the toolchain, since the packaged one lacked the xmega3 core. However, AVR128DA28 has an xmega4 core, and that is in older toolchains. I prefer using a package toolchain.
+
+
+## BCM24 Cntl Uart/UPDI Mode
+
+The R-Pi needs to control the BCM24 pin so that it can select the IOFF buffer needed for UPDI mode or UART mode. The scripts to do this are in [RPUusb/BCM24cntl]. The makefiles expects RPUusb to be loaded to the side of the MacGyver repo so clone both (for now).
+
+[RPUusb/BCM24cntl]: https://github.com/epccs/RPUusb
+
+```
+git clone https://github.com/epccs/RPUusb
+git clone https://github.com/epccs/MacGyver
+```
+
+Note that RPUusb has a MCU that will control the BCM24 pin and its UART is briged to the USB secondary UART. The USB primary UART is used for serial or UPDI depending on the selected setting from the secondary. 
 
 
 ## Application Notes

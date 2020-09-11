@@ -1,21 +1,32 @@
-/*****************************************************************************
- *
- * Copyright (C) 2020 Atmel Corporation, a wholly owned subsidiary of Microchip Technology Inc.
+/*
+ * Copyright (C) 2020, Microchip Technology Inc. and its subsidiaries ("Microchip")
  * All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This software is developed by Microchip Technology Inc. and its subsidiaries ("Microchip").
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ * Redistribution and use in source and binary forms, with or without modification, are
+ * permitted provided that the following conditions are met:
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- ****************************************************************************/
-
+ *     1. Redistributions of source code must retain the above copyright notice, this list of
+ *        conditions and the following disclaimer.
+ *
+ *     2. Redistributions in binary form must reproduce the above copyright notice, this list
+ *        of conditions and the following disclaimer in the documentation and/or other
+ *        materials provided with the distribution. Publication is not required when
+ *        this file is used in an embedded application.
+ *
+ *     3. Microchip's name may not be used to endorse or promote products derived from this
+ *        software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY MICROCHIP "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL MICROCHIP BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING BUT NOT LIMITED TO
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWSOEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 #ifndef _AVR_IO_H_
 #  error "Include <avr/io.h> instead of this file."
@@ -1396,10 +1407,10 @@ typedef enum NVMCTRL_ERROR_enum
 /* Flash Mapping in Data space select */
 typedef enum NVMCTRL_FLMAP_enum
 {
-    NVMCTRL_FLMAP_SECTION0_gc = (0x00<<4),  /* Flash section 0, 0 - 32KB */
-    NVMCTRL_FLMAP_SECTION1_gc = (0x01<<4),  /* Flash section 1, 32 - 64KB */
-    NVMCTRL_FLMAP_SECTION2_gc = (0x02<<4),  /* Flash section 2, 64 - 96KB */
-    NVMCTRL_FLMAP_SECTION3_gc = (0x03<<4),  /* Flash section 3, 96 - 128KB */
+    NVMCTRL_FLMAP_SECTION0_gc = (0x00<<4),  /* Flash section 0 */
+    NVMCTRL_FLMAP_SECTION1_gc = (0x01<<4),  /* Flash section 1 */
+    NVMCTRL_FLMAP_SECTION2_gc = (0x02<<4),  /* Flash section 2 */
+    NVMCTRL_FLMAP_SECTION3_gc = (0x03<<4),  /* Flash section 3 */
 } NVMCTRL_FLMAP_t;
 
 /*
@@ -1764,6 +1775,13 @@ typedef struct SLPCTRL_struct
     register8_t CTRLA;  /* Control A */
     register8_t VREGCTRL;  /* Control B */
 } SLPCTRL_t;
+
+/* High Temperature Low Leakage Enable select */
+typedef enum SLPCTRL_HTLLEN_enum
+{
+    SLPCTRL_HTLLEN_OFF_gc = (0x00<<4),  /* Disabled */
+    SLPCTRL_HTLLEN_ON_gc = (0x01<<4),  /* Enabled */
+} SLPCTRL_HTLLEN_t;
 
 /* Performance Mode select */
 typedef enum SLPCTRL_PMODE_enum
@@ -2376,9 +2394,8 @@ typedef enum USART_PMODE_enum
 /* RS485 Mode internal transmitter select */
 typedef enum USART_RS485_enum
 {
-    USART_RS485_OFF_gc = (0x00<<0),  /* RS485 Mode disabled */
-    USART_RS485_EXT_gc = (0x01<<0),  /* RS485 Mode External drive */
-    USART_RS485_INT_gc = (0x02<<0),  /* RS485 Mode Internal drive */
+    USART_RS485_DISABLE_gc = (0x00<<0),  /* RS485 Mode disabled */
+    USART_RS485_ENABLE_gc = (0x01<<0),  /* RS485 Mode enabled */
 } USART_RS485_t;
 
 /* Receiver Mode select */
@@ -3703,24 +3720,14 @@ IO Module Instances. Mapped to memory.
 #define CCL_INTMODE31_bp  7  /* Interrupt Mode for LUT3 bit 1 position. */
 
 /* CCL.INTFLAGS  bit masks and bit positions */
-#define CCL_INT_gm  0xFF  /* Interrupt Flags group mask. */
-#define CCL_INT_gp  0  /* Interrupt Flags group position. */
-#define CCL_INT0_bm  (1<<0)  /* Interrupt Flags bit 0 mask. */
-#define CCL_INT0_bp  0  /* Interrupt Flags bit 0 position. */
-#define CCL_INT1_bm  (1<<1)  /* Interrupt Flags bit 1 mask. */
-#define CCL_INT1_bp  1  /* Interrupt Flags bit 1 position. */
-#define CCL_INT2_bm  (1<<2)  /* Interrupt Flags bit 2 mask. */
-#define CCL_INT2_bp  2  /* Interrupt Flags bit 2 position. */
-#define CCL_INT3_bm  (1<<3)  /* Interrupt Flags bit 3 mask. */
-#define CCL_INT3_bp  3  /* Interrupt Flags bit 3 position. */
-#define CCL_INT4_bm  (1<<4)  /* Interrupt Flags bit 4 mask. */
-#define CCL_INT4_bp  4  /* Interrupt Flags bit 4 position. */
-#define CCL_INT5_bm  (1<<5)  /* Interrupt Flags bit 5 mask. */
-#define CCL_INT5_bp  5  /* Interrupt Flags bit 5 position. */
-#define CCL_INT6_bm  (1<<6)  /* Interrupt Flags bit 6 mask. */
-#define CCL_INT6_bp  6  /* Interrupt Flags bit 6 position. */
-#define CCL_INT7_bm  (1<<7)  /* Interrupt Flags bit 7 mask. */
-#define CCL_INT7_bp  7  /* Interrupt Flags bit 7 position. */
+#define CCL_INT0_bm  0x01  /* Interrupt Flag 0 bit mask. */
+#define CCL_INT0_bp  0  /* Interrupt Flag 0 bit position. */
+#define CCL_INT1_bm  0x02  /* Interrupt Flag 1 bit mask. */
+#define CCL_INT1_bp  1  /* Interrupt Flag 1 bit position. */
+#define CCL_INT2_bm  0x04  /* Interrupt Flag 2 bit mask. */
+#define CCL_INT2_bp  2  /* Interrupt Flag 2 bit position. */
+#define CCL_INT3_bm  0x08  /* Interrupt Flag 3 bit mask. */
+#define CCL_INT3_bp  3  /* Interrupt Flag 3 bit position. */
 
 /* CCL.LUT0CTRLA  bit masks and bit positions */
 /* CCL_ENABLE  is already defined. */
@@ -5252,6 +5259,8 @@ IO Module Instances. Mapped to memory.
 #define SLPCTRL_PMODE1_bp  1  /* Performance Mode bit 1 position. */
 #define SLPCTRL_PMODE2_bm  (1<<2)  /* Performance Mode bit 2 mask. */
 #define SLPCTRL_PMODE2_bp  2  /* Performance Mode bit 2 position. */
+#define SLPCTRL_HTLLEN_bm  0x10  /* High Temperature Low Leakage Enable bit mask. */
+#define SLPCTRL_HTLLEN_bp  4  /* High Temperature Low Leakage Enable bit position. */
 
 /* SPI - Serial Peripheral Interface */
 /* SPI.CTRLA  bit masks and bit positions */
@@ -5511,6 +5520,7 @@ IO Module Instances. Mapped to memory.
 #define TCA_SPLIT_CMD1_bp  3  /* Command bit 1 position. */
 
 /* TCA_SPLIT.CTRLESET  bit masks and bit positions */
+/* TCA_SPLIT_CMDEN  is already defined. */
 /* TCA_SPLIT_CMD  is already defined. */
 
 /* TCA_SPLIT.INTCTRL  bit masks and bit positions */
@@ -6028,12 +6038,8 @@ IO Module Instances. Mapped to memory.
 /* USART_RXCIF  is already defined. */
 
 /* USART.CTRLA  bit masks and bit positions */
-#define USART_RS485_gm  0x03  /* RS485 Mode internal transmitter group mask. */
-#define USART_RS485_gp  0  /* RS485 Mode internal transmitter group position. */
-#define USART_RS4850_bm  (1<<0)  /* RS485 Mode internal transmitter bit 0 mask. */
-#define USART_RS4850_bp  0  /* RS485 Mode internal transmitter bit 0 position. */
-#define USART_RS4851_bm  (1<<1)  /* RS485 Mode internal transmitter bit 1 mask. */
-#define USART_RS4851_bp  1  /* RS485 Mode internal transmitter bit 1 position. */
+#define USART_RS485_bm  0x01  /* RS485 Mode internal transmitter bit mask. */
+#define USART_RS485_bp  0  /* RS485 Mode internal transmitter bit position. */
 #define USART_ABEIE_bm  0x04  /* Auto-baud Error Interrupt Enable bit mask. */
 #define USART_ABEIE_bp  2  /* Auto-baud Error Interrupt Enable bit position. */
 #define USART_LBME_bm  0x08  /* Loop-back Mode Enable bit mask. */

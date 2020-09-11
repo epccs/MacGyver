@@ -801,7 +801,10 @@
           <bitfield caption="Interrupt Mode for LUT3" mask="0xc0" name="INTMODE3" rw="RW" values="CCL_INTMODE3"/>
         </register>
         <register caption="Interrupt Flags" initval="0x00" name="INTFLAGS" offset="0x07" rw="RW" size="1">
-          <bitfield caption="Interrupt Flags" mask="0xff" name="INT" rw="RW"/>
+          <bitfield caption="Interrupt Flag 0" mask="0x1" name="INT0" rw="RW"/>
+          <bitfield caption="Interrupt Flag 1" mask="0x2" name="INT1" rw="RW"/>
+          <bitfield caption="Interrupt Flag 2" mask="0x4" name="INT2" rw="RW"/>
+          <bitfield caption="Interrupt Flag 3" mask="0x8" name="INT3" rw="RW"/>
         </register>
         <register caption="LUT Control 0 A" initval="0x00" name="LUT0CTRLA" offset="0x08" rw="RW" size="1">
           <bitfield caption="Clock Source Selection" mask="0xe" name="CLKSRC" rw="RW" values="CCL_CLKSRC"/>
@@ -1806,10 +1809,10 @@
         <value caption="EEPROM Erase Command" name="EECHER" value="0x30"/>
       </value-group>
       <value-group caption="Flash Mapping in Data space select" name="NVMCTRL_FLMAP">
-        <value caption="Flash section 0, 0 - 32KB" name="SECTION0" value="0x0"/>
-        <value caption="Flash section 1, 32 - 64KB" name="SECTION1" value="0x1"/>
-        <value caption="Flash section 2, 64 - 96KB" name="SECTION2" value="0x2"/>
-        <value caption="Flash section 3, 96 - 128KB" name="SECTION3" value="0x3"/>
+        <value caption="Flash section 0" name="SECTION0" value="0x0"/>
+        <value caption="Flash section 1" name="SECTION1" value="0x1"/>
+        <value caption="Flash section 2" name="SECTION2" value="0x2"/>
+        <value caption="Flash section 3" name="SECTION3" value="0x3"/>
       </value-group>
       <value-group caption="Write error select" name="NVMCTRL_ERROR">
         <value caption="No Error" name="NOERROR" value="0x0"/>
@@ -2194,6 +2197,7 @@
           <bitfield caption="Sleep mode" mask="0x6" name="SMODE" rw="RW" values="SLPCTRL_SMODE"/>
         </register>
         <register caption="Control B" initval="0x00" name="VREGCTRL" offset="0x1" rw="RW" size="1">
+          <bitfield caption="High Temperature Low Leakage Enable" mask="0x10" name="HTLLEN" rw="RW" values="SLPCTRL_HTLLEN"/>
           <bitfield caption="Performance Mode" mask="0x7" name="PMODE" rw="RW" values="SLPCTRL_PMODE"/>
         </register>
       </register-group>
@@ -2201,6 +2205,10 @@
         <value caption="Idle mode" name="IDLE" value="0x00"/>
         <value caption="Standby Mode" name="STDBY" value="0x01"/>
         <value caption="Power-down Mode" name="PDOWN" value="0x02"/>
+      </value-group>
+      <value-group caption="High Temperature Low Leakage Enable select" name="SLPCTRL_HTLLEN">
+        <value caption="Disabled" name="OFF" value="0x0"/>
+        <value caption="Enabled" name="ON" value="0x1"/>
       </value-group>
       <value-group caption="Performance Mode select" name="SLPCTRL_PMODE">
         <value caption="" name="AUTO" value="0x0"/>
@@ -2373,6 +2381,7 @@
         </register>
         <register caption="Control E Set" initval="0x00" name="CTRLESET" offset="0x05" rw="RW" size="1">
           <bitfield caption="Command" mask="0xc" name="CMD" rw="RW" values="TCA_SPLIT_CMD"/>
+          <bitfield caption="Command Enable" mask="0x3" name="CMDEN" rw="RW" values="TCA_SPLIT_CMDEN"/>
         </register>
         <register caption="Degbug Control" initval="0x00" name="DBGCTRL" offset="0x0E" rw="RW" size="1">
           <bitfield caption="Debug Run" mask="0x1" name="DBGRUN" rw="RW"/>
@@ -2832,7 +2841,7 @@
           <bitfield caption="Auto-baud Error Interrupt Enable" mask="0x4" name="ABEIE" rw="RW"/>
           <bitfield caption="Data Register Empty Interrupt Enable" mask="0x20" name="DREIE" rw="RW"/>
           <bitfield caption="Loop-back Mode Enable" mask="0x8" name="LBME" rw="RW"/>
-          <bitfield caption="RS485 Mode internal transmitter" mask="0x3" name="RS485" rw="RW" values="USART_RS485"/>
+          <bitfield caption="RS485 Mode internal transmitter" mask="0x1" name="RS485" rw="RW" values="USART_RS485"/>
           <bitfield caption="Receive Complete Interrupt Enable" mask="0x80" name="RXCIE" rw="RW"/>
           <bitfield caption="Receiver Start Frame Interrupt Enable" mask="0x10" name="RXSIE" rw="RW"/>
           <bitfield caption="Transmit Complete Interrupt Enable" mask="0x40" name="TXCIE" rw="RW"/>
@@ -2901,9 +2910,8 @@
         </register>
       </register-group>
       <value-group caption="RS485 Mode internal transmitter select" name="USART_RS485">
-        <value caption="RS485 Mode disabled" name="OFF" value="0x00"/>
-        <value caption="RS485 Mode External drive" name="EXT" value="0x01"/>
-        <value caption="RS485 Mode Internal drive" name="INT" value="0x02"/>
+        <value caption="RS485 Mode disabled" name="DISABLE" value="0x0"/>
+        <value caption="RS485 Mode enabled" name="ENABLE" value="0x1"/>
       </value-group>
       <value-group caption="Receiver Mode select" name="USART_RXMODE">
         <value caption="Normal mode" name="NORMAL" value="0x0"/>

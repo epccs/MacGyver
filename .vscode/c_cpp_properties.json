@@ -9,7 +9,7 @@
                 "${default}"
             ],
             "forcedInclude": [ "${workspaceFolder}/lib/AVR-Dx_DFP/include/avr/ioavr128da28.h" ],
-            "defines": ["__AVR_AVR128DA28__","F_CPU = 3333000UL/6"],
+            "defines": ["__AVR_AVR128DA28__","F_CPU = 16000000UL"],
             "cStandard": "c11",
             "cppStandard": "c++17",
             "browse": {
