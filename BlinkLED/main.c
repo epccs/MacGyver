@@ -15,15 +15,45 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 */ 
 
 #include <stdbool.h>
+#include <stdlib.h>
+#include <avr/pgmspace.h>
 #include <util/delay.h>
 #include <util/atomic.h>
 #include <avr/io.h>
+#include "../lib/uart0_bsd.h"
 #include "../lib/io_enum_bsd.h"
 #include "../lib/timers_bsd.h"
 #include "../lib/twi0_mc.h"
 
 #define BLINK_DELAY 1000UL
-static unsigned long blink_started_at;
+unsigned long blink_started_at;
+unsigned long blink_delay;
+
+static int got_a;
+
+void setup(void) 
+{
+    ioCntl(MCU_IO_AIN0, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
+    ioDir(MCU_IO_AIN0, DIRECTION_OUTPUT);
+    ioWrite(MCU_IO_AIN0,LOGIC_LEVEL_HIGH);
+
+    /* Initialize UART to 38.4kbps, it returns a pointer to FILE so redirect of stdin and stdout works*/
+    stderr = stdout = stdin = uart0_init(38400UL, UART0_RX_REPLACE_CR_WITH_NL);
+
+    //TCA0_HUNF used for timing, TCA0 split for 6 PWM's, TCB0..TCB2 set for three more PWM's.
+    initTimers();
+
+    /* Initialize I2C*/
+    //twi1_init(100000UL, TWI1_PINS_PULLUP);
+
+    sei(); // Enable global interrupts to start TIMER0
+    
+    // tick count is not milliseconds use cnvrt_milli() to convert time into ticks, thus tickAtomic()/cnvrt_milli(1000) gives seconds
+    blink_started_at = tickAtomic();
+    blink_delay = cnvrt_milli(BLINK_DELAY);
+
+    got_a = 0;
+}
 
 // cycle the twi state machine on both the master and slave(s)
 void i2c_ping(void)
@@ -47,7 +77,6 @@ void i2c_ping(void)
 void blink(void)
 {
     unsigned long kRuntime = elapsed(&blink_started_at);
-    unsigned long blink_delay = cnvrt_milli(BLINK_DELAY);
     if ( kRuntime > blink_delay)
     {
         ioToggle(MCU_IO_AIN0);
@@ -57,83 +86,74 @@ void blink(void)
     }
 }
 
-/*
-// test program, routing external 32kHz crystal -> RTC (on PA2) -> TCA0 (on PA0) -> TCB1 (on PA3)
-// from El Tangas post #40
-// https://www.avrfreaks.net/forum/mega4809-tca-oddity
-
-void set_clock(){
-    _PROTECTED_WRITE(CLKCTRL.XOSC32KCTRLA, CLKCTRL_RUNSTDBY_bm | CLKCTRL_ENABLE_bm);      // Enable 32kHz crystal; run in standby is needed.
-    _PROTECTED_WRITE(CLKCTRL.MCLKCTRLB, CLKCTRL_PDIV_2X_gc | CLKCTRL_PEN_bm);             // Prescaler.
+// abort++. 
+void abort_safe(void)
+{
+    // make sure controled devices are safe befor waiting on UART 
+    ioDir(MCU_IO_AIN0,DIRECTION_OUTPUT);
+    ioWrite(MCU_IO_AIN0,LOGIC_LEVEL_LOW);
+    // flush the UART befor halt
+    uart0_flush();
+    _delay_ms(20); // wait for last byte to send
+    uart0_init(0, 0); // disable UART hardware 
+    // turn off interrupts and then spin loop a LED toggle 
+    cli();
+    while(1) 
+    {
+        _delay_ms(100); 
+        ioToggle(MCU_IO_AIN0);
+    }
 }
-
-void RTC_init(){
-    // The RTC is programmed to generate an event every other clock cycle, clocked by a 32kHz crystal.
-    // Since each event pulse takes one RTC cycle, this means a square wave of 16kHz is generated on the RTC event output.
-    RTC.CLKSEL = RTC_CLKSEL_TOSC32K_gc;
-    RTC.PER = 1;
-    RTC.CTRLA = RTC_PRESCALER_DIV1_gc | RTC_RTCEN_bm;
-}
-
-void EVSYS_init(){
-    // Route the 16kHz square wave from RTC to both EVOUTA (PA2), for observation, and to the TCA event input, to clock TCA.
-    EVSYS.CHANNEL0 = EVSYS_GENERATOR_RTC_OVF_gc;
-    EVSYS.USEREVOUTA = EVSYS_CHANNEL_CHANNEL0_gc;       // Port direction is overridden automatically
-    EVSYS.USERTCA0 = EVSYS_CHANNEL_CHANNEL0_gc;
-}
-
-void TCA_init(){
-    // Generate square wave at TCA clock /2 on TCA output 0 (PA0).
-    TCA0.SINGLE.CTRLB = TCA_SINGLE_CMP0EN_bm | TCA_SINGLE_WGMODE_SINGLESLOPE_gc;
-    TCA0.SINGLE.CMP0 = 1;
-    TCA0.SINGLE.PER = 1;
-    PORTA.DIRSET = 1 << 0;      // Set PA0 as output. This is not automatic for TCA.
-
-    // This basically sets the TCA event input as clock.
-    // Both edges clock TCA, this allows the 16kHz square wave coming from RTC to clock TCA @32kHz, thus recovering the full crystal clock.
-    TCA0.SINGLE.EVCTRL = TCA_SINGLE_EVACT_ANYEDGE_gc | TCA_SINGLE_CNTEI_bm;
-
-    // Enable TCA. The divisor seems to be ignored, the clock is set by the event input.
-    TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV1_gc | TCA_SINGLE_ENABLE_bm;
-}
-
-void TCB_init(){
-    // Generate square wave at TCB clock /2 on TCB1 output (PA3).
-    // Enabling TCB output also automatically overrides port direction, unlike TCA.
-    TCB1.CTRLB = TCB_CCMPEN_bm | TCB_CNTMODE_PWM8_gc;
-    TCB1.CCMPL = 1;
-    TCB1.CCMPH = 1;
-
-    // Clock TCB from TCA, therefore indirectly from the 32kHz crystal.
-    TCB1.CTRLA = TCB_ENABLE_bm | TCB_CLKSEL_CLKTCA_gc;
-}
-
-*/
-
-
 
 int main(void)
 {
-    ioCntl(MCU_IO_AIN0, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
-    ioDir(MCU_IO_AIN0, DIRECTION_OUTPUT);
-    ioWrite(MCU_IO_AIN0,LOGIC_LEVEL_HIGH);
+    setup();
 
-    // init i2c master with normal 100k clock
-    // TWI_MasterInit(100000UL);
-
-    //TCA0_HUNF used for timing, TCA0 split for 6 PWM's, TCB0..TCB2 set for three more PWM's.
-    initTimers();
-
-    // Enable global interrupts to start Timers and I2C
-    sei();
-
-    // tick count is not milliseconds use cnvrt_milli() to convert time into ticks, thus tickAtomic()/cnvrt_milli(1000) gives seconds
-    blink_started_at = tickAtomic();
+    int abort_yet = 0;
 
     while (1)
     {
-        blink();
-        // i2c_ping(); // That poor I2C address is going to lose it.
+        if(uart0_available())
+        {
+            // standard C has a libc function getchar() 
+            // which gets a byte from stdin.
+            // Since I redirected stdin to be from the UART0 this works.
+            int input = getchar();
+
+            // standard C has a libc function printf() 
+            // which sends a formated string to stdout.
+            // stdout was also redirected to UART0, so this also works.
+            printf("%c\r", input); 
+
+            if (input == '$') 
+            {
+                // Variant of printf() that uses a format string that resides in flash memory.
+                printf_P(PSTR("{\"abort\":\"egg found\"}\r\n")); 
+                abort_safe();
+            }
+
+            // press 'a' to stop blinking.
+            if(input == 'a') 
+            {
+                got_a = 1; 
+                ++abort_yet; 
+            }
+            else
+            {
+              got_a = 0;
+            }
+
+            // press 'a' more than five times to hault
+            if (abort_yet >= 5) 
+            {
+                abort_safe();
+            }
+        }
+        if (!got_a)
+        {
+            blink();
+            //i2c_ping();
+        }
     }
 }
 

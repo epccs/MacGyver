@@ -3,6 +3,7 @@ TARGET = BlinkLED
 LIBDIR = ../lib
 OBJECTS = main.o \
 	$(LIBDIR)/twi0_mc.o \
+	$(LIBDIR)/uart0_bsd.o \
 	$(LIBDIR)/timers_bsd.o
 
 # Chip and project-specific global definitions
@@ -76,6 +77,16 @@ updi: ## upload with pyupid
 	ls ../../RPUusb/BCM24cntl/UARTmode.py 2>/dev/null || false
 	python3 ../../RPUusb/BCM24cntl/UPDImode.py
 	pyupdi -v -d $(MCU) -c $(UPDI_PORT) -b 115200 -e -f $(TARGET).hex
+	python3 ../../RPUusb/BCM24cntl/UARTmode.py
+
+reset: ## reset AVR with pyupid
+	@echo testing for prerequesetits a false will stop make
+	which python3 2>/dev/null || false
+	which pyupdi 2>/dev/null || false
+	ls ../../RPUusb/BCM24cntl/UPDImode.py 2>/dev/null || false
+	ls ../../RPUusb/BCM24cntl/UARTmode.py 2>/dev/null || false
+	python3 ../../RPUusb/BCM24cntl/UPDImode.py
+	pyupdi -v -d $(MCU) -c $(UPDI_PORT) -b 115200 -e --reset
 	python3 ../../RPUusb/BCM24cntl/UARTmode.py
 
 $(TARGET).elf: $(OBJECTS)

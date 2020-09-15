@@ -5,7 +5,6 @@
             "intelliSenseMode": "clang-x64",
             "compilerPath": "/usr/bin/avr-gcc",
             "includePath": [
-                "${workspaceFolder}",
                 "${default}"
             ],
             "forcedInclude": [ "${workspaceFolder}/lib/AVR-Dx_DFP/include/avr/ioavr128da28.h" ],

@@ -166,7 +166,7 @@ const static struct IO_Map ioMap[MCU_IO_END] = {
 };
 
 #else
-#   error this is for an mega4809 on a PCB board, see https://github.com/epccs/PiUpdi
+#   error this is for an avr128da28 on a PCB, see https://github.com/epccs/MacGyver
 #endif
 
 
@@ -212,7 +212,7 @@ void ioToggle(MCU_IO_t io)
     portReg(io)->OUTTGL = ioMask(io);
 }
 
-// set io direction (INPUT or OUTPUT).
+// set io direction (DIRECTION_INPUT or DIRECTION_OUTPUT).
 static inline __attribute__((always_inline))
 void ioDir(MCU_IO_t io, DIRECTION_t dir) 
 {
@@ -226,7 +226,24 @@ void ioDir(MCU_IO_t io, DIRECTION_t dir)
     }
 }
 
-// io control settings
+/*  io control settings
+
+    isc is for PINnCTRL Input/Sense Configuration select bits
+    PORT_ISC_INTDISABLE_gc is for Interrupt disabled but input buffer enabled
+    PORT_ISC_BOTHEDGES_gc is for Sense Both Edges
+    PORT_ISC_RISING_gc is for Sense Rising Edge 
+    PORT_ISC_FALLING_gc is for Sense Falling Edge 
+    PORT_ISC_INPUT_DISABLE_gc is for Digital Input Buffer disabled
+    PORT_ISC_LEVEL_gc is for Sense low Level
+
+    pu is for PINnCTRL bit (3) for Pullup Enable
+    PORT_PULLUP_DISABLE
+    PORT_PULLUP_ENABLE
+
+    inv is for PINnCTRL bit (7) for Inverted I/O
+    PORT_INVERT_NORMAL
+    PORT_INVERT_INVERTED
+*/ 
 static inline __attribute__((always_inline))
 void ioCntl(MCU_IO_t io, PORT_ISC_t isc, PORT_PULLUP_t pu, PORT_INVERT_t inv) 
 {
