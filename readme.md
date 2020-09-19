@@ -113,3 +113,26 @@ https://github.com/arduino/ArduinoCore-megaavr/blob/master/libraries/Wire/src/ut
 If the UPDI idea has problems Optiboot could be a workaround
 
 https://github.com/Optiboot/optiboot/blob/master/Wiki/CompilingOptiboot_x.md
+
+
+## VSCode issue 
+
+In c_cpp_properties.json, I put some defines.
+
+```
+"defines": ["__AVR_DEV_LIB_NAME__=avr128da28","F_CPU=16000000UL"],
+```
+
+__AVR_DEV_LIB_NAME__ is from the -mmcu compiler option. Intellisense should track it through #include <avr/io.h> which would then include "io" + "avr128da28" + ".h". Intellisense does not look outside the includes origin (cross-origin), so it reports an error about not finding ioavr128da28.h, therefor the MCU header has to be put where it can find it. I have added a rule to do this (it needs admin rights).
+
+```
+sudo make hdr4code
+```
+
+After that I removed the forcedInclude I was using
+
+```
+"forcedInclude": [ "${workspaceFolder}/lib/AVR-Dx_DFP/include/avr/ioavr128da28.h" ],
+```
+
+Code is now seeing the same thing that the compiler does, and not recusing though files multiple times (and leaking as it does) to build its database.

@@ -1,5 +1,4 @@
-#ifndef UART0_H
-#define UART0_H
+#pragma once
 
 // https://www.microchip.com/webdoc/AVRLibcReferenceManual/group__avr__stdio.html
 #include <stdio.h>
@@ -28,5 +27,3 @@ extern bool uart0_availableForWrite(void);
 extern FILE *uart0_init(uint32_t baudrate, uint8_t choices);
 extern int uart0_putchar(char c, FILE *stream);
 extern int uart0_getchar(FILE *stream);
-
-#endif // UART0_H 

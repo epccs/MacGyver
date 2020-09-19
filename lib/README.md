@@ -3,9 +3,11 @@
 ```
 timer_bsd timer setup with binary event timer from TCA0 that counts at F_CPU / (64 * 256)  [or F_CPU / (16 * 256) with slower F_CPU].
 uart0_bsd init returns a pointer to FILE so redirect of stdin and stdout works (stdio.h streams)
+twi0_bsd wip
 ```
 
 # Quick Notes
+twi0_bsd: twi_mode and twi0_MastSlav_RxTx_state are doing the same sort of thing can I remove one. TWI_SetBaud math needs fixed.
 
 uart0_bsd: Interrupt-Driven UART for AVR Standard IO facilities streams (like I have been using on m328pb and m324pb).
 

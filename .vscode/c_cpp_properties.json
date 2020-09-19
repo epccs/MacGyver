@@ -1,14 +1,13 @@
 {
     "configurations": [
         {
-            "name": "AVR",
-            "intelliSenseMode": "clang-x64",
+            "name": "avr128da28",
+            "intelliSenseMode": "gcc-x64",
             "compilerPath": "/usr/bin/avr-gcc",
             "includePath": [
                 "${default}"
             ],
-            "forcedInclude": [ "${workspaceFolder}/lib/AVR-Dx_DFP/include/avr/ioavr128da28.h" ],
-            "defines": ["__AVR_AVR128DA28__","F_CPU = 16000000UL"],
+            "defines": ["__AVR_DEV_LIB_NAME__=avr128da28","F_CPU=16000000UL"],
             "cStandard": "c11",
             "cppStandard": "c++17",
             "browse": {

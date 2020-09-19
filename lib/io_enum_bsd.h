@@ -23,8 +23,6 @@ https://github.com/greiman/SdFat-beta/blob/master/src/DigitalIO/DigitalPin.h
 #ifndef IO_Enum_h
 #define IO_Enum_h
 
-#if defined(__AVR_AVR128DA28__)
-
 // Direction is used to program the IO as an input or output
 typedef enum DIRECTION_enum 
 {
@@ -164,11 +162,6 @@ const static struct IO_Map ioMap[MCU_IO_END] = {
     [MCU_IO_RX2] = { .port= &PORTF, .mask= PIN1_bm },
     [MCU_IO_nRESET] = { .port= &PORTF, .mask= PIN6_bm }
 };
-
-#else
-#   error this is for an avr128da28 on a PCB, see https://github.com/epccs/MacGyver
-#endif
-
 
 static inline __attribute__((always_inline))
 volatile PORT_t* portReg(MCU_IO_t io) 

@@ -1,5 +1,4 @@
-#ifndef TimersTick_h
-#define TimersTick_h
+#pragma once
 
 /* Timer tick opitons 
     USE_TIMERA0
@@ -16,4 +15,3 @@ unsigned long elapsed(unsigned long *past);
 unsigned long cnvrt_milli(unsigned long millisec);
 unsigned long cnvrt_milli_lrg(unsigned long millisec);
 
-#endif // TimersTick_h

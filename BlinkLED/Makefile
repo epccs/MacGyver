@@ -7,7 +7,7 @@ OBJECTS = main.o \
 	$(LIBDIR)/timers_bsd.o
 
 # Chip and project-specific global definitions
-MCU   =  avr128da28
+MCU = avr128da28
 # 1,2,4*,8,16. * is default: Internal High-Frequency Oscillator Control A (OSCHFCTRLA) bitfield FRQSEL[3:0]
 F_CPU = 16000000UL
 #BAUD  =  38400UL
@@ -38,7 +38,7 @@ CFLAGS = -Os -g -std=gnu99 -Wall
 # CFLAGS += -fpack-struct -fshort-enums 
 CFLAGS += -ffunction-sections -fdata-sections 
 
-# atmega4809 is not in the avr-gcc packaged for my OS 
+# avr128da28 is not in the avr-gcc packaged for my OS 
 TARGET_ARCH = -mmcu=$(MCU) \
 -B $(LIBDIR)/AVR-Dx_DFP/gcc/dev/avr128da28/ \
 -I $(LIBDIR)/AVR-Dx_DFP/include/
@@ -88,6 +88,12 @@ reset: ## reset AVR with pyupid
 	python3 ../../RPUusb/BCM24cntl/UPDImode.py
 	pyupdi -v -d $(MCU) -c $(UPDI_PORT) -b 115200 -e --reset
 	python3 ../../RPUusb/BCM24cntl/UARTmode.py
+
+hdrcode: ## copy header for VSCode to find run with sudo
+	@echo VSCode will not look outside or cross-origin for an include,  
+	@echo so I have to put the MCU header where it can find it.
+	cp -u ../lib/AVR-Dx_DFP/include/avr/ioavr128da28.h /usr/lib/avr/include/avr/ioavr128da28.h
+	chmod u-x /usr/lib/avr/include/avr/ioavr128da28.h
 
 $(TARGET).elf: $(OBJECTS)
 	$(CC) $(LDFLAGS) $(TARGET_ARCH) $^ -o $@

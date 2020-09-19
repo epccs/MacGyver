@@ -1,5 +1,4 @@
-#ifndef twi0_h
-#define twi0_h
+#pragma once
 
 #define TWI0_BUFFER_LENGTH 32
 
@@ -50,8 +49,8 @@ typedef enum TWI0_RD_STAT_enum {
 // Use a repeated start to hold (lock) the bus for a future transaction.
 // The ISR will generate a start that locks the bus
 typedef enum TWI0_PROTOCALL_enum {
-    TWI0_PROTOCALL_STOP = 0x01, // Stop sending and unlock the bus
-    TWI0_PROTOCALL_REPEATEDSTART = 0x02 // lock the bus and wait for more to send
+    TWI0_PROTOCALL_STOP, // Stop sending and unlock the bus
+    TWI0_PROTOCALL_REPEATEDSTART // lock the bus and wait for more to send
 } TWI0_PROTOCALL_t;
 
 typedef enum TWI0_LOOP_STATE_enum {
@@ -63,6 +62,28 @@ typedef enum TWI0_LOOP_STATE_enum {
     TWI0_LOOP_STATE_ASYNC_RD, // this can fail if data does not fit buffer, and needs to retry if TWI state machine is not ready
     TWI0_LOOP_STATE_STATUS_RD // the TWI state machine will have a status when it has finished
 } TWI0_LOOP_STATE_t;
+
+// Master result
+typedef enum TWIM_RESULT_enum {
+    TWIM_RESULT_UNKNOWN,
+    TWIM_RESULT_OK,
+    TWIM_RESULT_BUFFER_OVERFLOW,
+    TWIM_RESULT_ARBITRATION_LOST,
+    TWIM_RESULT_BUS_ERROR,
+    TWIM_RESULT_NACK_RECEIVED,
+    TWIM_RESULT_FAIL
+} TWIM_RESULT_t;
+
+// Slave result
+typedef enum TWIS_RESULT_enum {
+    TWIS_RESULT_UNKNOWN,
+    TWIS_RESULT_OK,
+    TWIS_RESULT_BUFFER_OVERFLOW,
+    TWIS_RESULT_TRANSMIT_COLLISION,
+    TWIS_RESULT_BUS_ERROR,
+    TWIS_RESULT_FAIL,
+    TWIS_RESULT_ABORTED
+} TWIS_RESULT_t;
 
 void twi0_init(uint32_t bitrate, TWI0_PINS_t pull_up);
 
@@ -83,6 +104,4 @@ uint8_t twi0_slaveAddress(uint8_t slave);
 uint8_t twi0_fillSlaveTxBuffer(const uint8_t* slave_data, uint8_t bytes_to_send);
 void twi0_registerSlaveRxCallback( void (*function)(uint8_t*, uint8_t) );
 void twi0_registerSlaveTxCallback( void (*function)(void) );
-
-#endif // twi0_h
 
