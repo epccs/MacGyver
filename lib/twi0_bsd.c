@@ -96,6 +96,10 @@ void twi0_transmit_default(void)
 {
     // In a real callback, the data to send needs to be copied from a local buffer.
     // uint8_t return_code = twi0_fillSlaveTxBuffer(localBuffer, localBufferLength);
+
+    // this default puts a NUL byte in the buffer and bypasses the provided function
+    slave_bytesToWrite = 1;
+    twi0_slaveTxBuffer[0] = 0x00;
     return;
 }
 
@@ -129,13 +133,11 @@ static register8_t  master_bytesWritten;
 static register8_t  master_bytesRead;
 static register8_t  master_sendStop;
 static register8_t  master_trans_status;
-static register8_t  master_result;   
+static register8_t  master_result;
 
 static uint8_t twi0_slaveTxBuffer[TWI0_BUFFER_LENGTH];
-static volatile uint8_t twi0_slaveTxBufferIndex;
-static volatile uint8_t twi0_slaveTxBufferLength;
 typedef void (*PointerToReceive)(uint8_t*, uint8_t);
-static PointerToTransmit twi0_onSlaveTx = twi0_transmit_default;
+static PointerToTransmit twi0_onSlaveTx = twi0_transmit_default; // user must call twi0_fillSlaveTxBuffer(bytes, length) in callback
 static PointerToReceive twi0_onSlaveRx = twi0_receive_default;
 static uint8_t (*TWI_onSlaveTransmit)(void) __attribute__((unused));
 static void (*TWI_onSlaveReceive)(int) __attribute__((unused));
@@ -155,9 +157,7 @@ static uint8_t twi0_slaveRxBufferA[TWI0_BUFFER_LENGTH];
 #ifdef TWI0_SLAVE_RX_BUFFER_INTERLEAVING
 static uint8_t twi0_slaveRxBufferB[TWI0_BUFFER_LENGTH];
 #endif
-
 static uint8_t *twi0_slaveRxBuffer;
-static volatile uint8_t twi0_slaveRxBufferIndex;
 
 // Set the BAUD bit field in the TWIn.MBAUD
 void TWI_SetBaud(uint32_t f_scl)
@@ -200,19 +200,20 @@ void TWI_MasterTransactionFinished(uint8_t result)
 }
 
 // TWI0 Master event
-ISR(TWI0_TWIM_vect){
+ISR(TWI0_TWIM_vect)
+{
     uint8_t currentStatus = TWI0.MSTATUS;
 
     // arbitration lost or bus error.
-    if ((currentStatus & TWI_ARBLOST_bm) || (currentStatus & TWI_BUSERR_bm)) 
+    if ((currentStatus & TWI_ARBLOST_bm) || (currentStatus & TWI_BUSERR_bm))
     {
         uint8_t currentStatus = TWI0.MSTATUS;
 
-        if (currentStatus & TWI_BUSERR_bm) 
+        if (currentStatus & TWI_BUSERR_bm)
         {
             master_result = TWIM_RESULT_BUS_ERROR;
         }
-        else 
+        else
         {
             master_result = TWIM_RESULT_ARBITRATION_LOST;
         }
@@ -255,6 +256,12 @@ ISR(TWI0_TWIM_vect){
         // If more to write
         else if (master_bytesWritten < bytesToWrite) 
         {
+            if (master_writeData == NULL)
+            {
+                twi0_error = TWI_ERROR_ILLEGAL;
+                TWI_MasterTransactionFinished(TWIM_RESULT_FAIL);
+                return;
+            }
             uint8_t data = master_writeData[master_bytesWritten];
             TWI0.MDATA = data;
             master_bytesWritten++;
@@ -292,8 +299,10 @@ ISR(TWI0_TWIM_vect){
             master_readData[master_bytesRead] = data;
             master_bytesRead++;
         }
-        else { // to many bytes
-            if(master_sendStop){
+        else // to many bytes
+        { 
+            if(master_sendStop)
+            {
                 TWI0.MCTRLB = TWI_ACKACT_bm | TWI_MCMD_STOP_gc;
             } 
             else 
@@ -308,14 +317,16 @@ ISR(TWI0_TWIM_vect){
 
         uint8_t bytesToRead = master_bytesToRead;
 
-        if (master_bytesRead < bytesToRead) {
+        if (master_bytesRead < bytesToRead) 
+        {
             TWI0.MCTRLB = TWI_MCMD_RECVTRANS_gc; // issue ACK to start next byte read.
         }
-        else {
+        else 
+        {
             if(master_sendStop)
             {
                 TWI0.MCTRLB = TWI_ACKACT_bm | TWI_MCMD_STOP_gc;
-            } 
+            }
             else 
             {
                 TWI0.MCTRLB = TWI_ACKACT_bm | TWI_MCMD_REPSTART_gc;
@@ -326,27 +337,29 @@ ISR(TWI0_TWIM_vect){
     }
 
     // unexpected 
-    else {
+    else
+    {
         twi0_error = TWI_ERROR_ILLEGAL;
         TWI_MasterTransactionFinished(TWIM_RESULT_FAIL);
     }
 }
 
-void TWI_SlaveAddressMatchHandler(){
+void TWI_SlaveAddressMatchHandler()
+{
     slave_trans_status = TWIS_STATUS_BUSY;
     slave_result = TWIS_RESULT_UNKNOWN;
     
     // ACK, data should be on the way
-    TWI0.SCTRLB = TWI_SCMD_RESPONSE_gc;    
+    TWI0.SCTRLB = TWI_SCMD_RESPONSE_gc;
     
-    if(TWI0.SSTATUS & TWI_DIR_bm) // Master Read or Slave Write
+    if(TWI0.SSTATUS & TWI_DIR_bm) // Slave Writes to Master
     { 
         slave_bytesWritten = 0;
         /* Call user function  */
-        slave_bytesToWrite = TWI_onSlaveTransmit();    
+        twi0_onSlaveTx(); // user must call twi0_fillSlaveTxBuffer(bytes, length) in callback
         twi_mode = TWI_MODE_SLAVE_TRANSMIT;
     } 
-    else // If Master Write/Slave Read
+    else // Master Writes to Slave
     {
         slave_bytesRead = 0;
         slave_callUserReceive = 1;
@@ -381,9 +394,28 @@ ISR(TWI0_TWIS_vect)
         // run user receive function after Master Write/Slave Read.
         // should get to this point after the STOP or REPSTART 
         // TWI_SlaveAddressMatchHandler sets slave_callUserReceive
+        // a.k.a. not clock streatching
         if(slave_callUserReceive == 1)
         {
-            TWI_onSlaveReceive(slave_bytesRead);
+            if(slave_bytesRead < TWI0_BUFFER_LENGTH)
+            {
+                twi0_slaveRxBuffer[slave_bytesRead] = '\0';
+                slave_bytesRead += 1;
+            }
+            twi0_onSlaveRx(twi0_slaveRxBuffer, slave_bytesRead);
+            #ifdef TWI0_SLAVE_RX_BUFFER_INTERLEAVING
+            // interleaving was a trick I used on m328pb to limit clock streatching, 
+            // but delaying the receive callback until after the STOP is better
+            if (twi0_slaveRxBuffer == twi0_slaveRxBufferA) 
+            {
+                twi0_slaveRxBuffer = twi0_slaveRxBufferB;
+            }
+            else
+            {
+                twi0_slaveRxBuffer = twi0_slaveRxBufferA;
+            }
+            #endif
+            slave_bytesRead = 0;
             slave_callUserReceive = 0;
         }
 
@@ -401,7 +433,7 @@ ISR(TWI0_TWIS_vect)
             // When the APIF interupt occures for a STOP we can miss an 
             // address event if we don't check the CLKHOLD bit.
             if(TWI0.SSTATUS & TWI_CLKHOLD_bm)
-            {    
+            {
                 TWI_SlaveAddressMatchHandler(); // clears CLKHOLD
             }
         }
@@ -432,25 +464,34 @@ ISR(TWI0_TWIS_vect)
                 {        
                     if(slave_bytesWritten < slave_bytesToWrite){
                         uint8_t data = slave_writeData[slave_bytesWritten];
+                        // twi0_fillSlaveTxBuffer is used to the save buffer into twi0_slaveTxBuffer
+                        uint8_t data = twi0_slaveTxBuffer[slave_bytesWritten];
                         TWI0.SDATA = data; // send data
                         slave_bytesWritten++;    
                         TWI0.SCTRLB = TWI_SCMD_RESPONSE_gc; // wait for next data interrupt
-                    } 
-                    
-                    /* If buffer overflow */
-                    else {
-                        TWI0.SCTRLB = TWI_SCMD_COMPTRANS_gc;
-                        TWI_SlaveTransactionFinished(TWIS_RESULT_BUFFER_OVERFLOW);
-                        
                     }
-                    
-                        
+                    else // buffer overflow
+                    {
+                        TWI0.SCTRLB = TWI_SCMD_COMPTRANS_gc;
+                        TWI_SlaveTransactionFinished(TWIS_RESULT_BUFFER_OVERFLOW);   
+                    }     
                 }
             }
             else // Master Write/Slave Read
             {
-                TWI_SlaveReadHandler();
-            }    
+                if(slave_bytesRead < slave_bytesToRead) // check for free buffer space
+                {  
+                    uint8_t data = TWI0.SDATA;
+                    slave_readData[slave_bytesRead] = data;
+                    slave_bytesRead++;
+                    TWI0.SCTRLB = TWI_SCMD_RESPONSE_gc; // Send ACK and wait for next data interrupt
+                }
+                else // buffer overflow, send NACK and wait for next START. Set result buffer overflow
+                {
+                    TWI0.SCTRLB = TWI_ACKACT_bm | TWI_SCMD_COMPTRANS_gc;
+                    TWI_SlaveTransactionFinished(TWIS_RESULT_BUFFER_OVERFLOW);
+                }
+            }
         }
     }
     
@@ -550,7 +591,8 @@ TWI0_WRT_t twi0_masterAsyncWrite(uint8_t slave_address, uint8_t *write_data, uin
         master_slaveAddress = slave_address<<1;
 
         // Write command, send the START condition + Address + 'R/_W = 0'
-        if (master_bytesToWrite > 0) {
+        if (master_bytesToWrite > 0) 
+        {
             twi_mode = TWI_MODE_MASTER_TRANSMIT;
             uint8_t writeAddress = ADD_WRITE_BIT(master_slaveAddress);
             TWI0.MADDR = writeAddress;
@@ -872,26 +914,6 @@ uint8_t twi0_masterWriteRead(uint8_t slave_address, uint8_t* write_data, uint8_t
     
 }
 
-// set valid slave address (0x8..0x77) 
-// return address if set
-uint8_t twi0_slaveAddress(uint8_t slave)
-{
-    if( (slave>=0x8) && (slave<=0x77))
-    {
-        // TWAR0 is Slave Address Register TWA[6..0] in bits 7..1 TWGCE in bit 0
-        //       TWGCE bit is for General Call Recognition
-        TWAR0 = slave << 1; 
-        return slave;
-    }
-    else
-    {
-        TWAR0 = 0; 
-        twi0_onSlaveTx = twi0_transmit_default;
-        twi0_onSlaveRx = twi0_receive_default;
-        return 0;
-    }
-}
-
 // fill twi0_slaveTxBuffer using callback returns
 // 0: OK
 // 1: bytes_to_send is to much for buffer, so request ignored
@@ -902,18 +924,18 @@ uint8_t twi0_fillSlaveTxBuffer(const uint8_t* slave_data, uint8_t bytes_to_send)
     {
         return 1;
     }
-  
+
     if(TWI_STATE_SLAVE_TRANSMITTER != twi0_MastSlav_RxTx_state)
     {
         return 2;
     }
-  
-    twi0_slaveTxBufferLength = bytes_to_send;
+
     for(uint8_t i = 0; i < bytes_to_send; ++i)
     {
         twi0_slaveTxBuffer[i] = slave_data[i];
     }
-  
+    slave_bytesToWrite = bytes_to_send;
+
     return 0;
 }
 
@@ -921,7 +943,7 @@ uint8_t twi0_fillSlaveTxBuffer(const uint8_t* slave_data, uint8_t bytes_to_send)
 // a NULL pointer will use the default callback
 void twi0_registerSlaveRxCallback( void (*function)(uint8_t*, uint8_t) )
 {
-    if (function == ((void *)0) )
+    if (function == NULL )
     {
         twi0_onSlaveRx = twi0_receive_default;
     }
@@ -935,7 +957,7 @@ void twi0_registerSlaveRxCallback( void (*function)(uint8_t*, uint8_t) )
 // a NULL pointer will use the default callback
 void twi0_registerSlaveTxCallback( void (*function)(void) )
 {
-    if (function == ((void *)0) )
+    if (function == NULL )
     {
         twi0_onSlaveTx = twi0_transmit_default;
     }

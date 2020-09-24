@@ -100,7 +100,6 @@ uint8_t twi0_masterBlockingRead(uint8_t slave_address, uint8_t* read_data, uint8
 
 uint8_t twi0_masterWriteRead(uint8_t slave_address, uint8_t* write_data, uint8_t bytes_to_write, uint8_t* read_data, uint8_t bytes_to_read, TWI0_LOOP_STATE_t *loop_state);
 
-uint8_t twi0_slaveAddress(uint8_t slave);
 uint8_t twi0_fillSlaveTxBuffer(const uint8_t* slave_data, uint8_t bytes_to_send);
 void twi0_registerSlaveRxCallback( void (*function)(uint8_t*, uint8_t) );
 void twi0_registerSlaveTxCallback( void (*function)(void) );

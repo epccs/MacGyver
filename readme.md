@@ -136,3 +136,5 @@ After that I removed the forcedInclude I was using
 ```
 
 Code is now seeing the same thing that the compiler does, and not recusing though files multiple times (and leaking as it does) to build its database.
+
+https://blog.robenkleene.com/2020/09/21/the-era-of-visual-studio-code/
