@@ -34,7 +34,27 @@ a
 make reset
 ``` 
 
-An 'a' will toggle the blinking (off), and another will toggle it on; after a few toggles, it will abort.
+An 'a' will toggle the blinking and i2c ping (off), and another will toggle it on; after a few toggles, it will abort.
+
+To test the i2c (TWI) I am using another board (RPUusb) that plugs into where the R-Pi would. It has a m328pb with i2c-debug software and is acceses from its second serial port /dev/ttyUSB1.
+
+``` 
+picocom -b 38400 /dev/ttyUSB1
+...
+/0/id?
+{"id":{"name":"I2Cdebug^2","desc":"RPUusb (14145^5) Board /w ATmega328pb","avr-gcc":"5.4.0"}}
+/0/iscan?
+{"scan":[]}
+/0/imon? 41
+{"monitor_0x29":[{"data":"0x0"}]}
+{"monitor_0x29":[{"data":"0x0"}]}
+...
+``` 
+
+Ping TWI with each LED toggle; imon does not show updates if it is swamped with pings.  
+
+
+
 
 The AVR128DA28 starts running at 24MHz/6 (4MHz) from the factory. To run at another frequency, we can change the clock select bit field (e.g., CLKCTRL_FREQSEL_16M_gc). The timers_bsd.c will select the correct option based on the F_CPU value that the Makefile passes to the compiler during the build.
 
@@ -56,7 +76,7 @@ To set the clock with code requires meeting a 4 cycle timing.
 
 // set clock to 20MHz (needs 5V on supply to function)
 void clock_init(void) {
-    _PROTECTED_WRITE(CLKCTRL.MCLKCTRLB, CLKCTRL_PDIV_1X_gc | CLKCTRL_PEN_bm);
+    _PROTECTED_WRITE(CLKCTRL_OSCHFCTRLA, CLKCTRL_FREQSEL_20M_gc);
 }
 
 ```

@@ -45,6 +45,7 @@ void setup(void)
 
     /* Initialize I2C*/
     //twi1_init(100000UL, TWI1_PINS_PULLUP);
+    TWI_MasterInit(100000UL);
 
     sei(); // Enable global interrupts to start TIMER0
     
@@ -58,15 +59,15 @@ void setup(void)
 // cycle the twi state machine on both the master and slave(s)
 void i2c_ping(void)
 { 
-    // ping I2C for an RPU bus manager 
-    uint8_t i2c_address = 41; //I2C_ADDR_OF_BUS_MGR
-    uint8_t data = 0;
-    uint8_t length = 0;
+    // ping I2C for a manager 
+    uint8_t i2c_address = 41; //the address I have been useing for the manager (from the application MCU, not the host)
+    uint8_t data[] = {0};
+    uint8_t length = 1;
     // uint8_t wait = 1;
     uint8_t sendStop = 1;
     for (uint8_t i =0;1; i++) // try a few times.
     {
-        uint8_t twi_errorCode = TWI_MasterWrite(i2c_address, &data, length, sendStop); 
+        uint8_t twi_errorCode = TWI_MasterWrite(i2c_address, data, length, sendStop); 
         if (twi_errorCode == 0) break; // ping was error free
         if (i>5) return; // give up after 5 trys
     }
@@ -80,6 +81,7 @@ void blink(void)
     if ( kRuntime > blink_delay)
     {
         ioToggle(MCU_IO_AIN0);
+        i2c_ping();
         
         // next toggle 
         blink_started_at += blink_delay; 
@@ -151,8 +153,7 @@ int main(void)
         }
         if (!got_a)
         {
-            blink();
-            //i2c_ping();
+            blink(); // also ping_i2c() at the toggle time
         }
     }
 }
