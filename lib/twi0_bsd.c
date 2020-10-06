@@ -21,7 +21,7 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 An AVR128DA has two ISR driven state machines, one for the master and another for the slave 
 it is not yet clear to me if they can share the same IO hardware wihtout locking up.
 
-Todo: data going to slave_readData should goto twi0_slaveRxBuffer
+done: removed interleaving buffer twi0_slaveRxBufferA twi0_slaveRxBufferB use twi0_slaveRxBuffer as the buffer
 
 */
 
@@ -105,18 +105,12 @@ static volatile uint8_t  master_sendStop;
 static volatile TWIM_RESULT_t master_result;
 
 static uint8_t twi0_slaveTxBuffer[TWI0_BUFFER_LENGTH];
-static uint8_t twi0_slaveRxBufferA[TWI0_BUFFER_LENGTH];
-#ifdef TWI0_SLAVE_RX_BUFFER_INTERLEAVING // enable interleaving buffer for R-Pi Zero in header
-static uint8_t twi0_slaveRxBufferB[TWI0_BUFFER_LENGTH];
-#endif
-static uint8_t *twi0_slaveRxBuffer;
-//static volatile uint8_t *slave_writeData;
-static volatile uint8_t *slave_readData;
+static uint8_t twi0_slaveRxBuffer[TWI0_BUFFER_LENGTH];
 static volatile uint8_t  slave_bytesToWrite;
 static volatile uint8_t  slave_bytesWritten;
 static volatile uint8_t  slave_bytesRead;
 static volatile TWIS_RESULT_t  slave_result;
-static volatile uint8_t  slave_callUserReceive; // flag to run user receive function after the STOP or REPSTART.
+static volatile uint8_t  run_user_receive_callback_after_STOP_or_REPSTART; // preventing clock streatching
 
 // used to initalize the slave Transmit functions in case they are not used.
 void twi0_transmit_default(void)
@@ -353,7 +347,7 @@ void TWI_SlaveAddressMatchHandler()
     else // Master Writes to Slave
     {
         slave_bytesRead = 0;
-        slave_callUserReceive = 1;
+        run_user_receive_callback_after_STOP_or_REPSTART = 1;
         twis_mode = TWIS_MODE_RECEIVE;
     }
 }
@@ -391,9 +385,9 @@ ISR(TWI0_TWIS_vect)
     {
         // run user receive function after Master Write/Slave Read.
         // should get to this point after the STOP or REPSTART 
-        // TWI_SlaveAddressMatchHandler sets slave_callUserReceive
-        // a.k.a. not clock streatching
-        if(slave_callUserReceive == 1)
+        // TWI_SlaveAddressMatchHandler sets run_user_receive_callback_after_STOP_or_REPSTART
+        // a.k.a. preventing clock streatching
+        if(run_user_receive_callback_after_STOP_or_REPSTART == 1)
         {
             if(slave_bytesRead < TWI0_BUFFER_LENGTH)
             {
@@ -401,20 +395,8 @@ ISR(TWI0_TWIS_vect)
                 slave_bytesRead += 1;
             }
             twi0_onSlaveRx(twi0_slaveRxBuffer, slave_bytesRead);
-            #ifdef TWI0_SLAVE_RX_BUFFER_INTERLEAVING
-            // interleaving was a trick I used on m328pb to limit clock streatching, 
-            // but delaying the receive callback until after the STOP is better
-            if (twi0_slaveRxBuffer == twi0_slaveRxBufferA) 
-            {
-                twi0_slaveRxBuffer = twi0_slaveRxBufferB;
-            }
-            else
-            {
-                twi0_slaveRxBuffer = twi0_slaveRxBufferA;
-            }
-            #endif
             slave_bytesRead = 0;
-            slave_callUserReceive = 0;
+            run_user_receive_callback_after_STOP_or_REPSTART = 0;
         }
 
         // address match
@@ -479,7 +461,7 @@ ISR(TWI0_TWIS_vect)
                 if(slave_bytesRead < TWI0_BUFFER_LENGTH) // check for free buffer space
                 {  
                     uint8_t data = TWI0.SDATA;
-                    slave_readData[slave_bytesRead] = data;
+                    twi0_slaveRxBuffer[slave_bytesRead] = data;
                     slave_bytesRead++;
                     TWI0.SCTRLB = TWI_SCMD_RESPONSE_gc; // Send ACK and wait for next data interrupt
                 }
@@ -522,9 +504,6 @@ void twi0_init(uint32_t bitrate, TWI0_PINS_t pull_up)
     else
     {
         if(twim_mode != TWIM_MODE_UNKNOWN) return;
-
-        // start with interleaving buffer A (B is an optional buffer if it is enabled)
-        twi0_slaveRxBuffer = twi0_slaveRxBufferA;
 
         // initialize state machine
         twi0_MastSlav_RxTx_state = TWI_STATE_READY;
@@ -920,7 +899,7 @@ uint8_t twi0_slaveAddress(uint8_t slave)
         slave_bytesRead = 0;
         slave_bytesWritten = 0;
         slave_result = TWIS_RESULT_UNKNOWN;
-        slave_callUserReceive = 0;
+        run_user_receive_callback_after_STOP_or_REPSTART = 0;
         
         TWI0.SADDR = slave << 1;
         // enable an interrupt on the Data Interrupt Flag (DIF) from the Slave Status (TWIn.SSTATUS) register

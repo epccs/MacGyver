@@ -51,7 +51,7 @@ picocom -b 38400 /dev/ttyUSB1
 ...
 ``` 
 
-Ping TWI with each LED toggle; imon does not show updates if it is swamped with pings.  
+Ping TWI with each LED toggle; imon does not show updates if it is swamped with pings. The twi0_mc lib was first checked and then twi0_bsd was debuged and then ran (it is not much of a test but is a start).
 
 
 
