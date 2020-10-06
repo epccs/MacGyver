@@ -120,7 +120,7 @@ void TWI_SlaveInit(uint8_t address)
     TWI0.SADDR = address << 1;    
     TWI0.SCTRLA = TWI_DIEN_bm | TWI_APIEN_bm | TWI_PIEN_bm  | TWI_ENABLE_bm;
     
-    /* Bus Error Detection circuitry needs Master enabled to work */
+    // Dual Control Enable bit mask so the slave will operate simultaneously with master
     TWI0.MCTRLA = TWI_ENABLE_bm;
 }
 

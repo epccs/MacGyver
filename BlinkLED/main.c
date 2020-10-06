@@ -23,7 +23,7 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 #include "../lib/uart0_bsd.h"
 #include "../lib/io_enum_bsd.h"
 #include "../lib/timers_bsd.h"
-#include "../lib/twi0_mc.h"
+#include "../lib/twi0_bsd.h"
 
 #define BLINK_DELAY 1000UL
 unsigned long blink_started_at;
@@ -31,7 +31,7 @@ unsigned long blink_delay;
 
 static int got_a;
 
-void setup(void) 
+void setup(void)
 {
     ioCntl(MCU_IO_AIN0, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
     ioDir(MCU_IO_AIN0, DIRECTION_OUTPUT);
@@ -44,8 +44,8 @@ void setup(void)
     initTimers();
 
     /* Initialize I2C*/
-    //twi1_init(100000UL, TWI1_PINS_PULLUP);
-    TWI_MasterInit(100000UL);
+    twi0_init(100000UL, TWI0_PINS_PULLUP); // twi0_bsd
+    //TWI_MasterInit(100000UL); // twi0_mc
 
     sei(); // Enable global interrupts to start TIMER0
     
@@ -60,14 +60,12 @@ void setup(void)
 void i2c_ping(void)
 { 
     // ping I2C for a manager 
-    uint8_t i2c_address = 41; //the address I have been useing for the manager (from the application MCU, not the host)
+    uint8_t mgr_address = 41; //the address I have been useing for the manager (from the application MCU, the host would use 42)
     uint8_t data[] = {0};
     uint8_t length = 1;
-    // uint8_t wait = 1;
-    uint8_t sendStop = 1;
     for (uint8_t i =0;1; i++) // try a few times.
     {
-        uint8_t twi_errorCode = TWI_MasterWrite(i2c_address, data, length, sendStop); 
+        uint8_t twi_errorCode = twi0_masterBlockingWrite(mgr_address, data, length, TWI0_PROTOCALL_STOP); 
         if (twi_errorCode == 0) break; // ping was error free
         if (i>5) return; // give up after 5 trys
     }

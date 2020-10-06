@@ -18,13 +18,11 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%22)
 
-TODO: This was used on a m324pb but it will need a lot of updates to work with a AVR-DA.
+An AVR128DA has two ISR driven state machines, one for the master and another for the slave 
+it is not yet clear to me if they can share the same IO hardware wihtout locking up.
 
-Multi-Master can lock up when blocking functions are used. Also the master will get a NACK 
-if it tries to acceess a slave on the same state machine. Note: an AVR128DA has two ISR driven
-state machines, one for the master and another for the slave but it is not clear to me if
-they can share the same IO hardware wihtout locking up. The AVR128DA famly has alternat 
-IO hardware, the master ISR can be on one set of hardware while the slave ISR is on the other.
+Todo: data going to slave_readData should goto twi0_slaveRxBuffer
+
 */
 
 #include <stdbool.h>
@@ -33,14 +31,6 @@ IO hardware, the master ISR can be on one set of hardware while the slave ISR is
 #include <util/twi.h>
 #include "io_enum_bsd.h"
 #include "twi0_bsd.h"
-
-/* TWI master status */
-#define TWIM_STATUS_READY              0
-#define TWIM_STATUS_BUSY               1
-
-/* TWI slave status */
-#define TWIS_STATUS_READY                0
-#define TWIS_STATUS_BUSY                 1
 
 /*! For adding R/_W bit to address */
 #define ADD_READ_BIT(address)    (address | 0x01)
@@ -58,18 +48,28 @@ typedef enum TWI_STATE_enum {
 
 static volatile TWI_STATE_t twi0_MastSlav_RxTx_state;
 
-/* TWI modes modules mode */
-typedef enum TWI_MODE_enum {
-    TWI_MODE_UNKNOWN = 0,
-    TWI_MODE_MASTER = 1,
-    TWI_MODE_SLAVE = 2,
-    TWI_MODE_MASTER_TRANSMIT = 3,
-    TWI_MODE_MASTER_RECEIVE = 4,
-    TWI_MODE_SLAVE_TRANSMIT = 5,
-    TWI_MODE_SLAVE_RECEIVE = 6
-} TWI_MODE_t;
+// TWI modes for master module
+typedef enum TWIM_MODE_enum
+{
+    TWIM_MODE_UNKNOWN,
+    TWIM_MODE_ENABLE,
+    TWIM_MODE_TRANSMIT,
+    TWIM_MODE_RECEIVE
+} TWIM_MODE_t;
 
-static volatile TWI_MODE_t twi_mode;
+static volatile TWIM_MODE_t twim_mode;
+
+// TWI modes for slave module
+typedef enum TWIS_MODE_enum 
+{
+    TWIS_MODE_UNKNOWN,
+    TWIS_MODE_ENABLE,
+    TWIS_MODE_TRANSMIT,
+    TWIS_MODE_RECEIVE
+} TWIS_MODE_t;
+
+static volatile TWIS_MODE_t twis_mode;
+
 
 typedef enum TWI_ACK_enum {
     TWI_ACK,
@@ -91,6 +91,33 @@ typedef enum TWI_ERROR_enum {
 
 static volatile TWI_ERROR_t twi0_error;
 
+static uint8_t twi0_masterBuffer[TWI0_BUFFER_LENGTH];
+static volatile uint8_t twi0_masterBufferIndex;
+static volatile uint8_t twi0_masterBufferLength;
+static volatile uint8_t  master_slaveAddress;
+static volatile uint8_t *master_writeData;
+static volatile uint8_t *master_readData;
+static volatile uint8_t  master_bytesToWrite;
+static volatile uint8_t  master_bytesToRead;
+static volatile uint8_t  master_bytesWritten;
+static volatile uint8_t  master_bytesRead;
+static volatile uint8_t  master_sendStop;
+static volatile TWIM_RESULT_t master_result;
+
+static uint8_t twi0_slaveTxBuffer[TWI0_BUFFER_LENGTH];
+static uint8_t twi0_slaveRxBufferA[TWI0_BUFFER_LENGTH];
+#ifdef TWI0_SLAVE_RX_BUFFER_INTERLEAVING // enable interleaving buffer for R-Pi Zero in header
+static uint8_t twi0_slaveRxBufferB[TWI0_BUFFER_LENGTH];
+#endif
+static uint8_t *twi0_slaveRxBuffer;
+//static volatile uint8_t *slave_writeData;
+static volatile uint8_t *slave_readData;
+static volatile uint8_t  slave_bytesToWrite;
+static volatile uint8_t  slave_bytesWritten;
+static volatile uint8_t  slave_bytesRead;
+static volatile TWIS_RESULT_t  slave_result;
+static volatile uint8_t  slave_callUserReceive; // flag to run user receive function after the STOP or REPSTART.
+
 // used to initalize the slave Transmit functions in case they are not used.
 void twi0_transmit_default(void)
 {
@@ -102,8 +129,6 @@ void twi0_transmit_default(void)
     twi0_slaveTxBuffer[0] = 0x00;
     return;
 }
-
-typedef void (*PointerToTransmit)(void);
 
 // used to initalize the slave Receive functions in case they are not used.
 void twi0_receive_default(uint8_t *data, uint8_t length)
@@ -117,47 +142,16 @@ void twi0_receive_default(uint8_t *data, uint8_t length)
     //
     // the receive event happens once after the I2C stop or repeated-start
     //
-    // repeated-start is usd for atomic bus operation e.g. prevents others from using bus 
+    // repeated-start is usd for atomic bus operation e.g. prevents others from using bus
     return;
 }
 
-static uint8_t twi0_masterBuffer[TWI0_BUFFER_LENGTH];
-static volatile uint8_t twi0_masterBufferIndex;
-static volatile uint8_t twi0_masterBufferLength;
-static register8_t  master_slaveAddress;
-static register8_t *master_writeData;
-static register8_t *master_readData;
-static register8_t  master_bytesToWrite;
-static register8_t  master_bytesToRead;
-static register8_t  master_bytesWritten;
-static register8_t  master_bytesRead;
-static register8_t  master_sendStop;
-static register8_t  master_trans_status;
-static register8_t  master_result;
-
-static uint8_t twi0_slaveTxBuffer[TWI0_BUFFER_LENGTH];
+typedef void (*PointerToTransmit)(void);
 typedef void (*PointerToReceive)(uint8_t*, uint8_t);
 static PointerToTransmit twi0_onSlaveTx = twi0_transmit_default; // user must call twi0_fillSlaveTxBuffer(bytes, length) in callback
 static PointerToReceive twi0_onSlaveRx = twi0_receive_default;
-static uint8_t (*TWI_onSlaveTransmit)(void) __attribute__((unused));
-static void (*TWI_onSlaveReceive)(int) __attribute__((unused));
-static register8_t* slave_writeData;
-static register8_t* slave_readData;
-static register8_t  slave_bytesToWrite;
-static register8_t  slave_bytesWritten;
-static register8_t  slave_bytesToRead;
-static register8_t  slave_bytesRead;
-static register8_t  slave_trans_status;
-static register8_t  slave_result;
-static register8_t  slave_callUserReceive;
-static register8_t  slave_callUserRequest;
-
-// enable interleaving buffer for R-Pi Zero in header
-static uint8_t twi0_slaveRxBufferA[TWI0_BUFFER_LENGTH];
-#ifdef TWI0_SLAVE_RX_BUFFER_INTERLEAVING
-static uint8_t twi0_slaveRxBufferB[TWI0_BUFFER_LENGTH];
-#endif
-static uint8_t *twi0_slaveRxBuffer;
+// static uint8_t (*TWI_onSlaveTransmit)(void) __attribute__((unused));
+// static void (*TWI_onSlaveReceive)(int) __attribute__((unused));
 
 // Set the BAUD bit field in the TWIn.MBAUD
 void TWI_SetBaud(uint32_t f_scl)
@@ -192,11 +186,10 @@ void TWI_SetBaud(uint32_t f_scl)
 
 }
 
-void TWI_MasterTransactionFinished(uint8_t result)
+void TWI_MasterTransactionFinished(TWIM_RESULT_t result)
 {
     master_result = result;
-    master_trans_status = TWIM_STATUS_READY;
-    twi_mode = TWI_MODE_MASTER;
+    twim_mode = TWIM_MODE_ENABLE;
 }
 
 // TWI0 Master event
@@ -220,8 +213,7 @@ ISR(TWI0_TWIM_vect)
 
         TWI0.MSTATUS = currentStatus; // clear operation
 
-        twi_mode = TWI_MODE_MASTER;
-        master_trans_status = TWIM_STATUS_READY;
+        twim_mode = TWIM_MODE_ENABLE;
     }
 
     // master write 
@@ -270,7 +262,7 @@ ISR(TWI0_TWIM_vect)
         // If read is next, send START condition + Address + 'R/_W = 1'
         else if (master_bytesRead < bytesToRead) 
         {
-            twi_mode = TWI_MODE_MASTER_RECEIVE;
+            twim_mode = TWIM_MODE_RECEIVE;
             uint8_t readAddress = ADD_READ_BIT(master_slaveAddress);
             TWI0.MADDR = readAddress;
         }
@@ -346,7 +338,6 @@ ISR(TWI0_TWIM_vect)
 
 void TWI_SlaveAddressMatchHandler()
 {
-    slave_trans_status = TWIS_STATUS_BUSY;
     slave_result = TWIS_RESULT_UNKNOWN;
     
     // ACK, data should be on the way
@@ -357,14 +348,21 @@ void TWI_SlaveAddressMatchHandler()
         slave_bytesWritten = 0;
         /* Call user function  */
         twi0_onSlaveTx(); // user must call twi0_fillSlaveTxBuffer(bytes, length) in callback
-        twi_mode = TWI_MODE_SLAVE_TRANSMIT;
+        twis_mode = TWIS_MODE_TRANSMIT;
     } 
     else // Master Writes to Slave
     {
         slave_bytesRead = 0;
         slave_callUserReceive = 1;
-        twi_mode = TWI_MODE_SLAVE_RECEIVE;
+        twis_mode = TWIS_MODE_RECEIVE;
     }
+}
+
+void TWI_SlaveTransactionFinished(TWIS_RESULT_t result)
+{
+    TWI0.SCTRLA |= (TWI_APIEN_bm | TWI_PIEN_bm);
+    twis_mode = TWIS_MODE_ENABLE;
+    slave_result = result;
 }
 
 void TWI_SlaveStopHandler()
@@ -463,8 +461,7 @@ ISR(TWI0_TWIS_vect)
                 else // got ACK, more data expected
                 {        
                     if(slave_bytesWritten < slave_bytesToWrite){
-                        uint8_t data = slave_writeData[slave_bytesWritten];
-                        // twi0_fillSlaveTxBuffer is used to the save buffer into twi0_slaveTxBuffer
+                        // twi0_fillSlaveTxBuffer is used to save buffer into twi0_slaveTxBuffer
                         uint8_t data = twi0_slaveTxBuffer[slave_bytesWritten];
                         TWI0.SDATA = data; // send data
                         slave_bytesWritten++;    
@@ -479,7 +476,7 @@ ISR(TWI0_TWIS_vect)
             }
             else // Master Write/Slave Read
             {
-                if(slave_bytesRead < slave_bytesToRead) // check for free buffer space
+                if(slave_bytesRead < TWI0_BUFFER_LENGTH) // check for free buffer space
                 {  
                     uint8_t data = TWI0.SDATA;
                     slave_readData[slave_bytesRead] = data;
@@ -520,18 +517,18 @@ void twi0_init(uint32_t bitrate, TWI0_PINS_t pull_up)
         // deactivate internal pullups for twi.
         ioCntl(MCU_IO_SCL0, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
         ioCntl(MCU_IO_SDA0, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
-        twi_mode = TWI_MODE_UNKNOWN;
+        twim_mode = TWIM_MODE_UNKNOWN;
     }
     else
     {
-        if(twi_mode != TWI_MODE_UNKNOWN) return;
+        if(twim_mode != TWIM_MODE_UNKNOWN) return;
 
         // start with interleaving buffer A (B is an optional buffer if it is enabled)
         twi0_slaveRxBuffer = twi0_slaveRxBufferA;
 
         // initialize state machine
         twi0_MastSlav_RxTx_state = TWI_STATE_READY;
-        twi_mode = TWI_MODE_MASTER;
+        twim_mode = TWIM_MODE_ENABLE;
         twi0_protocall = TWI0_PROTOCALL_STOP & ~TWI0_PROTOCALL_REPEATEDSTART;
 
         // use default pins PA2, PA3, PC2, PC3
@@ -547,7 +544,7 @@ void twi0_init(uint32_t bitrate, TWI0_PINS_t pull_up)
             ioCntl(MCU_IO_SDA0, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_ENABLE, PORT_INVERT_NORMAL);
         }
 
-        master_trans_status = TWIM_STATUS_READY;
+        master_result = TWIM_RESULT_OK;
 
         // enable twi module, acks, and twi interrupt
         TWI0.MCTRLA = TWI_RIEN_bm | TWI_WIEN_bm | TWI_ENABLE_bm;
@@ -562,18 +559,17 @@ void twi0_init(uint32_t bitrate, TWI0_PINS_t pull_up)
 // 2 .. TWI state machine not ready for use
 TWI0_WRT_t twi0_masterAsyncWrite(uint8_t slave_address, uint8_t *write_data, uint8_t bytes_to_write, TWI0_PROTOCALL_t send_stop)
 {
-    if(twi_mode != TWI_MODE_MASTER) return TWI0_WRT_NOT_READY; // add TWI0_WRT_WRONG_MODE
+    if(twim_mode != TWIM_MODE_ENABLE) return TWI0_WRT_NOT_READY; // may be receving, writing or unknown
 
     if(bytes_to_write > TWI0_BUFFER_LENGTH) return TWI0_WRT_TO_MUCH_DATA;
 
-    /*Initiate transaction if bus is ready. */
-    if (master_trans_status != TWIM_STATUS_READY) 
+    // Initiate the new transaction if bus is ready
+    if (master_result == TWIM_RESULT_UNKNOWN)
     { 
         return TWI0_WRT_NOT_READY;
     }
     else
     {
-        master_trans_status = TWIM_STATUS_BUSY;
         master_result = TWIM_RESULT_UNKNOWN;
 
         // buffer data so wright can return without blocking. NOT_READY until buffer is sent.
@@ -593,13 +589,13 @@ TWI0_WRT_t twi0_masterAsyncWrite(uint8_t slave_address, uint8_t *write_data, uin
         // Write command, send the START condition + Address + 'R/_W = 0'
         if (master_bytesToWrite > 0) 
         {
-            twi_mode = TWI_MODE_MASTER_TRANSMIT;
+            twim_mode = TWIM_MODE_TRANSMIT;
             uint8_t writeAddress = ADD_WRITE_BIT(master_slaveAddress);
             TWI0.MADDR = writeAddress;
         }
         else // ping
         {
-            twi_mode = TWI_MODE_MASTER_TRANSMIT;
+            twim_mode = TWIM_MODE_TRANSMIT;
             uint8_t writeAddress = ADD_WRITE_BIT(master_slaveAddress);
             TWI0.MADDR = writeAddress;
         }
@@ -705,18 +701,17 @@ uint8_t twi0_masterBlockingWrite(uint8_t slave_address, uint8_t* write_data, uin
 // 2 .. TWI state machine not ready for use
 TWI0_RD_t twi0_masterAsyncRead(uint8_t slave_address, uint8_t bytes_to_read, TWI0_PROTOCALL_t send_stop)
 {
-    if(twi_mode != TWI_MODE_MASTER) return TWI0_RD_NOT_READY; // add TWI0_RD_WRONG_MODE
+    if(twim_mode != TWIM_MODE_ENABLE) return TWI0_RD_NOT_READY; // add TWI0_RD_WRONG_MODE
 
     if(bytes_to_read > TWI0_BUFFER_LENGTH) return TWI0_RD_TO_MUCH_DATA;
 
-    /*Initiate transaction if bus is ready. */
-    if (master_trans_status != TWIM_STATUS_READY) 
+    // Initiate the new transaction if bus is ready
+    if (master_result == TWIM_RESULT_UNKNOWN)
     { 
         return TWI0_WRT_NOT_READY;
     }
     else
     {
-        master_trans_status = TWIM_STATUS_BUSY;
         master_result = TWIM_RESULT_UNKNOWN;
 
         master_writeData = NULL;
@@ -733,13 +728,13 @@ TWI0_RD_t twi0_masterAsyncRead(uint8_t slave_address, uint8_t bytes_to_read, TWI
 
         // Read command, send the START condition + Address + 'R/_W = 1'
         if (master_bytesToRead > 0) {
-            twi_mode = TWI_MODE_MASTER_RECEIVE;
+            twim_mode = TWIM_MODE_RECEIVE;
             uint8_t readAddress = ADD_READ_BIT(master_slaveAddress);
             TWI0.MADDR = readAddress;
         }
          else // ping
         {
-            twi_mode = TWI_MODE_MASTER_TRANSMIT;
+            twim_mode = TWIM_MODE_TRANSMIT;
             uint8_t writeAddress = ADD_WRITE_BIT(master_slaveAddress);
             TWI0.MADDR = writeAddress;
         }
@@ -754,7 +749,7 @@ TWI0_RD_t twi0_masterAsyncRead(uint8_t slave_address, uint8_t bytes_to_read, TWI
 // clears the twi0_error value so that getBytes can read data NACKed befor finishing.
 TWI0_RD_STAT_t twi0_masterAsyncRead_status(void)
 {
-    TWI_ERROR_t twi0_error_temp;
+    TWI_ERROR_t twi0_error_temp = TWI_ERROR_NONE;
     if (master_result == TWIM_RESULT_UNKNOWN)
         return TWI0_RD_STAT_BUSY;
     else if (TWI_ERROR_NONE == twi0_error)
@@ -765,7 +760,6 @@ TWI0_RD_STAT_t twi0_masterAsyncRead_status(void)
         twi0_error_temp = TWI0_RD_STAT_DATA_NACK;
     else if (TWI_ERROR_ILLEGAL == twi0_error) 
         twi0_error_temp = TWI0_RD_STAT_ILLEGAL;
-    twi0_error = TWI_ERROR_NONE;
     return twi0_error_temp;
 }
 
@@ -912,6 +906,41 @@ uint8_t twi0_masterWriteRead(uint8_t slave_address, uint8_t* write_data, uint8_t
         return 0; // not done
     }
     
+}
+
+// init slave with a valid address (0x08..0x77), otherwise slave hardware is disabled
+// slave is dual mode, both master and slave should be able to run
+// return address if set
+uint8_t twi0_slaveAddress(uint8_t slave)
+{
+    if(twis_mode != TWIS_MODE_UNKNOWN) return 0;
+    if( (slave>=0x8) && (slave<=0x77))
+    {
+        twis_mode = TWIS_MODE_ENABLE;
+        slave_bytesRead = 0;
+        slave_bytesWritten = 0;
+        slave_result = TWIS_RESULT_UNKNOWN;
+        slave_callUserReceive = 0;
+        
+        TWI0.SADDR = slave << 1;
+        // enable an interrupt on the Data Interrupt Flag (DIF) from the Slave Status (TWIn.SSTATUS) register
+        // enable an interrupt on the Address or Stop Interrupt Flag (APIF) from the Slave Status (TWIn.SSTATUS) register
+        // allow the Address or Stop Interrupt Flag (APIF) in the Slave Status (TWIn.SSTATUS) register to be set when a Stop condition occurs
+        TWI0.SCTRLA = TWI_DIEN_bm | TWI_APIEN_bm | TWI_PIEN_bm  | TWI_ENABLE_bm;
+        
+        // Dual Control Enable bit mask which should allow the slave to operate simultaneously with master
+        TWI0.MCTRLA = TWI_ENABLE_bm;
+        return slave;
+    }
+    else
+    {
+        // turn off all Slave Control A bits so only master hardware is running
+        TWI0.SCTRLA = 0;
+        twis_mode = TWIS_MODE_UNKNOWN;
+        twi0_onSlaveTx = twi0_transmit_default;
+        twi0_onSlaveRx = twi0_receive_default;
+        return 0;
+    }
 }
 
 // fill twi0_slaveTxBuffer using callback returns
