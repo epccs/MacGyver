@@ -32,7 +32,8 @@ endif
 # Compiler/linker options
 CFLAGS = -Os -g -std=gnu99 -Wall
 # CFLAGS += -funsigned-char -funsigned-bitfields 
-# CFLAGS += -fpack-struct -fshort-enums 
+# CFLAGS += -fpack-struct
+CFLAGS += -fshort-enums
 CFLAGS += -ffunction-sections -fdata-sections 
 
 # atmega4809 is not in the avr-gcc packaged for my OS 
@@ -70,11 +71,11 @@ updi: ## upload with pyupid
 	@echo testing for prerequesetits a false will stop make
 	which python3 2>/dev/null || false
 	which pyupdi 2>/dev/null || false
-	ls ../../RPUusb/BCM24cntl/UPDImode.py 2>/dev/null || false
-	ls ../../RPUusb/BCM24cntl/UARTmode.py 2>/dev/null || false
-	python3 ../../RPUusb/BCM24cntl/UPDImode.py
+	ls ../../RPUusb/UPDImode/UPDImode.py 2>/dev/null || false
+	ls ../../RPUusb/UPDImode/UARTmode.py 2>/dev/null || false
+	python3 ../../RPUusb/UPDImode/UPDImode.py
 	pyupdi -v -d $(MCU) -c $(UPDI_PORT) -b 115200 -e -f $(TARGET).hex
-	python3 ../../RPUusb/BCM24cntl/UARTmode.py
+	python3 ../../RPUusb/UPDImode/UARTmode.py
 
 $(TARGET).elf: $(OBJECTS)
 	$(CC) $(LDFLAGS) $(TARGET_ARCH) $^ -o $@

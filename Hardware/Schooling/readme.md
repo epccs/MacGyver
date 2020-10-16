@@ -4,7 +4,18 @@ Some lessons I learned doing MacGyver.
 
 # Table Of Contents:
 
+1. ^1 UPDI Mode Does Not Turn Off
+1. ^1 Name
 1. ^0 Serial 0 Does Not Crossover
+
+
+## ^1 UPDI Mode Does Not Turn Off
+
+Using RPUusb the m238pb resets and the pin goes hi-z after enabling UPDI mode. 
+
+To help understan the problem I isolated UPDI mode to BCM24 and UART mode to BCM23. Also added a 10k Ohm pull down on UPDI mode. Then I found that I had forgot to init the pins as an output in the i2c-debug program (see [RPUusb_029ec11]) so I was turning on and off a weak pullup (that was more days than I want to admit).
+
+[RPUusb_029ec11]: https://github.com/epccs/RPUusb/commit/029ec1194d0428e7181b6f8db35fa39c39068542
 
 
 ## ^1 Name

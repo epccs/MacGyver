@@ -45,7 +45,10 @@ This board allows a Pi Zero [W] serial to interface an AVR128DA28 with either it
             *during review the Design may change without changing the revision.
             3-state buffer? https://www.diodes.com/assets/product-showcases/Automotive-compliant-Single-Gate-LVC-Logic-Family.pdf
             change name on board to MacGyver
-            AVR128DB has two power domains after a fuse is set, but the logistics of the fuse and keeping it fixed that way...
+            AVR128DB has two power domains, but the logistics is a mystery to me at this time.
+            Add 10k Ohm to discharge the UPDI mode which is controled with BCM24
+            Remove Q4 so UART mode can not get power from 3V3
+            Use BCM23 to power UART mode
 
         ^1  Done: Design, Layout, BOM, Review* (#= done), Order Boards,
             WIP: Assembly, 

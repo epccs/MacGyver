@@ -18,8 +18,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%22)
 
-An AVR128DA has two ISR driven state machines, one for the master and another for the slave 
-it is not yet clear to me if they can share the same IO hardware wihtout locking up.
+An AVR128DA has two ISR driven state machines, one for the master and another for the slave.
 
 done: removed interleaving buffer twi0_slaveRxBufferA twi0_slaveRxBufferB use twi0_slaveRxBuffer as the buffer
 
@@ -46,7 +45,7 @@ typedef enum TWI_STATE_enum {
     TWI_STATE_SLAVE_TRANSMITTER  // TWI state machine is slave transmitter
 } TWI_STATE_t;
 
-static volatile TWI_STATE_t twi0_MastSlav_RxTx_state;
+static volatile uint8_t twi0_MastSlav_RxTx_state;
 
 // TWI modes for master module
 typedef enum TWIM_MODE_enum
@@ -102,14 +101,14 @@ static volatile uint8_t  master_bytesToRead;
 static volatile uint8_t  master_bytesWritten;
 static volatile uint8_t  master_bytesRead;
 static volatile uint8_t  master_sendStop;
-static volatile TWIM_RESULT_t master_result;
+static volatile uint8_t master_result;
 
 static uint8_t twi0_slaveTxBuffer[TWI0_BUFFER_LENGTH];
 static uint8_t twi0_slaveRxBuffer[TWI0_BUFFER_LENGTH];
 static volatile uint8_t  slave_bytesToWrite;
 static volatile uint8_t  slave_bytesWritten;
 static volatile uint8_t  slave_bytesRead;
-static volatile TWIS_RESULT_t  slave_result;
+static volatile uint8_t  slave_result;
 static volatile uint8_t  run_user_receive_callback_after_STOP_or_REPSTART; // preventing clock streatching
 
 // used to initalize the slave Transmit functions in case they are not used.

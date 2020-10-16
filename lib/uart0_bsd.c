@@ -144,8 +144,9 @@ static FILE uartstream0_f = FDEV_SETUP_STREAM(uart0_putchar, uart0_getchar, _FDE
 // choices e.g., UART0_TX_REPLACE_NL_WITH_CR & UART0_RX_REPLACE_CR_WITH_NL
 FILE *uart0_init(uint32_t baudrate, uint8_t choices)
 {
+    // an stomic transaction is done by turning off interrupts
     uint8_t oldSREG = SREG;
-    cli();
+    cli();           // clear the global interrupt mask.
 
     TxHead = 0;
     TxTail = 0;
@@ -183,7 +184,7 @@ FILE *uart0_init(uint32_t baudrate, uint8_t choices)
 
     options = choices;
 
-    SREG = oldSREG;
+    SREG = oldSREG; // restore global interrupt if they were enabled
 
     return &uartstream0_f;
 }

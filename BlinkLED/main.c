@@ -18,7 +18,7 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 #include <stdlib.h>
 #include <avr/pgmspace.h>
 #include <util/delay.h>
-#include <util/atomic.h>
+#include <avr/interrupt.h>
 #include <avr/io.h>
 #include "../lib/uart0_bsd.h"
 #include "../lib/io_enum_bsd.h"
@@ -33,9 +33,9 @@ static int got_a;
 
 void setup(void)
 {
-    ioCntl(MCU_IO_AIN0, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
-    ioDir(MCU_IO_AIN0, DIRECTION_OUTPUT);
-    ioWrite(MCU_IO_AIN0,LOGIC_LEVEL_HIGH);
+    ioCntl(MCU_IO_TX2, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
+    ioDir(MCU_IO_TX2, DIRECTION_OUTPUT);
+    ioWrite(MCU_IO_TX2,LOGIC_LEVEL_HIGH);
 
     /* Initialize UART to 38.4kbps, it returns a pointer to FILE so redirect of stdin and stdout works*/
     stderr = stdout = stdin = uart0_init(38400UL, UART0_RX_REPLACE_CR_WITH_NL);
@@ -78,7 +78,7 @@ void blink(void)
     unsigned long kRuntime = elapsed(&blink_started_at);
     if ( kRuntime > blink_delay)
     {
-        ioToggle(MCU_IO_AIN0);
+        ioToggle(MCU_IO_TX2);
         i2c_ping();
         
         // next toggle 
@@ -90,8 +90,8 @@ void blink(void)
 void abort_safe(void)
 {
     // make sure controled devices are safe befor waiting on UART 
-    ioDir(MCU_IO_AIN0,DIRECTION_OUTPUT);
-    ioWrite(MCU_IO_AIN0,LOGIC_LEVEL_LOW);
+    ioDir(MCU_IO_TX2,DIRECTION_OUTPUT);
+    ioWrite(MCU_IO_TX2,LOGIC_LEVEL_LOW);
     // flush the UART befor halt
     uart0_flush();
     _delay_ms(20); // wait for last byte to send
@@ -101,7 +101,7 @@ void abort_safe(void)
     while(1) 
     {
         _delay_ms(100); 
-        ioToggle(MCU_IO_AIN0);
+        ioToggle(MCU_IO_TX2);
     }
 }
 

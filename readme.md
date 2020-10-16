@@ -46,6 +46,7 @@ note: 10.0.0 has float/double/long_double (32/32/64).
 ```
 # if side load tools are used skip packages: gcc-avr binutils-avr gdb-avr avr-libc 
 sudo apt-get install git make avrdude gcc-avr binutils-avr gdb-avr avr-libc python3-pip
+sudo apt-get purge modemmanager
 pip3 install pyserial intelhex pylint
 pip3 install https://github.com/mraardvark/pyupdi/archive/master.zip
 # [optional side loaded toolchain(s)]

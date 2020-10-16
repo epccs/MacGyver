@@ -15,7 +15,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%22)
 */
 
-#include <util/atomic.h>
+//#include <util/atomic.h>
 #include <avr/interrupt.h>
 #include "timers_bsd.h"
 
@@ -233,15 +233,17 @@ void initTimers()
 #endif // USE_TIMERA0 or USE_TIMERRTC
 }
 
-// returns a uint32 count of Timer A underflow events.
+// returns a count of Timer A underflow events.
 // each tick is (64 * 256) = 16,384 crystal counts or 1.024mSec with F_CPU at 16MHz
 unsigned long tickAtomic()
 {
     unsigned long local;
-    ATOMIC_BLOCK ( ATOMIC_RESTORESTATE )
-    {
-        local = tick;
-    }
+
+    // an stomic transaction is done by turning off interrupts
+    uint8_t oldSREG = SREG;
+    cli();           // clear the global interrupt mask.
+    local = tick;    // there are four bytes to copy but nothing can change at the moment
+    SREG = oldSREG;  // restore global interrupt if they were enabled
 
     return local;
 }
