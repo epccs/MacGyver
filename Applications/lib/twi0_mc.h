@@ -110,23 +110,5 @@ void TWI_SlaveReadHandler(void);
 void TWI_attachSlaveRxEvent( void (*function)(int), uint8_t *read_data, uint8_t bytes_to_read );
 void TWI_attachSlaveTxEvent( uint8_t (*function)(void), uint8_t *write_data );
 void TWI_SlaveTransactionFinished(uint8_t result);
-/*! TWI master interrupt service routine.
- *
- *  Interrupt service routine for the TWI master. Copy the needed vectors
- *  into your code.
- *
-
-
-    ISR(TWI0_TWIM_vect){
-        TWI_MasterInterruptHandler();
-    }
-
-    ISR(TWI0_TWIS_vect){
-        TWI_SlaveInterruptHandler();
-    }    
-
- *
- */ 
-
 
 #endif /* TWI_DRIVER_H */
