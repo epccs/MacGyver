@@ -1,12 +1,18 @@
-# Uart0_hello is used to kick the tires
-TARGET = Uart0_hello
+# used to kick the tires
+TARGET = Uart
 LIBDIR = ../lib
-OBJECTS = main.o 
+OBJECTS = main.o \
+	id.o \
+	$(LIBDIR)/twi0_bsd.o \
+	$(LIBDIR)/uart0_bsd.o \
+	$(LIBDIR)/rpu_mgr.o \
+	$(LIBDIR)/timers_bsd.o \
+	$(LIBDIR)/parse.o
 
 # Chip and project-specific global definitions
-MCU   =  avr128da28
-# default 4MHz; Internal High-Frequency Oscillator Control A (OSCHFCTRLA) bitfield FRQSEL[3:0]
-F_CPU = 4000000UL
+MCU = avr128da28
+# 1,2,4*,8,16. * is default: Internal High-Frequency Oscillator Control A (OSCHFCTRLA) bitfield FRQSEL[3:0]
+F_CPU = 16000000UL
 #BAUD  =  38400UL
 CPPFLAGS = -DF_CPU=$(F_CPU) -I. 
 
@@ -33,10 +39,10 @@ endif
 CFLAGS = -Os -g -std=gnu99 -Wall
 # CFLAGS += -funsigned-char -funsigned-bitfields 
 # CFLAGS += -fpack-struct
-CFLAGS += -fshort-enums
+CFLAGS += -fshort-enums 
 CFLAGS += -ffunction-sections -fdata-sections 
 
-# atmega4809 is not in the avr-gcc packaged for my OS 
+# avr128da28 is not in the avr-gcc packaged for my OS 
 TARGET_ARCH = -mmcu=$(MCU) \
 -B $(LIBDIR)/AVR-Dx_DFP/gcc/dev/avr128da28/ \
 -I $(LIBDIR)/AVR-Dx_DFP/include/
@@ -76,6 +82,22 @@ updi: ## upload with pyupid
 	python3 ../../RPUusb/UPDImode/UPDImode.py
 	pyupdi -v -d $(MCU) -c $(UPDI_PORT) -b 115200 -e -f $(TARGET).hex
 	python3 ../../RPUusb/UPDImode/UARTmode.py
+
+reset: ## reset AVR with pyupid
+	@echo testing for prerequesetits a false will stop make
+	which python3 2>/dev/null || false
+	which pyupdi 2>/dev/null || false
+	ls ../../RPUusb/UPDImode/UPDImode.py 2>/dev/null || false
+	ls ../../RPUusb/UPDImode/UARTmode.py 2>/dev/null || false
+	python3 ../../RPUusb/UPDImode/UPDImode.py
+	pyupdi -v -d $(MCU) -c $(UPDI_PORT) -b 115200 -e --reset
+	python3 ../../RPUusb/UPDImode/UARTmode.py
+
+hdrcode: ## copy header for VSCode to find run with sudo
+	@echo VSCode will not look outside or cross-origin for an include,  
+	@echo so I have to put the MCU header where it can find it.
+	cp -u ../lib/AVR-Dx_DFP/include/avr/ioavr128da28.h /usr/lib/avr/include/avr/ioavr128da28.h
+	chmod u-x /usr/lib/avr/include/avr/ioavr128da28.h
 
 $(TARGET).elf: $(OBJECTS)
 	$(CC) $(LDFLAGS) $(TARGET_ARCH) $^ -o $@
