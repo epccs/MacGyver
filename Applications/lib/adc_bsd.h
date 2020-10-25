@@ -21,32 +21,17 @@ typedef enum ADC_CH_enum {
 } ADC_CH_t;
 
 extern volatile int adc[];
-extern volatile uint8_t adc_channel;
+extern volatile ADC_CH_t adc_channel;
 extern volatile uint8_t ADC_auto_conversion;
-extern volatile uint8_t analog_reference;
+extern volatile VREF_REFSEL_t analog_reference;
 
 #define ISR_ADCBURST_DONE 0x7F
 #define ISR_ADCBURST_START 0x00
 extern volatile uint8_t adc_isr_status;
 
-/* ioavr128da... has a reference select enum that may be passed to init_ADC_single_conversion
-typedef enum VREF_REFSEL_enum
-{
-    VREF_REFSEL_1V024_gc = (0x00<<0),  // Internal 1.024V reference
-    VREF_REFSEL_2V048_gc = (0x01<<0),  // Internal 2.048V reference
-    VREF_REFSEL_4V096_gc = (0x02<<0),  // Internal 4.096V reference
-    VREF_REFSEL_2V500_gc = (0x03<<0),  // Internal 2.500V reference
-    VREF_REFSEL_VDD_gc = (0x05<<0),  // VDD as reference
-    VREF_REFSEL_VREFA_gc = (0x06<<0),  // External referance on VREFA pin
-} VREF_REFSEL_t;
-*/
-
-#ifndef EXTERNAL_AVCC
-#   error your mcu is not supported
-#endif
-extern void init_ADC_single_conversion(VREF_REFSEL_t reference);
+extern void init_ADC_single_conversion(void);
 extern int adcAtomic(ADC_CH_t channel);
-extern int adcSingle(uint8_t channel);
+extern int adcSingle(ADC_CH_t channel);
 
 #define FREE_RUNNING 1
 #define BURST_MODE 0

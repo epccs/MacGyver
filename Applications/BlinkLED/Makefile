@@ -74,21 +74,21 @@ updi: ## upload with pyupid
 	@echo testing for prerequesetits a false will stop make
 	which python3 2>/dev/null || false
 	which pyupdi 2>/dev/null || false
-	ls ../../RPUusb/UPDImode/UPDImode.py 2>/dev/null || false
-	ls ../../RPUusb/UPDImode/UARTmode.py 2>/dev/null || false
-	python3 ../../RPUusb/UPDImode/UPDImode.py
+	ls ../../../RPUusb/UPDImode/UPDImode.py 2>/dev/null || false
+	ls ../../../RPUusb/UPDImode/UARTmode.py 2>/dev/null || false
+	python3 ../../../RPUusb/UPDImode/UPDImode.py
 	pyupdi -v -d $(MCU) -c $(UPDI_PORT) -b 115200 -e -f $(TARGET).hex
-	python3 ../../RPUusb/UPDImode/UARTmode.py
+	python3 ../../../RPUusb/UPDImode/UARTmode.py
 
 reset: ## reset AVR with pyupid
 	@echo testing for prerequesetits a false will stop make
 	which python3 2>/dev/null || false
 	which pyupdi 2>/dev/null || false
-	ls ../../RPUusb/UPDImode/UPDImode.py 2>/dev/null || false
-	ls ../../RPUusb/UPDImode/UARTmode.py 2>/dev/null || false
-	python3 ../../RPUusb/UPDImode/UPDImode.py
+	ls ../../../RPUusb/UPDImode/UPDImode.py 2>/dev/null || false
+	ls ../../../RPUusb/UPDImode/UARTmode.py 2>/dev/null || false
+	python3 ../../../RPUusb/UPDImode/UPDImode.py
 	pyupdi -v -d $(MCU) -c $(UPDI_PORT) -b 115200 -e --reset
-	python3 ../../RPUusb/UPDImode/UARTmode.py
+	python3 ../../../RPUusb/UPDImode/UARTmode.py
 
 hdrcode: ## copy header for VSCode to find run with sudo
 	@echo VSCode will not look outside or cross-origin for an include,  

@@ -18,9 +18,10 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 
 #include <util/atomic.h>
 #include "adc_bsd.h"
+#include "references.h"
 
 volatile int adc[ADC_CHANNELS];
-volatile uint8_t adc_channel;
+volatile ADC_CH_t adc_channel;
 volatile uint8_t ADC_auto_conversion;
 volatile VREF_REFSEL_t analog_reference;
 volatile uint8_t adc_isr_status;
@@ -30,73 +31,11 @@ static uint8_t free_running; // if true loop thru channels continuously
 // setup the ADC channel for reading
 void channel_setup(void)
 {
-    switch (adc_channel)
-    {
-    case 0:
-        ADC0.CTRLD = ADC_INITDLY_DLY16_gc; // the reference needs some time to stabalize.
-        ADC0.CTRLA = ADC_RESSEL_12BIT_gc | (0<<ADC_CONVMODE_bp); //12-bit resolution, SINGLEENDED
-        VREF.ADC0REF = VREF_REFSEL_VDD_gc; // Always On bit (see datasheet) is not selected so after each reading the referance will disconnect
-        ADC0.MUXPOS = ADC_MUXPOS_AIN0_gc; // select +ADC side to use AIN0
-        //ADC0.MUXNEG = ADC_MUXNEG_GND_gc; // in diff mode select -ADC side to use 0V
-        break;
-    case 1:
-        ADC0.CTRLD = ADC_INITDLY_DLY16_gc; // the reference needs some time to stabalize.
-        ADC0.CTRLA = ADC_RESSEL_12BIT_gc | (0<<ADC_CONVMODE_bp); //12-bit resolution, SINGLEENDED
-        VREF.ADC0REF = VREF_REFSEL_VDD_gc; // Always On bit (see datasheet) is not selected so after each reading the referance will disconnect
-        ADC0.MUXPOS = ADC_MUXPOS_AIN1_gc; // select +ADC side to use AIN1
-        //ADC0.MUXNEG = ADC_MUXNEG_GND_gc; // in diff mode select -ADC side to use 0V
-        break;
-    case 2:
-        ADC0.CTRLD = ADC_INITDLY_DLY16_gc; // the reference needs some time to stabalize.
-        ADC0.CTRLA = ADC_RESSEL_12BIT_gc | (0<<ADC_CONVMODE_bp); //12-bit resolution, SINGLEENDED
-        VREF.ADC0REF = VREF_REFSEL_VDD_gc; // Always On bit (see datasheet) is not selected so after each reading the referance will disconnect
-        ADC0.MUXPOS = ADC_MUXPOS_AIN2_gc; // select +ADC side to use AIN2
-        //ADC0.MUXNEG = ADC_MUXNEG_GND_gc; // in diff mode select -ADC side to use 0V
-        break;
-    case 3:
-        ADC0.CTRLD = ADC_INITDLY_DLY16_gc; // the reference needs some time to stabalize.
-        ADC0.CTRLA = ADC_RESSEL_12BIT_gc | (0<<ADC_CONVMODE_bp); //12-bit resolution, SINGLEENDED
-        VREF.ADC0REF = VREF_REFSEL_VDD_gc; // Always On bit (see datasheet) is not selected so after each reading the referance will disconnect
-        ADC0.MUXPOS = ADC_MUXPOS_AIN3_gc; // select +ADC side to use AIN3
-        //ADC0.MUXNEG = ADC_MUXNEG_GND_gc; // in diff mode select -ADC side to use 0V
-        break;
-    case 4:
-        ADC0.CTRLD = ADC_INITDLY_DLY16_gc; // the reference needs some time to stabalize.
-        ADC0.CTRLA = ADC_RESSEL_12BIT_gc | (0<<ADC_CONVMODE_bp); //12-bit resolution, SINGLEENDED
-        VREF.ADC0REF = VREF_REFSEL_VDD_gc; // Always On bit (see datasheet) is not selected so after each reading the referance will disconnect
-        ADC0.MUXPOS = ADC_MUXPOS_AIN4_gc; // select +ADC side to use AIN4
-        //ADC0.MUXNEG = ADC_MUXNEG_GND_gc; // in diff mode select -ADC side to use 0V
-        break;
-    case 5:
-        ADC0.CTRLD = ADC_INITDLY_DLY16_gc; // the reference needs some time to stabalize.
-        ADC0.CTRLA = ADC_RESSEL_12BIT_gc | (0<<ADC_CONVMODE_bp); //12-bit resolution, SINGLEENDED
-        VREF.ADC0REF = VREF_REFSEL_VDD_gc; // Always On bit (see datasheet) is not selected so after each reading the referance will disconnect
-        ADC0.MUXPOS = ADC_MUXPOS_AIN5_gc; // select +ADC side to use AIN5
-        //ADC0.MUXNEG = ADC_MUXNEG_GND_gc; // in diff mode select -ADC side to use 0V
-        break;
-    case 6:
-        ADC0.CTRLD = ADC_INITDLY_DLY16_gc; // the reference needs some time to stabalize.
-        ADC0.CTRLA = ADC_RESSEL_12BIT_gc | (0<<ADC_CONVMODE_bp); //12-bit resolution, SINGLEENDED
-        VREF.ADC0REF = VREF_REFSEL_VDD_gc; // Always On bit (see datasheet) is not selected so after each reading the referance will disconnect
-        ADC0.MUXPOS = ADC_MUXPOS_AIN6_gc; // select +ADC side to use AIN6
-        //ADC0.MUXNEG = ADC_MUXNEG_GND_gc; // in diff mode select -ADC side to use 0V
-        break;
-    case 7:
-        ADC0.CTRLD = ADC_INITDLY_DLY16_gc; // the reference needs some time to stabalize.
-        ADC0.CTRLA = ADC_RESSEL_12BIT_gc | (0<<ADC_CONVMODE_bp); //12-bit resolution, SINGLEENDED
-        VREF.ADC0REF = VREF_REFSEL_VDD_gc; // Always On bit (see datasheet) is not selected so after each reading the referance will disconnect
-        ADC0.MUXPOS = ADC_MUXPOS_AIN7_gc; // select +ADC side to use AIN7
-        //ADC0.MUXNEG = ADC_MUXNEG_GND_gc; // in diff mode select -ADC side to use 0V
-        break;
-    default:
-        adc_channel = 0;
-        ADC0.CTRLD = ADC_INITDLY_DLY16_gc; // the reference needs some time to stabalize.
-        ADC0.CTRLA = ADC_RESSEL_12BIT_gc | (0<<ADC_CONVMODE_bp); //12-bit resolution, SINGLEENDED
-        VREF.ADC0REF = VREF_REFSEL_VDD_gc; // Always On bit (see datasheet) is not selected so after each reading the referance will disconnect
-        ADC0.MUXPOS = ADC_MUXPOS_AIN0_gc; // select +ADC side to use AIN0
-        //ADC0.MUXNEG = ADC_MUXNEG_GND_gc; // in diff mode select -ADC side to use 0V
-        break;
-    }
+    ADC0.CTRLD = ADC_INITDLY_DLY16_gc; // the reference needs some time to stabalize.
+    ADC0.CTRLA = ADC_RESSEL_12BIT_gc | (0<<ADC_CONVMODE_bp); //12-bit resolution, SINGLEENDED
+    VREF.ADC0REF = calMap[adc_channel].adc0ref; // Always On bit (see datasheet) is not selected so after each reading the referance will disconnect
+    ADC0.MUXPOS = calMap[adc_channel].muxpos; // select +ADC side
+    ADC0.MUXNEG = calMap[adc_channel].muxneg; // select -ADC side
 }
 
 
@@ -135,9 +74,8 @@ ISR(ADC0_RESRDY_vect)
 
 // Select a referance (VREF_REFSEL_VDD_gc, VREF_REFSEL_1V024_gc) and initialize ADC but do not start it.
 // also used to init for auto conversion
-void init_ADC_single_conversion(VREF_REFSEL_t reference)
+void init_ADC_single_conversion(void)
 {
-    analog_reference = reference; // save it for use in the ISR
     free_running = 0;
 
     // datasheet wants ADC clock to be faster than 150 kHz.
@@ -156,17 +94,22 @@ void init_ADC_single_conversion(VREF_REFSEL_t reference)
 #else  
     ADC0.CTRLC = ADC_PRESC_DIV2_gc; // is the lowest setting
 #endif
-    ADC0.SAMPCTRL=14; //16 ADC clock sampling time for slow mode
-
-
-    // Enable ADC 
+    ADC0.SAMPCTRL=0; //This bit field extends the ADC sampling time beyond the default two clocks
     ADC0.CTRLD = ADC_INITDLY_DLY16_gc; // the reference needs time to stabalize.
-    ADC0.CTRLA = ADC_RESSEL_12BIT_gc | (0<<ADC_CONVMODE_bp);
 
-    VREF.ADC0REF = reference; // Always On bit (see datasheet) is not selected so after each reading the referance will disconnect
+    // load references or set error
+    ref_loaded = VREF_LOADED_NO;
+    while(ref_loaded < VREF_LOADED_DONE)
+    {
+        LoadAnalogRef();
+    }
 
-    ADC0.MUXPOS = ADC_MUXPOS_AIN0_gc; // init with +ADC to AIN0
-    //ADC0.MUXNEG = ADC_MUXNEG_GND_gc; // init with -ADC to 0V
+    // load calibrations or set error
+    cal_loaded = CALIBRATE_LOADED_NO;
+    while(cal_loaded < CALIBRATE_LOADED_DONE)
+    {
+        LoadAnalogCal();
+    }
 
     ADC_auto_conversion = 0; 
 }
@@ -179,7 +122,7 @@ void init_ADC_single_conversion(VREF_REFSEL_t reference)
 void enable_ADC_auto_conversion(uint8_t free_run)
 {
     adc_channel = 0;
-    adc_isr_status = ISR_ADCBURST_START; // mark so we know new readings are arriving
+    adc_isr_status = ISR_ADCBURST_START; // mark so we know new readings are wip
     free_running = free_run;
 
     // Start the first Conversion (ISR will start each one after the previous is done)
@@ -205,7 +148,7 @@ int adcAtomic(ADC_CH_t channel)
 }
 
 // ADC single channel conversion (blocking)
-int adcSingle(uint8_t channel)
+int adcSingle(ADC_CH_t channel)
 {
     adc_channel = channel;
     channel_setup();

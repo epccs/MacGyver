@@ -1,12 +1,15 @@
 # used to kick the tires
-TARGET = Uart
+TARGET = Adc
 LIBDIR = ../lib
 OBJECTS = main.o \
-	id.o \
-	$(LIBDIR)/twi0_bsd.o \
-	$(LIBDIR)/uart0_bsd.o \
-	$(LIBDIR)/rpu_mgr.o \
+	analog.o \
+	../Uart/id.o \
 	$(LIBDIR)/timers_bsd.o \
+	$(LIBDIR)/uart0_bsd.o \
+	$(LIBDIR)/twi0_bsd.o \
+	$(LIBDIR)/rpu_mgr.o \
+	$(LIBDIR)/adc_bsd.o \
+	$(LIBDIR)/references.o \
 	$(LIBDIR)/parse.o
 
 # Chip and project-specific global definitions
@@ -39,7 +42,7 @@ endif
 CFLAGS = -Os -g -std=gnu99 -Wall
 # CFLAGS += -funsigned-char -funsigned-bitfields 
 # CFLAGS += -fpack-struct
-CFLAGS += -fshort-enums 
+CFLAGS += -fshort-enums
 CFLAGS += -ffunction-sections -fdata-sections 
 
 # avr128da28 is not in the avr-gcc packaged for my OS 
@@ -89,11 +92,11 @@ reset: ## reset AVR with pyupid
 	which pyupdi 2>/dev/null || false
 	ls ../../../RPUusb/UPDImode/UPDImode.py 2>/dev/null || false
 	ls ../../../RPUusb/UPDImode/UARTmode.py 2>/dev/null || false
-	python3 ../../../RPUusb/UPDImode/UPDImode.py
+	python3 ../../RPUusb/UPDImode/UPDImode.py
 	pyupdi -v -d $(MCU) -c $(UPDI_PORT) -b 115200 -e --reset
 	python3 ../../../RPUusb/UPDImode/UARTmode.py
 
-hdrcode: ## copy header for VSCode to find. Run with sudo
+hdrcode: ## copy header for VSCode to find run with sudo
 	@echo VSCode will not look outside or cross-origin for an include,  
 	@echo so I have to put the MCU header where it can find it.
 	cp -u ../lib/AVR-Dx_DFP/include/avr/ioavr128da28.h /usr/lib/avr/include/avr/ioavr128da28.h
