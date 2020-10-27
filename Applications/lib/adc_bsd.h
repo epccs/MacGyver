@@ -22,7 +22,6 @@ typedef enum ADC_CH_enum {
 
 extern volatile int adc[];
 extern volatile ADC_CH_t adc_channel;
-extern volatile uint8_t ADC_auto_conversion;
 extern volatile VREF_REFSEL_t analog_reference;
 
 #define ISR_ADCBURST_DONE 0x7F

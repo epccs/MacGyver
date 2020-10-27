@@ -41,22 +41,12 @@ struct Cal_Map {
     VREF_REFSEL_t adc0ref; // Setting for ADC0 Reference register
     ADC_MUXPOS_t muxpos; // Setting for ADC0 Positive mux input register
     ADC_MUXNEG_t muxneg; // Setting for ADC0 Negative mux input register
+    uint8_t sampctrl; // Extend the ADC sampling time beyond the default two clocks
 };
 
-typedef enum ADC_CAL_enum 
-{
-    ADC_CAL_AIN0, // Calibration for analog channel 0
-    ADC_CAL_AIN1, // Calibration for analog channel 1
-    ADC_CAL_AIN2, // Calibration for analog channel 2
-    ADC_CAL_AIN3, // Calibration for analog channel 3
-    ADC_CAL_AIN4, // Calibration for analog channel 4
-    ADC_CAL_AIN5, // Calibration for analog channel 5
-    ADC_CAL_AIN6, // Calibration for analog channel 6
-    ADC_CAL_AIN7, // Calibration for analog channel 7
-    ADC_CAL_END
-} ADC_CAL_t;
+#define ADC_CHANNEL_NUM 8
 
-static struct Cal_Map calMap[ADC_CAL_END];
+extern struct Cal_Map calMap[ADC_CHANNEL_NUM];
 
 extern VREF_LOADED_t LoadAnalogRef();
 extern CALIBRATE_LOADED_t LoadAnalogCal();

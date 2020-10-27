@@ -2,6 +2,7 @@
 
 ## Todo
 
+ADC blocking readings are garbage.
 The referances are going to be held on the manager, not the application eeprom.
 
 ## Overview
@@ -15,7 +16,7 @@ The channel number is used in a switch statement (see LoadAnalogCal() function i
 
 # Manager has Reference and Callibration Values
 
-The application controller and manager have a private I2C bus between them.
+The application controller and manager will have a private I2C bus between them.
 
 ```
 Callibraion         type        i2c command/select/data         manager defaults 
@@ -43,40 +44,15 @@ The internal bandgaps should be within +/-4% from the manufacturer, but are temp
 
 # Firmware Upload
 
-The manager connected to the host that uploads needs to be advised what bootload address will receive the upload. I do this with some commands on the SMBus interface from a Raspberry Pi single-board computer.
-
-``` 
-sudo apt-get install i2c-tools python3-smbus
-sudo usermod -a -G i2c your_user_name
-# logout for the change to take
-python3
-import smbus
-bus = smbus.SMBus(1)
-#write_i2c_block_data(I2C_ADDR, I2C_COMMAND, DATA)
-#read_i2c_block_data(I2C_ADDR, I2C_COMMAND, NUM_OF_BYTES)
-# what is my address
-bus.write_i2c_block_data(42, 0, [255])
-print("'"+chr(bus.read_i2c_block_data(42, 0, 2)[1])+"'" )
-'2'
-# I want to bootload address '1'
-bus.write_i2c_block_data(42, 3, [ord('1')])
-print("'"+chr(bus.read_i2c_block_data(42, 3, 2)[1])+"'" )
-'1'
-# clear the host lockout status bit so nRTS from my R-Pi on '2' will triger the bootloader on '1'
-bus.write_i2c_block_data(42, 7, [0])
-print(bus.read_i2c_block_data(42,7, 2))
-[7, 0]
-exit()
-```
-
-Now the serial port connection (see BOOTLOAD_PORT in Makefile) can reset the MCU and execute the receiving bootloader (optiboot) so that the 'make bootload' rule can upload a new binary image in the application area of the MCU's flash memory.
+TBD, but at this time the updi rule needs some python scripts in RPUusb
 
 ``` 
 sudo apt-get install make git picocom gcc-avr binutils-avr gdb-avr avr-libc avrdude
-git clone https://github.com/epccs/Gravimetric/
-cd /Gravimetric/Applications/Adc
-make
-make bootload
+git clone https://github.com/epccs/RPUusb/
+git clone https://github.com/epccs/MacGyver/
+cd /MacGyver/Applications/Adc
+make all
+make updi
 ...
 avrdude done.  Thank you.
 ``` 
@@ -86,7 +62,8 @@ Now connect with picocom (or ilk).
 
 ``` 
 #exit is C-a, C-x
-picocom -b 38400 /dev/ttyAMA0
+picocom -b 38400 /dev/ttyUSB0
+#picocom -b 38400 /dev/ttyAMA0
 ``` 
 
 or log the terminal session
@@ -114,66 +91,32 @@ identify
 
 ``` 
 /1/id?
-{"id":{"name":"Adc","desc":"Gravimetric (17341^1) Board /w ATmega324pb","avr-gcc":"5.4.0"}}
+{"id":{"name":"Adc","desc":"MacGyver (19260^1) Board /w AVR128DA28","avr-gcc":"5.4.0"}}
 ```
 
 ##  /0/analog? 0..7\[,0..7\[,0..7\[,0..7\[,0..7\]\]\]\]    
 
-Analog-to-Digital Converter reading from up to 5 channels. The reading repeats every 2 Seconds until the Rx buffer gets a character. Channel 11 is the input voltage (PWR_V), channel 10 is the input current (PWR_I), channel 8 is the alternate input current (ALT_I), channel 9 is the alternate input voltage (ALT_V), channels 0..3 can read up to about 4.5V (higher voltages are blocked by a level shift). Channel 4..7 are from floating test points. Channels 8..11 are from the manager over a private I2C connection. 
+Analog-to-Digital Converter reading from up to 5 channels. The reading repeats every 2 Seconds until the Rx buffer gets a character. Channels 0..7 can read up to the VDD voltage, they are [floating] inputs unless connected to somthing.
+
+[floating]: https://learn.adafruit.com/circuit-playground-digital-input/floating-inputs
 
 ``` 
-/1/analog? 8,9,10,11
-{"ALT_I":"0.00","ALT_V":"0.00","PWR_I":"0.02","PWR_V":"12.81"}
-/1/analog? 0,1,2,3,4
-{"ADC0":"3.75","ADC1":"3.77","ADC2":"3.77","ADC3":"3.77","ADC4":"3.77"}
+/0/analog? 0,1,2
+{"ADC0":"0.0000=0*5.0000*0.0002","ADC1":"0.0000=0*5.0000*0.0002","ADC2":"0.0000=0*5.0000*0.0002"}
+{"ADC0":"0.0000=0*5.0000*0.0002","ADC1":"0.0000=0*5.0000*0.0002","ADC2":"0.0000=0*5.0000*0.0002"}
+{"ADC0":"0.0000=0*5.0000*0.0002","ADC1":"0.0000=0*5.0000*0.0002","ADC2":"0.0000=0*5.0000*0.0002"}
+{"ADC0":"0.0000=0*5.0000*0.0002","ADC1":"0.0000=0*5.0000*0.0002","ADC2":"0.0000=0*5.0000*0.0002"}
 ```
 
-Channels 0..4 were floating when I ran the above.
-
-Channels 8..11 are taken from the manager over the I2C interface.
-
-
-##  /0/avcc 4500000..5500000
-
-Calibrate the AVCC reference in microvolts.
-
-``` 
-# do this with the SelfTest
-/1/avcc 4958500
-{"REF":{"extern_avcc":"4.9585",}}
-``` 
-
-
-##  /0/onevone 900000..1300000
-
-Set the 1V1 internal bandgap reference in microvolts.
+ISR is turned off so no values in adc array. 
 
 ```
-# do this with the SelfTest
-/1/onevone 1100000
-{"REF":{"intern_1v1":"1.1000",}}
-``` 
-
-The SelfTest will calculate this value when it is ran based on the AVCC value compiled into source.
-
-
-##  /0/reftoee
-
-Save the reference in static memory to EEPROM.
-
-```
-# do this with the SelfTest
-/1/reftoee
-{"REF":{"extern_avcc":"4.9585","intern_1v1":"1.1000",}}
+/0/adc? 0,1,2,3,4
+{"ADC0":"4095","ADC1":"4095","ADC2":"3306","ADC3":"2862","ADC4":"2575"}
+{"ADC0":"2726","ADC1":"4095","ADC2":"3534","ADC3":"3070","ADC4":"2776"}
+{"ADC0":"2894","ADC1":"4095","ADC2":"3586","ADC3":"3142","ADC4":"2845"}
+{"ADC0":"2959","ADC1":"4095","ADC2":"3606","ADC3":"3171","ADC4":"2872"}
 ```
 
-
-##  /0/reffrmee
-
-Load the reference from EEPROM into static memory.
-
-```
-/1/reffrmee
-{"REF":{"extern_avcc":"4.9785","intern_1v1":"1.0858",}}
-```
+Blocking readings are garbage, I have yet to figure out why.
 

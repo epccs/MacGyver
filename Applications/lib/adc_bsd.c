@@ -22,7 +22,6 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 
 volatile int adc[ADC_CHANNELS];
 volatile ADC_CH_t adc_channel;
-volatile uint8_t ADC_auto_conversion;
 volatile VREF_REFSEL_t analog_reference;
 volatile uint8_t adc_isr_status;
 
@@ -31,11 +30,15 @@ static uint8_t free_running; // if true loop thru channels continuously
 // setup the ADC channel for reading
 void channel_setup(void)
 {
-    ADC0.CTRLD = ADC_INITDLY_DLY16_gc; // the reference needs some time to stabalize.
-    ADC0.CTRLA = ADC_RESSEL_12BIT_gc | (0<<ADC_CONVMODE_bp); //12-bit resolution, SINGLEENDED
     VREF.ADC0REF = calMap[adc_channel].adc0ref; // Always On bit (see datasheet) is not selected so after each reading the referance will disconnect
     ADC0.MUXPOS = calMap[adc_channel].muxpos; // select +ADC side
     ADC0.MUXNEG = calMap[adc_channel].muxneg; // select -ADC side
+    ADC0.SAMPCTRL = calMap[adc_channel].sampctrl; // extend the ADC sampling time beyond the default two clocks
+    ADC0.CTRLD = ADC_INITDLY_DLY16_gc; // the reference needs some time to stabalize.
+    ADC0.CTRLA = ADC_ENABLE_bm             // ADC Enable: enabled
+                | ADC_RESSEL_12BIT_gc;     // 12-bit mode
+                // | ADC_CONVMODE_bm;     // DIFFERENTIAL mode
+    ADC0.COMMAND = ADC_STCONV_bm;   // Start conversion
 }
 
 
@@ -43,32 +46,28 @@ void channel_setup(void)
 ISR(ADC0_RESRDY_vect) 
 {
     adc[adc_channel] = ADC0.RES;
-    
+
     ++adc_channel;
     if (adc_channel >= ADC_CHANNELS) 
     {
         adc_channel = 0;
-        adc_isr_status = ISR_ADCBURST_DONE; // mark to notify burst is done
     }
 
-    channel_setup();
-
-    // Enable the ADC by writing a ‘1’ to the ADC Enable (ENABLE) bit in the ADCn.CTRLA register.
     if (adc_channel != 0)
     {
-        ADC0.CTRLA |= (1<<ADC_ENABLE_bp);
-        // ADC0.INTCTRL = (1<<ADC_RESRDY_bp); // ISR's are running
+        channel_setup();
+        ADC0.INTCTRL = ADC_RESRDY_bm; // ISR needs a manual tickling to trigger again
     }
     else if (free_running) // do not confuse with Bit 1 of ADC0.CTRLA which would loop on the same channel
     {
-        ADC0.CTRLA |= (1<<ADC_ENABLE_bp);
+        channel_setup();
         adc_isr_status = ISR_ADCBURST_START;
+        ADC0.INTCTRL = ADC_RESRDY_bm; // ISR needs a manual tickling to trigger again
     }
     else
     {
-        ADC0.INTCTRL = (0<<ADC_RESRDY_bp); // turn off ISR since channels have been scaned
+        adc_isr_status = ISR_ADCBURST_DONE; // mark to notify burst is done
     }
-    
 }
 
 
@@ -94,8 +93,6 @@ void init_ADC_single_conversion(void)
 #else  
     ADC0.CTRLC = ADC_PRESC_DIV2_gc; // is the lowest setting
 #endif
-    ADC0.SAMPCTRL=0; //This bit field extends the ADC sampling time beyond the default two clocks
-    ADC0.CTRLD = ADC_INITDLY_DLY16_gc; // the reference needs time to stabalize.
 
     // load references or set error
     ref_loaded = VREF_LOADED_NO;
@@ -110,8 +107,6 @@ void init_ADC_single_conversion(void)
     {
         LoadAnalogCal();
     }
-
-    ADC_auto_conversion = 0; 
 }
 
 
@@ -125,10 +120,9 @@ void enable_ADC_auto_conversion(uint8_t free_run)
     adc_isr_status = ISR_ADCBURST_START; // mark so we know new readings are wip
     free_running = free_run;
 
-    // Start the first Conversion (ISR will start each one after the previous is done)
-    ADC0.CTRLA |= (1<<ADC_ENABLE_bp);
-    ADC0.INTCTRL = (1<<ADC_RESRDY_bp); // turn on ISR's
-    ADC_auto_conversion =1;
+    // Start the first Conversion and touch the interupt bit
+    channel_setup();
+    ADC0.INTCTRL = ADC_RESRDY_bm; // ISR needs tickling
 }
 
 // return two byes from the last ADC update with an atomic transaction to make sure ISR does not change it durring the read
@@ -147,13 +141,18 @@ int adcAtomic(ADC_CH_t channel)
 
 }
 
+// Check if the conversion is done
+uint8_t ADC0_conversionDone(void)
+{
+    return (ADC0.INTFLAGS & ADC_RESRDY_bm);
+}
+
 // ADC single channel conversion (blocking)
 int adcSingle(ADC_CH_t channel)
 {
     adc_channel = channel;
     channel_setup();
-    ADC0.CTRLA |= (1<<ADC_ENABLE_bp);
-    while ( !(ADC0.INTFLAGS & ADC_RESRDY_bm) );
+    while ( !ADC0_conversionDone() );
     int local = ADC0.RES;
     return local;
 }

@@ -45,12 +45,35 @@ void ProcessCmd()
     }
     if ( (strcmp_P( command, PSTR("/analog?")) == 0) && ( (arg_count >= 1 ) && (arg_count <= 5) ) )
     {
-        Analog(2000UL); // update every 2 sec until terminated
+        Analogf(cnvrt_milli(2000UL)); // update every 2 sec until terminated
+    }
+    if ( (strcmp_P( command, PSTR("/adc?")) == 0) && ( (arg_count >= 1 ) && (arg_count <= 5) ) )
+    {
+        Analogd(cnvrt_milli(2000UL)); // update every 2 sec until terminated
     }
 }
 
 void setup(void) 
 {
+    // To reduce power consumption, the digital input buffer has to be disabled on the pins used as inputs for ADC. 
+    // This is configured by the I/O Pin Controller (PORT).
+    ioDir(MCU_IO_AIN0, DIRECTION_INPUT);
+    ioCntl(MCU_IO_AIN0, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
+    ioDir(MCU_IO_AIN1, DIRECTION_INPUT);
+    ioCntl(MCU_IO_AIN1, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
+    ioDir(MCU_IO_AIN2, DIRECTION_INPUT);
+    ioCntl(MCU_IO_AIN2, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
+    ioDir(MCU_IO_AIN3, DIRECTION_INPUT);
+    ioCntl(MCU_IO_AIN3, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
+    ioDir(MCU_IO_AIN4, DIRECTION_INPUT);
+    ioCntl(MCU_IO_AIN4, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
+    ioDir(MCU_IO_AIN5, DIRECTION_INPUT);
+    ioCntl(MCU_IO_AIN5, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
+    ioDir(MCU_IO_AIN6, DIRECTION_INPUT);
+    ioCntl(MCU_IO_AIN6, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
+    ioDir(MCU_IO_AIN7, DIRECTION_INPUT);
+    ioCntl(MCU_IO_AIN7, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
+
     // STATUS_LED
     ioDir(MCU_IO_TX2, DIRECTION_OUTPUT); 
     ioWrite(MCU_IO_TX2, LOGIC_LEVEL_HIGH);
@@ -60,7 +83,7 @@ void setup(void)
     init_ADC_single_conversion();
 
     // put ADC in Auto Trigger mode and fetch an array of channels
-    enable_ADC_auto_conversion(BURST_MODE);
+    //enable_ADC_auto_conversion(BURST_MODE);
     adc_started_at = milliseconds();
 
     /* Initialize UART to 38.4kbps, it returns a pointer to FILE so redirect of stdin and stdout works*/
@@ -105,7 +128,7 @@ void adc_burst(void)
     unsigned long kRuntime= elapsed(&adc_started_at);
     if ((kRuntime) > ((unsigned long)ADC_DELAY_MILSEC))
     {
-        enable_ADC_auto_conversion(BURST_MODE);
+        //enable_ADC_auto_conversion(BURST_MODE);
         adc_started_at += ADC_DELAY_MILSEC; 
     } 
 }

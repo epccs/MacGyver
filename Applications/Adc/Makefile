@@ -55,6 +55,10 @@ TARGET_ARCH = -mmcu=$(MCU) \
 LDFLAGS = -Wl,-Map,$(TARGET).map 
 LDFLAGS += -Wl,--gc-sections 
 
+## printf() is one of the vfprintf() family of functions which does not implement floating point conversion by default
+## https://www.nongnu.org/avr-libc/user-manual/group__avr__stdio.html
+LDFLAGS += -Wl,-u,vfprintf -lprintf_flt -lm
+
 .PHONY: help
 
 # some help for the make impaired
