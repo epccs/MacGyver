@@ -1,7 +1,8 @@
 # used to kick the tires
 TARGET = Adc
 LIBDIR = ../lib
-OBJECTS = main.o 
+OBJECTS = main.o \
+	$(LIBDIR)/uart0_bsd.o
 
 # Chip and project-specific global definitions
 MCU = avr128da28

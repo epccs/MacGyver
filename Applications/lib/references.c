@@ -25,7 +25,7 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 #include <stdlib.h>
 #include <ctype.h>
 #include "../lib/parse.h"
-#include "io_enum_bsd.h"
+#include "adc_bsd.h"
 #include "references.h"
 
 VREF_LOADED_t ref_loaded;
@@ -35,7 +35,7 @@ float ref_intern_1v0; // 1V024 +/- 4%, but a bandgap refernace is temperature st
 float ref_intern_2v0; // 2V048 +/- 4%, but a bandgap refernace is temperature stable
 float ref_intern_4v1; // 4V096 +/- 4%, but a bandgap refernace is temperature stable
 
-struct Cal_Map calMap[ADC_CHANNEL_NUM];
+struct AdcConf_Map adcConfMap[ADC_CHANNELS]; // Array of ADC config struct. The header has the struct 
 
 // TODO: load referances from manager over I2C
 VREF_LOADED_t LoadAnalogRef()
@@ -71,92 +71,92 @@ VREF_LOADED_t LoadAnalogRef()
     return ref_loaded;
 }
 
+// Load the hardware setting for ADC channel operation
 // TODO: load calibrations from manager over I2C
-// also hold the hardware setting related to the calibration
-CALIBRATE_LOADED_t LoadAnalogCal()
+CALIBRATE_LOADED_t LoadAdcConfig()
 {
     uint16_t i2c_success = 1; // i2c will take several scan loops to finish each cal. It is a place holder for the code.
-    uint8_t ch;
+    ADC_CH_t ch; // channels may be differential or internal things (TEMPSENSE, DAC, REF0...)
     switch (cal_loaded)
     {
     case CALIBRATE_LOADED_NO:
-        ch = MCU_IO_AIN0;
-        calMap[ch].calibration = 1.0/4096;
-        calMap[ch].ref = &ref_extern_vdd;
-        calMap[ch].adc0ref = VREF_REFSEL_VDD_gc;
-        calMap[ch].muxpos = ADC_MUXPOS_AIN0_gc;
-        calMap[ch].muxneg = ADC_MUXNEG_GND_gc;
-        calMap[ch].sampctrl = 14;
+        ch = ADC_CH_ADC0;
+        adcConfMap[ch].calibration = 1.0/4096;
+        adcConfMap[ch].ref = &ref_extern_vdd;
+        adcConfMap[ch].adc0ref = VREF_REFSEL_VDD_gc;
+        adcConfMap[ch].muxpos = ADC_MUXPOS_AIN0_gc;
+        adcConfMap[ch].muxneg = ADC_MUXNEG_GND_gc;
+        adcConfMap[ch].sampctrl = 0;
         if (i2c_success) cal_loaded = CALIBRATE_LOADED_CH0;
         break;
     case CALIBRATE_LOADED_CH0:
-        ch = MCU_IO_AIN1;
-        calMap[ch].calibration = 1.0/4096;
-        calMap[ch].ref = &ref_extern_vdd;
-        calMap[ch].adc0ref = VREF_REFSEL_VDD_gc;
-        calMap[ch].muxpos = ADC_MUXPOS_AIN1_gc;
-        calMap[ch].muxneg = ADC_MUXNEG_GND_gc;
-        calMap[ch].sampctrl = 14;
+        ch = ADC_CH_ADC1;
+        adcConfMap[ch].calibration = 1.0/4096;
+        adcConfMap[ch].ref = &ref_extern_vdd;
+        adcConfMap[ch].adc0ref = VREF_REFSEL_VDD_gc;
+        adcConfMap[ch].muxpos = ADC_MUXPOS_AIN1_gc;
+        adcConfMap[ch].muxneg = ADC_MUXNEG_GND_gc;
+        adcConfMap[ch].sampctrl = 0;
         if (i2c_success) cal_loaded = CALIBRATE_LOADED_CH1;
         break;
     case CALIBRATE_LOADED_CH1:
-        ch = MCU_IO_AIN2;
-        calMap[ch].calibration = 1.0/4096;
-        calMap[ch].ref = &ref_extern_vdd;
-        calMap[ch].adc0ref = VREF_REFSEL_VDD_gc;
-        calMap[ch].muxpos = ADC_MUXPOS_AIN2_gc;
-        calMap[ch].muxneg = ADC_MUXNEG_GND_gc;
-        calMap[ch].sampctrl = 14;
+        ch = ADC_CH_ADC2;
+        adcConfMap[ch].calibration = 1.0/4096;
+        adcConfMap[ch].ref = &ref_extern_vdd;
+        adcConfMap[ch].adc0ref = VREF_REFSEL_VDD_gc;
+        adcConfMap[ch].muxpos = ADC_MUXPOS_AIN2_gc;
+        adcConfMap[ch].muxneg = ADC_MUXNEG_GND_gc;
+        adcConfMap[ch].sampctrl = 0;
         if (i2c_success) cal_loaded = CALIBRATE_LOADED_CH2;
         break;
     case CALIBRATE_LOADED_CH2:
-        ch = MCU_IO_AIN3;
-        calMap[ch].calibration = 1.0/4096;
-        calMap[ch].ref = &ref_extern_vdd;
-        calMap[ch].adc0ref = VREF_REFSEL_VDD_gc;
-        calMap[ch].muxpos = ADC_MUXPOS_AIN2_gc;
-        calMap[ch].muxneg = ADC_MUXNEG_GND_gc;
-        calMap[ch].sampctrl = 14;
+        ch = ADC_CH_ADC3;
+        adcConfMap[ch].calibration = 1.0/4096;
+        adcConfMap[ch].ref = &ref_extern_vdd;
+        adcConfMap[ch].adc0ref = VREF_REFSEL_VDD_gc;
+        adcConfMap[ch].muxpos = ADC_MUXPOS_AIN3_gc;
+        adcConfMap[ch].muxneg = ADC_MUXNEG_GND_gc;
+        adcConfMap[ch].sampctrl = 0;
         if (i2c_success) cal_loaded = CALIBRATE_LOADED_CH3;
         break;
     case CALIBRATE_LOADED_CH3:
-        ch = MCU_IO_AIN4;
-        calMap[ch].calibration = 1.0/4096;
-        calMap[ch].ref = &ref_extern_vdd;
-        calMap[ch].adc0ref = VREF_REFSEL_VDD_gc;
-        calMap[ch].muxpos = ADC_MUXPOS_AIN2_gc;
-        calMap[ch].muxneg = ADC_MUXNEG_GND_gc;
-        calMap[ch].sampctrl = 14;
+        ch = ADC_CH_ADC4;
+        adcConfMap[ch].calibration = 1.0/4096;
+        adcConfMap[ch].ref = &ref_extern_vdd;
+        adcConfMap[ch].adc0ref = VREF_REFSEL_VDD_gc;
+        adcConfMap[ch].muxpos = ADC_MUXPOS_AIN4_gc;
+        adcConfMap[ch].muxneg = ADC_MUXNEG_GND_gc;
+        adcConfMap[ch].sampctrl = 0;
         if (i2c_success) cal_loaded = CALIBRATE_LOADED_CH4;
         break;
     case CALIBRATE_LOADED_CH4:
-        ch = MCU_IO_AIN5;
-        calMap[ch].calibration = 1.0/4096;
-        calMap[ch].ref = &ref_extern_vdd;
-        calMap[ch].adc0ref = VREF_REFSEL_VDD_gc;
-        calMap[ch].muxpos = ADC_MUXPOS_AIN2_gc;
-        calMap[ch].muxneg = ADC_MUXNEG_GND_gc;
-        calMap[ch].sampctrl = 14;
+        ch = ADC_CH_ADC5;
+        adcConfMap[ch].calibration = 1.0/4096;
+        adcConfMap[ch].ref = &ref_extern_vdd;
+        adcConfMap[ch].adc0ref = VREF_REFSEL_VDD_gc;
+        adcConfMap[ch].muxpos = ADC_MUXPOS_AIN5_gc;
+        adcConfMap[ch].muxneg = ADC_MUXNEG_GND_gc;
+        adcConfMap[ch].sampctrl = 0;
         if (i2c_success) cal_loaded = CALIBRATE_LOADED_CH5;
         break;
     case CALIBRATE_LOADED_CH5:
-        ch = MCU_IO_AIN6;
-        calMap[ch].calibration = 1.0/4096;
-        calMap[ch].ref = &ref_extern_vdd;
-        calMap[ch].adc0ref = VREF_REFSEL_VDD_gc;
-        calMap[ch].muxpos = ADC_MUXPOS_AIN2_gc;
-        calMap[ch].muxneg = ADC_MUXNEG_GND_gc;
-        calMap[ch].sampctrl = 14;
+        ch = ADC_CH_ADC6;
+        adcConfMap[ch].calibration = 1.0/4096;
+        adcConfMap[ch].ref = &ref_extern_vdd;
+        adcConfMap[ch].adc0ref = VREF_REFSEL_VDD_gc;
+        adcConfMap[ch].muxpos = ADC_MUXPOS_AIN6_gc;
+        adcConfMap[ch].muxneg = ADC_MUXNEG_GND_gc;
+        adcConfMap[ch].sampctrl = 0;
         if (i2c_success) cal_loaded = CALIBRATE_LOADED_CH6;
         break;
     case CALIBRATE_LOADED_CH6:
-        ch = MCU_IO_AIN7;
-        calMap[ch].calibration = 1.0/4096;
-        calMap[ch].ref = &ref_extern_vdd;
-        calMap[ch].adc0ref = VREF_REFSEL_VDD_gc;
-        calMap[ch].muxpos = ADC_MUXPOS_AIN2_gc;
-        calMap[ch].muxneg = ADC_MUXNEG_GND_gc;
-        calMap[ch].sampctrl = 14;
+        ch = ADC_CH_ADC7;
+        adcConfMap[ch].calibration = 1.0/4096;
+        adcConfMap[ch].ref = &ref_extern_vdd;
+        adcConfMap[ch].adc0ref = VREF_REFSEL_VDD_gc;
+        adcConfMap[ch].muxpos = ADC_MUXPOS_AIN7_gc;
+        adcConfMap[ch].muxneg = ADC_MUXNEG_GND_gc;
+        adcConfMap[ch].sampctrl = 0;
         if (i2c_success) cal_loaded = CALIBRATE_LOADED_CH7;
         break;
     case CALIBRATE_LOADED_CH7:

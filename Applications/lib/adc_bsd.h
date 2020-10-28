@@ -9,14 +9,14 @@
 
 // enumeraiton names for ADC_CH_<node> from schematic
 typedef enum ADC_CH_enum {
-    ADC_CH_ADC0, // PA0 has analog channel 0
-    ADC_CH_ADC1, // PA1 has analog channel 1
-    ADC_CH_ADC2, // PA2 has analog channel 2
-    ADC_CH_ADC3, // PA3 has analog channel 3
-    ADC_CH_ADC4, // PA4 has analog channel 4
-    ADC_CH_ADC5, // PA5 has analog channel 5
-    ADC_CH_ADC6, // PA6 has analog channel 6
-    ADC_CH_ADC7, // PA7 has analog channel 7
+    ADC_CH_ADC0, // this channels measures AIN0 to GND, AIN0 is on pin PD0
+    ADC_CH_ADC1, // this channels measures AIN1 to GND, AIN1 is on pin PD1
+    ADC_CH_ADC2, // this channels measures AIN2 to GND, AIN2 is on pin PD2
+    ADC_CH_ADC3, // this channels measures AIN3 to GND, AIN3 is on pin PD3
+    ADC_CH_ADC4, // this channels measures AIN4 to GND, AIN4 is on pin PD4
+    ADC_CH_ADC5, // this channels measures AIN5 to GND, AIN5 is on pin PD5
+    ADC_CH_ADC6, // this channels measures AIN6 to GND, AIN6 is on pin PD6
+    ADC_CH_ADC7, // this channels measures AIN7 to GND, AIN7 is on pin PD7
     ADC_CHANNELS
 } ADC_CH_t;
 

@@ -26,19 +26,20 @@ volatile VREF_REFSEL_t analog_reference;
 volatile uint8_t adc_isr_status;
 
 static uint8_t free_running; // if true loop thru channels continuously
+static uint8_t adc_auto_conversion; // don't allow single conversions if auto is running
 
 // setup the ADC channel for reading
-void channel_setup(void)
+void channel_setup(ADC_CH_t ch)
 {
-    VREF.ADC0REF = calMap[adc_channel].adc0ref; // Always On bit (see datasheet) is not selected so after each reading the referance will disconnect
-    ADC0.MUXPOS = calMap[adc_channel].muxpos; // select +ADC side
-    ADC0.MUXNEG = calMap[adc_channel].muxneg; // select -ADC side
-    ADC0.SAMPCTRL = calMap[adc_channel].sampctrl; // extend the ADC sampling time beyond the default two clocks
-    ADC0.CTRLD = ADC_INITDLY_DLY16_gc; // the reference needs some time to stabalize.
-    ADC0.CTRLA = ADC_ENABLE_bm             // ADC Enable: enabled
-                | ADC_RESSEL_12BIT_gc;     // 12-bit mode
-                // | ADC_CONVMODE_bm;     // DIFFERENTIAL mode
-    ADC0.COMMAND = ADC_STCONV_bm;   // Start conversion
+    adc_channel = ch;
+    VREF.ADC0REF = adcConfMap[ch].adc0ref;        // after each reading the referance will disconnect
+    ADC0.MUXPOS = adcConfMap[ch].muxpos;          // select +ADC side
+    ADC0.MUXNEG = adcConfMap[ch].muxneg;          // select -ADC side
+    ADC0.SAMPCTRL = adcConfMap[ch].sampctrl;      // extend the ADC sampling time beyond the default two clocks
+    ADC0.CTRLD = ADC_INITDLY_DLY16_gc;                 // the reference may need some time to stabalize.
+    ADC0.CTRLA = ADC_ENABLE_bm                         // ADC Enable: enabled
+                //| ADC_CONVMODE_bm                      // DIFFERENTIAL mode
+                | ADC_RESSEL_12BIT_gc;                 // 12-bit mode
 }
 
 
@@ -47,26 +48,32 @@ ISR(ADC0_RESRDY_vect)
 {
     adc[adc_channel] = ADC0.RES;
 
-    ++adc_channel;
-    if (adc_channel >= ADC_CHANNELS) 
+    if (adc_channel >= ADC_CH_ADC7) 
     {
-        adc_channel = 0;
+        adc_channel = ADC_CH_ADC0;
+    }
+    else
+    {
+        ++adc_channel;
     }
 
-    if (adc_channel != 0)
+    if (adc_channel)
     {
-        channel_setup();
+        channel_setup(adc_channel);
+        ADC0.COMMAND = ADC_STCONV_bm;                      // Start conversion
         ADC0.INTCTRL = ADC_RESRDY_bm; // ISR needs a manual tickling to trigger again
     }
     else if (free_running) // do not confuse with Bit 1 of ADC0.CTRLA which would loop on the same channel
     {
-        channel_setup();
+        channel_setup(adc_channel);
+        ADC0.COMMAND = ADC_STCONV_bm;                      // Start conversion
         adc_isr_status = ISR_ADCBURST_START;
         ADC0.INTCTRL = ADC_RESRDY_bm; // ISR needs a manual tickling to trigger again
     }
     else
     {
         adc_isr_status = ISR_ADCBURST_DONE; // mark to notify burst is done
+        adc_auto_conversion = 0;
     }
 }
 
@@ -105,10 +112,9 @@ void init_ADC_single_conversion(void)
     cal_loaded = CALIBRATE_LOADED_NO;
     while(cal_loaded < CALIBRATE_LOADED_DONE)
     {
-        LoadAnalogCal();
+        LoadAdcConfig();
     }
 }
-
 
 // Before setting the ADC scan mode, use init_ADC_single_conversion 
 // to select reference and set the adc_clock pre-scaler. This call will start 
@@ -116,12 +122,13 @@ void init_ADC_single_conversion(void)
 // in a buffer.
 void enable_ADC_auto_conversion(uint8_t free_run)
 {
-    adc_channel = 0;
     adc_isr_status = ISR_ADCBURST_START; // mark so we know new readings are wip
     free_running = free_run;
+    adc_auto_conversion = 1;
 
     // Start the first Conversion and touch the interupt bit
-    channel_setup();
+    channel_setup(ADC_CH_ADC0);
+    ADC0.COMMAND = ADC_STCONV_bm;                      // Start conversion
     ADC0.INTCTRL = ADC_RESRDY_bm; // ISR needs tickling
 }
 
@@ -141,18 +148,19 @@ int adcAtomic(ADC_CH_t channel)
 
 }
 
-// Check if the conversion is done
-uint8_t ADC0_conversionDone(void)
-{
-    return (ADC0.INTFLAGS & ADC_RESRDY_bm);
-}
-
-// ADC single channel conversion (blocking)
+// single channel conversion (blocking)
 int adcSingle(ADC_CH_t channel)
 {
-    adc_channel = channel;
-    channel_setup();
-    while ( !ADC0_conversionDone() );
-    int local = ADC0.RES;
-    return local;
+    if (adc_auto_conversion)
+    {
+        return 0; // skip conversion when ISR is running since it will corrupt the values
+    }
+    else
+    {
+        channel_setup(channel);
+        ADC0.COMMAND = ADC_STCONV_bm;                 // Start conversion
+        while ( !(ADC0.INTFLAGS & ADC_RESRDY_bm) );   // Check if the conversion is done
+        int local = ADC0.RES;
+        return local;
+    }
 }

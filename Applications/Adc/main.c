@@ -18,7 +18,7 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 #include <stdbool.h>
 #include <stdlib.h>
 #include <avr/pgmspace.h>
-#include <util/atomic.h>
+#include <avr/interrupt.h>
 #include "../lib/timers_bsd.h"
 #include "../lib/uart0_bsd.h"
 #include "../lib/parse.h"

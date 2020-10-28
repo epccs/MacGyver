@@ -35,7 +35,7 @@ extern float ref_intern_4v1;
 
 extern CALIBRATE_LOADED_t cal_loaded;
 
-struct Cal_Map { 
+struct AdcConf_Map { 
     float calibration; // calibrated value need for an ADC divion of the channel.
     float *ref; // pointer to the referance value used for channel
     VREF_REFSEL_t adc0ref; // Setting for ADC0 Reference register
@@ -44,11 +44,9 @@ struct Cal_Map {
     uint8_t sampctrl; // Extend the ADC sampling time beyond the default two clocks
 };
 
-#define ADC_CHANNEL_NUM 8
-
-extern struct Cal_Map calMap[ADC_CHANNEL_NUM];
+extern struct AdcConf_Map adcConfMap[]; // size is ADC_CHANNELS
 
 extern VREF_LOADED_t LoadAnalogRef();
-extern CALIBRATE_LOADED_t LoadAnalogCal();
+extern CALIBRATE_LOADED_t LoadAdcConfig();
 
 #endif // Analog_H 
