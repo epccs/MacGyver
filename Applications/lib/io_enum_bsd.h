@@ -240,15 +240,36 @@ void ioDir(MCU_IO_t io, DIRECTION_t dir)
 static inline __attribute__((always_inline))
 void ioCntl(MCU_IO_t io, PORT_ISC_t isc, PORT_PULLUP_t pu, PORT_INVERT_t inv) 
 {
-    // is there a better way? should PINnCTRL be in ioMap array (it would use more memory I think)
-    if (ioMask(io) == PIN0_bm) portReg(io)->PIN0CTRL = (register8_t) (isc+pu+inv);
-    if (ioMask(io) == PIN1_bm) portReg(io)->PIN1CTRL = (register8_t) (isc+pu+inv);
-    if (ioMask(io) == PIN2_bm) portReg(io)->PIN2CTRL = (register8_t) (isc+pu+inv);
-    if (ioMask(io) == PIN3_bm) portReg(io)->PIN3CTRL = (register8_t) (isc+pu+inv);
-    if (ioMask(io) == PIN4_bm) portReg(io)->PIN4CTRL = (register8_t) (isc+pu+inv);
-    if (ioMask(io) == PIN5_bm) portReg(io)->PIN5CTRL = (register8_t) (isc+pu+inv);
-    if (ioMask(io) == PIN6_bm) portReg(io)->PIN6CTRL = (register8_t) (isc+pu+inv);
-    if (ioMask(io) == PIN7_bm) portReg(io)->PIN7CTRL = (register8_t) (isc+pu+inv);
+    switch (ioMask(io))
+    {
+    case PIN0_bm:
+        portReg(io)->PIN0CTRL = (register8_t) (isc+pu+inv);
+        break;
+    case PIN1_bm:
+        portReg(io)->PIN1CTRL = (register8_t) (isc+pu+inv);
+        break;
+    case PIN2_bm:
+        portReg(io)->PIN2CTRL = (register8_t) (isc+pu+inv);
+        break;
+    case PIN3_bm:
+        portReg(io)->PIN3CTRL = (register8_t) (isc+pu+inv);
+        break;
+    case PIN4_bm:
+        portReg(io)->PIN4CTRL = (register8_t) (isc+pu+inv);
+        break;
+    case PIN5_bm:
+        portReg(io)->PIN5CTRL = (register8_t) (isc+pu+inv);
+        break;
+    case PIN6_bm:
+        portReg(io)->PIN6CTRL = (register8_t) (isc+pu+inv);
+        break;
+    case PIN7_bm:
+        portReg(io)->PIN7CTRL = (register8_t) (isc+pu+inv);
+        break;
+
+    default:
+        break;
+    }
 }
 
 
