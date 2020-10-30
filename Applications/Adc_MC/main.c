@@ -202,10 +202,8 @@ void PORT_init(void)
 
 void ADC0_init(void)
 {
-    ADC0.CTRLC = ADC_PRESC_DIV4_gc;        // CLK_PER divided by 4 (e.g. F_CPU/4 = 1 MHz)
-    ADC0.CTRLA = ADC_ENABLE_bm             // ADC Enable: enabled
-               | ADC_RESSEL_12BIT_gc;      // 12-bit mode
     ADC0.CTRLD = ADC_INITDLY_DLY16_gc;     // let referance settle
+    VREF.ADC0REF = VREF_REFSEL_VDD_gc; 
 
     // load config and calibration or set error
     cal_loaded = CALIBRATE_LOADED_NO;
@@ -223,9 +221,14 @@ uint16_t ADC0_read(void)
 
 void ADC0_start(ADC_CH_t ch)
 {
-    VREF.ADC0REF = adcConfMap[ch].adc0ref;  /* Select referance */
-    ADC0.MUXPOS = adcConfMap[ch].muxpos;    /* Select ADC channel */
-    ADC0.COMMAND = ADC_STCONV_bm;           /* Start ADC conversion */
+    ADC0.COMMAND = ADC_SPCONV_bm;            // Stop ADC conversion to get a clean value
+    ADC0.CTRLA  = 0;                         // disabled
+    VREF.ADC0REF = adcConfMap[ch].adc0ref;   // Select referance
+    ADC0.CTRLA = ADC_RESSEL_12BIT_gc;        // 12-bit mode
+    ADC0.CTRLC = ADC_PRESC_DIV4_gc;          // CLK_PER divided by 4 (e.g. F_CPU/4 = 1 MHz)
+    ADC0.MUXPOS = adcConfMap[ch].muxpos;     // Select ADC channel
+    ADC0.CTRLA |= ADC_ENABLE_bm;             // ADC Enabled
+    ADC0.COMMAND = ADC_STCONV_bm;            // Start ADC conversion
 }
 
 int main(void)

@@ -83,7 +83,7 @@ void setup(void)
     init_ADC_single_conversion();
 
     // put ADC in Auto Trigger mode and fetch an array of channels
-    //enable_ADC_auto_conversion(BURST_MODE);
+    enable_ADC_auto_conversion(BURST_MODE);
     adc_started_at = milliseconds();
 
     /* Initialize UART to 38.4kbps, it returns a pointer to FILE so redirect of stdin and stdout works*/
@@ -128,7 +128,7 @@ void adc_burst(void)
     unsigned long kRuntime= elapsed(&adc_started_at);
     if ((kRuntime) > ((unsigned long)ADC_DELAY_MILSEC))
     {
-        //enable_ADC_auto_conversion(BURST_MODE);
+        enable_ADC_auto_conversion(BURST_MODE);
         adc_started_at += ADC_DELAY_MILSEC; 
     } 
 }

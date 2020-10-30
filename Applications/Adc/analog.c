@@ -109,7 +109,7 @@ void Analogf(unsigned long serial_print_delay_ticks)
         float temp_ref = *ptr_temp_ref;
         float temp_ch_calibration_value = adcConfMap[arg_indx_channel].calibration;
         float corrected = temp_adc*temp_ref*temp_ch_calibration_value;
-        printf_P(PSTR("\"%1.4f=%d*%1.4f*%1.4f\""), corrected,temp_adc,temp_ref,temp_ch_calibration_value);
+        printf_P(PSTR("\"%1.4f\""), corrected,temp_adc,temp_ref,temp_ch_calibration_value);
 
         if ( (adc_arg_index+1) >= arg_count) 
         {
@@ -201,9 +201,22 @@ void Analogd(unsigned long serial_print_delay_ticks)
     {
         uint8_t arg_indx_channel = atoi(arg[adc_arg_index]);
 
+        int temp_adc = 0;
+        uint8_t oldSREG = SREG;
+        cli();           // clear the global interrupt mask.
+        if (adc_auto_conversion) 
+        {
+            SREG = oldSREG;  // restore global interrupt if they were enabled
+            return; // don't do single conversions when auto_conversion is running
+        }
+        else
+        {
+            temp_adc = adcSingle((ADC_CH_t) arg_indx_channel);
+            SREG = oldSREG;  // restore global interrupt if they were enabled
+        }
+
         // There are values from 0 to 4095 for 4096 slots where each reperesents 1/4096 of the reference.
         // Slot 4095 also includes higher values e.g., VREF*(4095/4096) and up.
-        int temp_adc = adcSingle((ADC_CH_t) arg_indx_channel);
         printf_P(PSTR("\"%d\""), temp_adc);
 
         if ( (adc_arg_index+1) >= arg_count) 

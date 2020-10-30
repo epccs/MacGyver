@@ -26,20 +26,38 @@ volatile VREF_REFSEL_t analog_reference;
 volatile uint8_t adc_isr_status;
 
 static uint8_t free_running; // if true loop thru channels continuously
-static uint8_t adc_auto_conversion; // don't allow single conversions if auto is running
+uint8_t adc_auto_conversion;
 
 // setup the ADC channel for reading
 void channel_setup(ADC_CH_t ch)
 {
+    ADC0.COMMAND = ADC_SPCONV_bm;                 // Stop ADC conversion to get a clean value
+    ADC0.CTRLA  = 0;                              // disabled
     adc_channel = ch;
     VREF.ADC0REF = adcConfMap[ch].adc0ref;        // after each reading the referance will disconnect
+    ADC0.CTRLA = ADC_RESSEL_12BIT_gc;             // 12-bit mode
+    //ADC0.CTRLA |= ADC_CONVMODE_bm;                // DIFFERENTIAL mode
+#if F_CPU >= 24000000
+    ADC0.CTRLC = ADC_PRESC_DIV24_gc;              // 1 MHz DS datasheet ADC clock to be faster than 150 kHz.
+#elif F_CPU >= 20000000
+    ADC0.CTRLC = ADC_PRESC_DIV20_gc;              // 1 MHz
+#elif F_CPU >= 16000000
+    ADC0.CTRLC = ADC_PRESC_DIV16_gc;              // 1 MHz
+#elif F_CPU >= 12000000
+    ADC0.CTRLC = ADC_PRESC_DIV12_gc;              // 1 MHz
+#elif F_CPU >= 8000000
+    ADC0.CTRLC = ADC_PRESC_DIV8_gc;               // 1 MHz
+#elif F_CPU >= 4000000
+    ADC0.CTRLC = ADC_PRESC_DIV4_gc;               // 1 MHz
+#else  
+    ADC0.CTRLC = ADC_PRESC_DIV2_gc;              // the lowest setting
+#endif
     ADC0.MUXPOS = adcConfMap[ch].muxpos;          // select +ADC side
     ADC0.MUXNEG = adcConfMap[ch].muxneg;          // select -ADC side
     ADC0.SAMPCTRL = adcConfMap[ch].sampctrl;      // extend the ADC sampling time beyond the default two clocks
-    ADC0.CTRLD = ADC_INITDLY_DLY16_gc;                 // the reference may need some time to stabalize.
-    ADC0.CTRLA = ADC_ENABLE_bm                         // ADC Enable: enabled
-                //| ADC_CONVMODE_bm                      // DIFFERENTIAL mode
-                | ADC_RESSEL_12BIT_gc;                 // 12-bit mode
+    ADC0.CTRLD = ADC_INITDLY_DLY16_gc;            // the reference may need some time to stabalize.
+    ADC0.CTRLA |= ADC_ENABLE_bm;                  // ADC Enabled
+    ADC0.COMMAND = ADC_STCONV_bm;                 // Start ADC conversion
 }
 
 
@@ -81,23 +99,6 @@ ISR(ADC0_RESRDY_vect)
 void init_ADC_single_conversion(void)
 {
     free_running = 0;
-
-    // datasheet wants ADC clock to be faster than 150 kHz.
-#if F_CPU >= 24000000
-    ADC0.CTRLC = ADC_PRESC_DIV24_gc; //1 MHz
-#elif F_CPU >= 20000000
-    ADC0.CTRLC = ADC_PRESC_DIV20_gc; //1 MHz
-#elif F_CPU >= 16000000
-    ADC0.CTRLC = ADC_PRESC_DIV16_gc; //1 MHz
-#elif F_CPU >= 12000000
-    ADC0.CTRLC = ADC_PRESC_DIV12_gc; //1 MHz
-#elif F_CPU >= 8000000
-    ADC0.CTRLC = ADC_PRESC_DIV8_gc;  //1 MHz
-#elif F_CPU >= 4000000
-    ADC0.CTRLC = ADC_PRESC_DIV4_gc;  //1 MHz
-#else  
-    ADC0.CTRLC = ADC_PRESC_DIV2_gc; // is the lowest setting
-#endif
 
     // load references or set error
     ref_loaded = VREF_LOADED_NO;

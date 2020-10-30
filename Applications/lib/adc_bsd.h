@@ -27,6 +27,7 @@ extern volatile VREF_REFSEL_t analog_reference;
 #define ISR_ADCBURST_DONE 0x7F
 #define ISR_ADCBURST_START 0x00
 extern volatile uint8_t adc_isr_status;
+extern uint8_t adc_auto_conversion; // don't do single conversions when auto_conversion is running
 
 extern void init_ADC_single_conversion(void);
 extern int adcAtomic(ADC_CH_t channel);

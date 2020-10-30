@@ -2,16 +2,15 @@
 
 ## Todo
 
-ADC blocking readings are garbage.
 The referances are going to be held on the manager, not the application eeprom.
 
 ## Overview
 
 Adc is an interactive command line program that demonstrates control of an Analog-to-Digital Converter. 
 
-A customized library routine is used to operate the AVR's ADC, it has an ISR that is started with the enable_ADC_auto_conversion function to read the channels one after the next in a burst. In this case, the loop starts the burst at timed intervals. The ADC clock runs at 1MegHz (must be > 150kHz) and it takes about 36 (see "Conversion Timing" in DS is 20, and delay 16 to settle referance) cycles to do the conversion, thus a burst takes over (ISR overhead) .29 milliseconds (e.g. 8*36*(1/1000000)) to scan eight channels. The ADC is turned off after each burst unless free running is set, which would automaticly start the next burst.
+A customized library routine is used to operate the AVR's ADC, it has an ISR that is started with the enable_ADC_auto_conversion function to read the channels one after the next in a burst. In this case, the loop starts the burst at timed intervals. The ADC clock runs at 1MegHz (must be > 150kHz) and it takes about 36 (see "Conversion Timing" in DS is 20, and delay 16 to settle referance) cycles to do the conversion, thus a burst takes over (ISR overhead) .29 milliseconds (e.g. 8*36*(1/1000000)) to scan eight channels. The ADC conversions stop after each burst unless free running is set, which would automaticly start the next burst.
 
-The channel number is used in a switch statement (see LoadAnalogCal() function in ../lib/references.c) to set the channel configuraiton, reference, and calibration.
+The channel number is used in a switch statement (see LoadAdcConfig() function in ../lib/references.c) to set the channel configuraiton, reference, and calibration.
 
 
 # Manager has Reference and Callibration Values
@@ -101,22 +100,28 @@ Analog-to-Digital Converter reading from up to 5 channels. The reading repeats e
 [floating]: https://learn.adafruit.com/circuit-playground-digital-input/floating-inputs
 
 ``` 
-/0/analog? 0,1,2
-{"ADC0":"0.0000=0*5.0000*0.0002","ADC1":"0.0000=0*5.0000*0.0002","ADC2":"0.0000=0*5.0000*0.0002"}
-{"ADC0":"0.0000=0*5.0000*0.0002","ADC1":"0.0000=0*5.0000*0.0002","ADC2":"0.0000=0*5.0000*0.0002"}
-{"ADC0":"0.0000=0*5.0000*0.0002","ADC1":"0.0000=0*5.0000*0.0002","ADC2":"0.0000=0*5.0000*0.0002"}
-{"ADC0":"0.0000=0*5.0000*0.0002","ADC1":"0.0000=0*5.0000*0.0002","ADC2":"0.0000=0*5.0000*0.0002"}
+/0/analog? 0,1,2,3,4
+{"ADC0":"4.9988","ADC1":"3.4302","ADC2":"2.9431","ADC3":"2.5159","ADC4":"2.1887"}
+{"ADC0":"4.9988","ADC1":"3.4290","ADC2":"2.9395","ADC3":"2.4963","ADC4":"2.2607"}
+{"ADC0":"4.9988","ADC1":"3.4314","ADC2":"2.9431","ADC3":"2.5000","ADC4":"2.1570"}
+{"ADC0":"4.9988","ADC1":"3.4314","ADC2":"2.9431","ADC3":"2.5159","ADC4":"2.1863"}
+{"ADC0":"4.9988","ADC1":"3.4363","ADC2":"2.9590","ADC3":"2.5720","ADC4":"2.2583"}
 ```
 
-ISR is turned off so no values in adc array. 
+ADC0 has 5V on it, the others are floating. 
 
 ```
 /0/adc? 0,1,2,3,4
-{"ADC0":"4095","ADC1":"4095","ADC2":"3306","ADC3":"2862","ADC4":"2575"}
-{"ADC0":"2726","ADC1":"4095","ADC2":"3534","ADC3":"3070","ADC4":"2776"}
-{"ADC0":"2894","ADC1":"4095","ADC2":"3586","ADC3":"3142","ADC4":"2845"}
-{"ADC0":"2959","ADC1":"4095","ADC2":"3606","ADC3":"3171","ADC4":"2872"}
+{"ADC0":"4095","ADC1":"2733","ADC2":"2382","ADC3":"2100","ADC4":"1878"}
+{"ADC0":"4095","ADC1":"2775","ADC2":"2395","ADC3":"2067","ADC4":"1907"}
+{"ADC0":"4095","ADC1":"2791","ADC2":"2405","ADC3":"2064","ADC4":"1911"}
+{"ADC0":"4094","ADC1":"2796","ADC2":"2409","ADC3":"2064","ADC4":"1913"}
+{"ADC0":"4095","ADC1":"2798","ADC2":"2408","ADC3":"2064","ADC4":"1913"}
+{"ADC0":"4094","ADC1":"2799","ADC2":"2408","ADC3":"2062","ADC4":"1913"}
+{"ADC0":"4094","ADC1":"2800","ADC2":"2407","ADC3":"2059","ADC4":"1909"}
+{"ADC0":"4095","ADC1":"2802","ADC2":"2408","ADC3":"2059","ADC4":"1909"}
+{"ADC0":"4095","ADC1":"2802","ADC2":"2410","ADC3":"2058","ADC4":"1907"}
 ```
 
-Blocking readings are garbage, I have yet to figure out why.
+
 
