@@ -46,7 +46,7 @@ void channel_setup(ADC_CH_t ch)
 // The conversion result is available in ADC0.RES.
 ISR(ADC0_RESRDY_vect) 
 {
-    adc[adc_channel] = ADC0.RES;
+    adc[adc_channel] = ADC0.RES;        // Clear the interrupt flag by reading the result
 
     if (adc_channel >= ADC_CH_ADC7) 
     {
@@ -61,14 +61,12 @@ ISR(ADC0_RESRDY_vect)
     {
         channel_setup(adc_channel);
         ADC0.COMMAND = ADC_STCONV_bm;                      // Start conversion
-        ADC0.INTCTRL = ADC_RESRDY_bm; // ISR needs a manual tickling to trigger again
     }
     else if (free_running) // do not confuse with Bit 1 of ADC0.CTRLA which would loop on the same channel
     {
         channel_setup(adc_channel);
         ADC0.COMMAND = ADC_STCONV_bm;                      // Start conversion
         adc_isr_status = ISR_ADCBURST_START;
-        ADC0.INTCTRL = ADC_RESRDY_bm; // ISR needs a manual tickling to trigger again
     }
     else
     {
@@ -129,7 +127,7 @@ void enable_ADC_auto_conversion(uint8_t free_run)
     // Start the first Conversion and touch the interupt bit
     channel_setup(ADC_CH_ADC0);
     ADC0.COMMAND = ADC_STCONV_bm;                      // Start conversion
-    ADC0.INTCTRL = ADC_RESRDY_bm; // ISR needs tickling
+    ADC0.INTCTRL = ADC_RESRDY_bm;                      // Enable interrupts
 }
 
 // return two byes from the last ADC update with an atomic transaction to make sure ISR does not change it durring the read
@@ -160,7 +158,7 @@ int adcSingle(ADC_CH_t channel)
         channel_setup(channel);
         ADC0.COMMAND = ADC_STCONV_bm;                 // Start conversion
         while ( !(ADC0.INTFLAGS & ADC_RESRDY_bm) );   // Check if the conversion is done
-        int local = ADC0.RES;
+        int local = ADC0.RES;                         // Clears the interrupt flag
         return local;
     }
 }
