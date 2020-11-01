@@ -72,11 +72,11 @@ Some device-specific files from the [atpack] are also added to this repo.
 With the m4809, I had to sideload the toolchain, since the packaged one lacked the xmega3 core. However, AVR128DA28 has an xmega4 core, and that is in older toolchains. I prefer using a package toolchain.
 
 
-## BCM24 Cntl Uart/UPDI Mode
+## BCM24 Cntl UPDI mode and BCM23 Cntl UART mode
 
-The R-Pi needs to control the BCM24 pin so that it can select the IOFF buffer needed for UPDI mode or UART mode. The scripts to do this are in [RPUusb/BCM24cntl]. The makefiles expects RPUusb to be loaded to the side of the MacGyver repo so clone both (for now).
+The R-Pi (or RPUusb) controls the BCM23 and BCM24 pins so that the UART and UPDI modes can be selected. At this time, the scripts to control the pins are in [RPUusb/BCM24cntl]. The makefiles expect the RPUusb repository to be loaded to the side of the MacGyver repo, so clone both.
 
-[RPUusb/BCM24cntl]: https://github.com/epccs/RPUusb
+[RPUusb/UPDImode]: https://github.com/epccs/RPUusb/tree/master/UPDImode
 
 ```
 git clone https://github.com/epccs/RPUusb
@@ -116,15 +116,15 @@ If the UPDI idea has problems Optiboot could be a workaround
 https://github.com/Optiboot/optiboot/blob/master/Wiki/CompilingOptiboot_x.md
 
 
-## VSCode issue 
+## VSCode
 
-In c_cpp_properties.json, I put some defines.
+There are two folders with independent ".vscode" setup, the Manager and Applications folders. Each uses different microcontrollers and needs unique defines. In the Applications/.vscode/c_cpp_properties.json, I put these defines.
 
 ```
 "defines": ["__AVR_DEV_LIB_NAME__=avr128da28","F_CPU=16000000UL"],
 ```
 
-__AVR_DEV_LIB_NAME__ is from the -mmcu compiler option. Intellisense should track it through #include <avr/io.h> which would then include "io" + "avr128da28" + ".h". Intellisense does not look outside the includes origin (cross-origin), so it reports an error about not finding ioavr128da28.h, therefor the MCU header has to be put where it can find it. I have added a rule to do this (it needs admin rights).
+The __AVR_DEV_LIB_NAME__ is from the -mmcu compiler option. Intellisense should track it through #include <avr/io.h> which would then include "io" + "avr128da28" + ".h". Intellisense does not look outside the includes origin (cross-origin), so it reports an error about not finding ioavr128da28.h, therefor the MCU header has to be put where it can find it. I have added a rule to do this (it needs admin rights).
 
 ```
 sudo make hdr4code
@@ -139,3 +139,14 @@ After that I removed the forcedInclude I was using
 Code is now seeing the same thing that the compiler does, and not recusing though files multiple times (and leaking as it does) to build its database.
 
 https://blog.robenkleene.com/2020/09/21/the-era-of-visual-studio-code/
+
+
+## Field Updates
+
+Updating flash from memory devices like SD cards has been a traditional way to do field updates. The update may be sent to the user as an SD card (or something similar) and then plugged into the product in the field to upgrade it. The idea is that providing an in-circuit programmer and a script to control that would be difficult; the customer would have to (climb up the tree and) access the products with their laptop and the programming cable to update them. An SD card eliminates the fiddly cable, but updates are still a nightmare. One of these boards could be remote (in the tree) without an R-Pi, and a CAT5 line could run (down) to an encloser (at the base) for access. When updates or data access are needed, another of these boards with an R-Pi (or RPUusb) could do what is required.
+
+A more exciting method is to connect a group of units to one that has an R-Pi permanently attached. If the R-Pi is near a WiFi bridge that goes to a Starlink connection, the options become very extensible. A setup might look like a hub with CAT5 lines radiating out to the maximum distance that the RS485 transceivers allow. 
+
+The UPDI interface is not a bootloader interface; it is the programming interface provided by the hardware manufacturer and is likely to be implemented correctly, more so than the bootloader I could implement. If fuses get set that lock the device, it can be erased for a do-over. Scrips can be linked-to desktop icons for ease of use, and the fiddley parts of in-circuit programming have to do with the cabling, not the upload software (which gets scripted).
+
+What about the ever-changing near future of a ranch water source? They deliver water to sites downslope through durable, low-cost HDPE plumbing, but sometimes it breaks or is blocked. Assuming the well has the primary power source, it would be the best location for a Starlink connection and some boards like this one (actually the Irrigate7 board after it gets overhauled) connected to control and monitor the reasonably nearby assets (main tank level, pump, battery charge, and valves that send water to remote locations). At the same time, a LoRa gateway is used to measure faraway assets (watering trough levels in remote areas). Controlling the valves near the source and measuring the volume dispensed can prevent emptying the tank when something breaks and allows an automatic siphon to clean a water trough before partly refilling. The important thing is ideas just keep adding, and various parts of the control software need to be changed to accommodate, so updates are a vital component of most automation.

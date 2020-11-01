@@ -109,7 +109,7 @@ void Analogf(unsigned long serial_print_delay_ticks)
         float temp_ref = *ptr_temp_ref;
         float temp_ch_calibration_value = adcConfMap[arg_indx_channel].calibration;
         float corrected = temp_adc*temp_ref*temp_ch_calibration_value;
-        printf_P(PSTR("\"%1.4f\""), corrected,temp_adc,temp_ref,temp_ch_calibration_value);
+        printf_P(PSTR("\"%1.4f\""), corrected);
 
         if ( (adc_arg_index+1) >= arg_count) 
         {

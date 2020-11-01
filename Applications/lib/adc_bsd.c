@@ -78,12 +78,10 @@ ISR(ADC0_RESRDY_vect)
     if (adc_channel)
     {
         channel_setup(adc_channel);
-        ADC0.COMMAND = ADC_STCONV_bm;                      // Start conversion
     }
     else if (free_running) // do not confuse with Bit 1 of ADC0.CTRLA which would loop on the same channel
     {
         channel_setup(adc_channel);
-        ADC0.COMMAND = ADC_STCONV_bm;                      // Start conversion
         adc_isr_status = ISR_ADCBURST_START;
     }
     else
@@ -127,7 +125,6 @@ void enable_ADC_auto_conversion(uint8_t free_run)
 
     // Start the first Conversion and touch the interupt bit
     channel_setup(ADC_CH_ADC0);
-    ADC0.COMMAND = ADC_STCONV_bm;                      // Start conversion
     ADC0.INTCTRL = ADC_RESRDY_bm;                      // Enable interrupts
 }
 
@@ -157,7 +154,6 @@ int adcSingle(ADC_CH_t channel)
     else
     {
         channel_setup(channel);
-        ADC0.COMMAND = ADC_STCONV_bm;                 // Start conversion
         while ( !(ADC0.INTFLAGS & ADC_RESRDY_bm) );   // Check if the conversion is done
         int local = ADC0.RES;                         // Clears the interrupt flag
         return local;

@@ -43,7 +43,8 @@ This board allows a Pi Zero [W] serial to interface an AVR128DA28 with either it
             WIP: 
             Todo: Design, Layout, BOM, Review* (#= done), Order Boards, Assembly, Testing, Evaluation.
             *during review the Design may change without changing the revision.
-            3-state buffer? https://www.diodes.com/assets/product-showcases/Automotive-compliant-Single-Gate-LVC-Logic-Family.pdf
+            LVT12R0100FER smd 1206 metal current sense element 0.01 Ohm 1W (e.g. 10A max)
+            AT30TSE758A eeprom/temperature-alert on i2c bus between mngr and app
             change name on board to MacGyver
             AVR128DB has two power domains, but the logistics is a mystery to me at this time.
             Add 10k Ohm to discharge the UPDI mode which is controled with BCM24
