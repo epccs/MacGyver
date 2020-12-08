@@ -116,3 +116,6 @@ clean: ## remove the image and its related files
  
 %.lst: %.elf
 	$(OBJDUMP) -h -S $< > $@
+
+builtin: ## show list of builtin (hidden) defines, some may need to be added to VScode c_cpp_properties.json
+	$(CC) $(LDFLAGS) $(TARGET_ARCH) -E -dM - < /dev/null

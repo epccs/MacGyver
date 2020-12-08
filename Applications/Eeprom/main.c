@@ -29,9 +29,6 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 #include "../Uart/id.h"
 #include "ee.h"
 
-#define ADC_DELAY_MILSEC 200UL
-static unsigned long adc_started_at;
-
 #define BLINK_DELAY 1000UL
 static unsigned long blink_started_at;
 static unsigned long blink_delay;

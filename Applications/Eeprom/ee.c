@@ -21,6 +21,7 @@ Copyright (C) 2019 Ronald Sutherland
 #include <util/atomic.h>
 // use the new eeprom.h from Microchip 3.6.2 the old 3.6.1 that is packaged on Debain does not work
 #include "../lib/eeprom.h"
+//#include <avr/eeprom.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
