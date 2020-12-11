@@ -5,11 +5,13 @@ From <https://github.com/epccs/MacGyver>
 
 ## Overview
 
-The board name was PiUpdi, but that is confusing (with pyupdi), which was causing self-inflicted pain. I have mcgyvered (improvised use of IOFF buffer) the UPDI programming interface so that an Raspberry Pi pin can select it; in effect, it results in a UART mode or a UPDI mode from the R-Pi hardware serial port.
+This board allows a Raspberry Pi serial hardware port (or adaptor board) to interface with a multi-drop. A local AVR128DA28 is on the multi-drop. Programing is done through the serial interface when a target (e.g., the local AVR128DA28) is set by the manager for UPDI (the preferred programing method for new AVRs) or UART mode.
 
-Board is used to connect a Raspberry Pi Zero (or W) hardware serial port (from 40 pin header) to ether the UPDI or UART0 port of an AVR128DA28. 
+I have improvised (mcgyvered) the use of IOFF buffers so the UPDI programming interface can be selected; it results in a UART mode or a UPDI mode from the R-Pi hardware serial port.
 
-The Raspberry Pi hardware UART does not have latency like a USB-serial bridge, so its programming speed may be the best possible. Programing sends a lot of small sets of data back and forth; USB latency is almost certainly the cause of most complaints about UPDI speed.
+Board is used to connect a Raspberry Pi hardware serial port (e.g., 40 pin header) to ether the UPDI or UART0 port of an AVR128DB32 manager, or (with help from the manager) to a local AVR128DA28 on the multi-drop serial. 
+
+The Raspberry Pi hardware UART does not have latency like a USB-serial bridge, so its programming speed is the best possible. Programing sends a lot of small sets of data back and forth; USB latency is almost certainly the cause of most complaints about UPDI speed.
 
 
 ## Status
@@ -27,7 +29,7 @@ Hardware files include schematic and board images, bill of materials, and my not
 TBD
 
 
-The Pi Zero needs a way to manualy [halt] from a push button, and start (when the AVR does not start it).
+The a switch on the board is used to [halt] the Raspberry Pi it will start at power up.
 
 [halt]: ./Shutdown
 
