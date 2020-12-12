@@ -5,13 +5,11 @@ From <https://github.com/epccs/MacGyver>
 
 ## Overview
 
-This board allows a Raspberry Pi serial hardware port (or adaptor board) to interface with a multi-drop. A local AVR128DA28 is on the multi-drop. Programing is done through the serial interface when a target (e.g., the local AVR128DA28) is set by the manager for UPDI (the preferred programing method for new AVRs) or UART mode.
+This board allows a Raspberry Pi serial hardware port (or adaptor board) to interface with a multi-drop. A local AVR128DA28 is on the multi-drop. Programing is done through the serial interface when a target (e.g., the local AVR128DA28) is set by the manager for UPDI (the programming method for new AVRs) or UART mode.
 
-I have improvised (mcgyvered) the use of IOFF buffers so the UPDI programming interface can be selected; it results in a UART mode or a UPDI mode from the R-Pi hardware serial port.
+Multi-drop serial allows the Raspberry Pi to reach other boards connected with a CAT5 cable. The managers have an out of band channel for the connection state (bus state) so that a host (R-Pi) can establish a point to point connection to the remote UPDI port. Regular serial communication can be a point to point or point to multi-point.
 
-Board is used to connect a Raspberry Pi hardware serial port (e.g., 40 pin header) to ether the UPDI or UART0 port of an AVR128DB32 manager, or (with help from the manager) to a local AVR128DA28 on the multi-drop serial. 
-
-The Raspberry Pi hardware UART does not have latency like a USB-serial bridge, so its programming speed is the best possible. Programing sends a lot of small sets of data back and forth; USB latency is almost certainly the cause of most complaints about UPDI speed.
+I have improvised (mcgyvered) the use of IOFF buffers so the UPDI programming interface can be selected; it results in a UART mode or a UPDI mode. A Raspberry Pi hardware UART does not have latency like a USB-serial bridge, so the programming speed is the best possible. Programing sends many small sets of data back and forth; USB latency causes reduced UPDI speed.
 
 
 ## Status
@@ -28,15 +26,20 @@ Hardware files include schematic and board images, bill of materials, and my not
 
 TBD
 
+Do not think of this as a PLC. A PLC runs a well-tested program that emulates logic (e.g., a logic sequence that historically was done with hardwired relay circuits) to implement control processes. The firmware that runs on this board is written in a general-purpose language C or assembly (C++ may also work if that is your thing, I have been avoiding it). The program needs careful reviewing and then compiled into the binary instructions that operate the processor. I recommend dividing the software into parts that are as minimally functional as possible for testing. Testing and ensuring correctness is the user's responsibility.
 
-The a switch on the board is used to [halt] the Raspberry Pi it will start at power up.
+The first UART on the application controller is used for the multi-drop serial bus that is interfaced with the serial hardware of the Single Board Computer (SBC). The 40 pin header of a Raspberry Pi uses pins 8 and 10 for RX and TX; other SBC's should also work (I do not test them). The RJ45 connectors are for the multi-drop serial bus daisy chain connection with terminations at the ends. The pairs are done the same as ethernet, so I can swap around cables if needed, but don't accidentally connect PoE devices since that would probably let out the smoke daemons. 
+
+The Raspberry Pi will start at power-up, a switch on the board is used to [halt] it.
 
 [halt]: ./Shutdown
 
 
 ## AVR toolchain
 
-The shared files for this board are in the /lib folder. Each example has files and a Makefile in its folder. Hear are some toolchain links for referance (The AVR128DA should work with the packaged toolchain on R-Pi).
+This board uses the AVR toolchain. I use the one from Microchip that has been packaged for Debian (3.6.1, it is also on Ubuntu, Raspbian, and Windows with WSL). With the toolchain installed, the AVR application can compile localy. 
+
+The frequently used files for this board are in the /lib folder (in Applicaions and Manager). Each example application has its files and a Makefile in a separate folder (in Applicaions and Manager). The toolchain is also available as packages. 
 
 * toolchain: https://www.microchip.com/mplab/avr-support/avr-and-arm-toolchains-c-compilers
 * source: https://www.microchip.com/mplab/avr-support/avr-and-sam-downloads-archive
@@ -46,32 +49,34 @@ The shared files for this board are in the /lib folder. Each example has files a
 note: 10.0.0 has float/double/long_double (32/32/64).
 
 ```
+# the modem manager causes problme with my old programer but not with the R-Pi uart
+[sudo apt-get purge modemmanager]
 # if side load tools are used skip packages: gcc-avr binutils-avr gdb-avr avr-libc 
 sudo apt-get install git make avrdude gcc-avr binutils-avr gdb-avr avr-libc python3-pip
-sudo apt-get purge modemmanager
 pip3 install pyserial intelhex pylint
 pip3 install https://github.com/mraardvark/pyupdi/archive/master.zip
-# [optional side loaded toolchain(s)]
-# to side load avr8-gnu-toolchain-3.6.2.1759-linux.any.x86_64.tar.gz
-wget https://www.microchip.com/mymicrochip/filehandler.aspx?ddocname=en607660
-cp 'filehandler.aspx?ddocname=en607660' Samba/avr8-gnu-toolchain-3.6.2.1759-linux.any.x86_64.tar.gz
-cd Samba
-# <cynical>That was not obfuscated at all.</cynical>
-# I got to this point from a remote Windows machine so sorry if the wget stuff does not work.
-mkdir avr8-3.6.2
-tar -xzvf avr8-gnu-toolchain-3.6.2.1759-linux.any.x86_64.tar.gz -C avr8-3.6.2
-git clone https://github.com/epccs/MacGyver
-# arduino has a toolchain form (bzip2 compression)
-wget http://downloads.arduino.cc/tools/avr-gcc-7.3.0-atmel3.6.1-arduino7-x86_64-pc-linux-gnu.tar.bz2
-# which is from https://github.com/arduino/toolchain-avr/tree/staging
-tar -xjvf avr-gcc-7.3.0-atmel3.6.1-arduino7-x86_64-pc-linux-gnu.tar.bz2 -C avr-gcc-7.3.0-atmel3.6.1-arduino7
+# [<optional> side loaded toolchain(s)
+#   to side load avr8-gnu-toolchain-3.6.2.1759-linux.any.x86_64.tar.gz
+   wget https://www.microchip.com/mymicrochip/filehandler.aspx?ddocname=en607660
+   cp 'filehandler.aspx?ddocname=en607660' Samba/avr8-gnu-toolchain-3.6.2.1759-linux.any.x86_64.tar.gz
+   cd Samba
+#    <cynical>That was not obfuscated at all.</cynical>
+#    I got to this point from a remote Windows machine so sorry if the wget stuff does not work.
+    mkdir avr8-3.6.2
+    tar -xzvf avr8-gnu-toolchain-3.6.2.1759-linux.any.x86_64.tar.gz -C avr8-3.6.2
+    git clone https://github.com/epccs/MacGyver
+#    arduino has a toolchain form (bzip2 compression)
+    wget http://downloads.arduino.cc/tools/avr-gcc-7.3.0-atmel3.6.1-arduino7-x86_64-pc-linux-gnu.tar.bz2
+#    which is from https://github.com/arduino/toolchain-avr/tree/staging
+    tar -xjvf avr-gcc-7.3.0-atmel3.6.1-arduino7-x86_64-pc-linux-gnu.tar.bz2 -C avr-gcc-7.3.0-atmel3.6.1-arduino7
+# </optional> side loaded toolchain(s)]
 ```
 
-Some device-specific files from the [atpack] are also added to this repo.
+Some device-specific files are from the [atpack] also added to this repo.
 
 [atpack]: http://packs.download.atmel.com/
 
-With the m4809, I had to sideload the toolchain, since the packaged one lacked the xmega3 core. However, AVR128DA28 has an xmega4 core, and that is in older toolchains. I prefer using a package toolchain.
+The AVR128DA28 is has avrxmega4 arch, and that is in the 3.6.1 toolchain. It is easy to use a package toolchain.
 
 
 ## BCM24 Cntl UPDI mode and BCM23 Cntl UART mode
@@ -145,7 +150,9 @@ https://blog.robenkleene.com/2020/09/21/the-era-of-visual-studio-code/
 
 ## Field Updates
 
-Updating flash from memory devices like SD cards has been a traditional way to do field updates. The update may be sent to the user as an SD card (or something similar) and then plugged into the product in the field to upgrade it. The idea is that providing an in-circuit programmer and a script to control that would be difficult; the customer would have to (climb up the tree and) access the products with their laptop and the programming cable to update them. An SD card eliminates the fiddly cable, but updates are still a nightmare. One of these boards could be remote (in the tree) without an R-Pi, and a CAT5 line could run (down) to an encloser (at the base) for access. When updates or data access are needed, another of these boards with an R-Pi (or RPUusb) could do what is required.
+There is no bootloader. The basic idea is that the R-Pi can upload firmware to an AVR128DB32 UPDI directly to act as a manager to load firmware to the AVR128DA28 UPDI through a multi-drop full-duplex connection, which I have had good luck with so far. I want the DA28 to be easy to replace, and DIP can have a socket, which is perfect.
+
+Updating flash from memory devices like SD cards has been a traditional way to do field updates. The update may be sent to the user as an SD card (or something similar) and then plugged into the product in the field to upgrade it. The idea is that providing an in-circuit programmer and a script to control that would be difficult; the customer would have to (climb up the tree and) access the products with their laptop and the programming cable to update them. An SD card eliminates the fiddly cable, but updates are still a nightmare. One of these boards could be remote (in the tree) without an R-Pi, and a CAT5 line could run (down) to an encloser (near the base) for access. When updates or data access are needed, another of these boards with an R-Pi (or RPUusb) could do what is required.
 
 A more exciting method is to connect a group of units to one that has an R-Pi permanently attached. If the R-Pi is near a WiFi bridge that goes to a Starlink connection, the options become very extensible. A setup might look like a hub with CAT5 lines radiating out to the maximum distance that the RS485 transceivers allow. 
 
