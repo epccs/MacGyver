@@ -19,7 +19,14 @@ Copyright (C) 2019 Ronald Sutherland
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <util/atomic.h>
-// use the new eeprom.h from Microchip 3.6.2 the old 3.6.1 that is packaged on Debain does not work
+// use the new eeprom.h from Microchip 3.6.2 
+// the old 3.6.1 on most Linux machines does not work
+// the new Debain package has 3.6.2
+// https://salsa.debian.org/debian/avr-libc/-/blob/09632ba9991dc8f7ad6d208b6c946940eaefc29e/libc/avr-libc/include/avr/eeprom.h
+// the new eewr_block_xmega.c is setup for m4809, but not AVR128Dx so it will need updates
+// https://salsa.debian.org/debian/avr-libc/-/blob/09632ba9991dc8f7ad6d208b6c946940eaefc29e/libc/avr-libc/libc/misc/eewr_block_xmega.c
+// I will tinker with that; VScode is making me think I am smarter than I am.
+// https://www.avrfreaks.net/forum/avr128dx-eeprom-writing
 #include "../lib/eeprom.h"
 //#include <avr/eeprom.h>
 #include <stdio.h>
