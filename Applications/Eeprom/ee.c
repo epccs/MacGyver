@@ -26,6 +26,11 @@ Copyright (C) 2019 Ronald Sutherland
 // the new eewr_block_xmega.c is setup for m4809, but not AVR128Dx so it will need updates
 // https://salsa.debian.org/debian/avr-libc/-/blob/09632ba9991dc8f7ad6d208b6c946940eaefc29e/libc/avr-libc/libc/misc/eewr_block_xmega.c
 // I will tinker with that; VScode is making me think I am smarter than I am.
+// gchapman post a link to mplab 2.31 source for GCC, xc8 is not gpl, but mplab has both compilers.
+// https://www.avrfreaks.net/comment/3023176#comment-3023176
+// which changes eewr_block_xmega.c a little. Basicly turning everything in it off for Dx parts.
+// That made me look a little at the .S files where I found eerd_byte.S and eewr_byte.S
+// I feel this is what I am after, but clueless about doing the Makefile for assembly.
 // https://www.avrfreaks.net/forum/avr128dx-eeprom-writing
 #include "../lib/eeprom.h"
 //#include <avr/eeprom.h>

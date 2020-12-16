@@ -3,7 +3,7 @@
 
 #include <avr/io.h>
 
-#if E2END && __AVR_XMEGA__ && defined(E2PAGESIZE) && (E2PAGESIZE)
+#if E2END && __AVR_XMEGA__ && defined(E2PAGESIZE) && (E2PAGESIZE > 1)
 
 #include <assert.h>
 #include "sectionname.h"
@@ -115,5 +115,4 @@ void eeprom_write_block (const void *sram, void *eeprom_addr, size_t length)
 
 #endif  /* E2END && __AVR_XMEGA__ && E2PAGESIZE */
 #endif  /* !__DOXYGEN__ */
-
 
