@@ -3,7 +3,7 @@ TARGET = Eeprom
 LIBDIR = ../lib
 OBJECTS = main.o \
 	ee.o \
-	eewr_block_xmega.o \
+	eerw_dx.o \
 	../Uart/id.o \
 	$(LIBDIR)/timers_bsd.o \
 	$(LIBDIR)/uart0_bsd.o \
