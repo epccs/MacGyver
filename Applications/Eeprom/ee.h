@@ -6,7 +6,7 @@
 #   error your mcu is not supported
 #endif
 
-extern void EEread(void);
-extern void EEwrite(void);
+extern void EEread_cmd(void);
+extern void EEwrite_cmd(void);
 
 #endif // ee_H 

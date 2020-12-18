@@ -42,11 +42,11 @@ void ProcessCmd()
     }
     if ( (strcmp_P( command, PSTR("/ee?")) == 0) && ( (arg_count == 1) || (arg_count == 2) ) )
     {
-        EEread();
+        EEread_cmd();
     }
     if ( (strcmp_P( command, PSTR("/ee")) == 0) && ( (arg_count == 2 ) || (arg_count == 3) ) )
     {
-        EEwrite();
+        EEwrite_cmd();
     }
 }
 

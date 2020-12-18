@@ -38,20 +38,18 @@ static inline void eeLock(bool tf){
 }
 
 // group a set of eeprom writes
-#define EEdo(statement)             do { eeLock(false); statement eeLock(true); } while(0)
+#define EEdolock(statement)             do { eeLock(false); statement eeLock(true); } while(0)
 
 //read/write a type at a 0 based address
 #define EEwrite(typ, addr, v)       (*(volatile typ*)(addr+0x1400)) = v
-#define EEread (typ, addr)          (*(volatile typ*)(addr+0x1400))
+#define EEread(typ, addr)          (*(volatile typ*)(addr+0x1400))
 
 //standard eeprom functions (0 based address)
-#define ee_dx_write_byte(addr,v)   EEdo( EEwrite(uint8_t, addr, v); )
-#define ee_dx_read_byte(addr)      EEread (uint8_t, addr, v)
+#define EE_DX_WRT_BYTE(addr,v)   EEdolock( EEwrite(uint8_t, addr, v); )
+#define EE_DX_RD_BYTE(addr)      EEread(uint8_t, addr)
+
 
 //need to add some more eeprom.h-like functions
-
-//0 based (standard linker script)
-EEMEM uint8_t ee0 = 5;
 
 #endif  /* E2END && __AVR_XMEGA__ && defined(E2PAGESIZE) && (E2PAGESIZE = 1) */
 #endif  /* !__DOXYGEN__ */

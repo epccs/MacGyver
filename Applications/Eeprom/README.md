@@ -2,6 +2,7 @@
 
 ## Todo
 
+EEPROM is WIP, but reading/writing a byte is working now. 
 The referances are going to be held on the manager. The application eeprom is for the user.
 
 ## Overview
@@ -41,19 +42,6 @@ or log the terminal session
 ``` 
 script -f -c "picocom -b 38400 /dev/ttyUSB0" stuff.log
 ``` 
-
-## Notes
-
-I can't find the source for MC's 3.6.2 AVR toolchain at the moment but it was on there web site for a while and I pointed it to the Debain maintainer who got it... anyway both eeprom.h and eewr_block_xmega.c are needed from that version, they are in the packages but not yet on most Linux installs.
-
-https://salsa.debian.org/debian/avr-libc/-/blob/master/libc/avr-libc/libc/misc/eewr_block_xmega.c
-
-MC's 3.6.2 AVR toolchain source (requires login)
-
-https://www.microchip.com/wwwregister/default.aspx?ReturnURL=https://ww1.microchip.com/downloads/Secure/en/DeviceDoc/3.6.2.zip
-
-Bummer, eewr_block_xmega.c is setup for m4809, but the AVR128Dx Non-volatile Memory Controller is different; this means significant changes are needed to the new eewr_block_xmega.c.
-
 
 # Commands
 
@@ -101,13 +89,13 @@ Write the value to the address [0..511] as type. Type is Type is UINT8, UINT16 o
 __Warning__ writing EEPROM can lead to device failure, it is only rated for 100k write cycles.
 
 ``` 
-/0/ee 0,255
-{"EE[0]":{"byte":"255","r":"255"}} 
+/0/ee 0,25
+{"EE[0]":{"byte":"25","r":"25"}} 
 /0/ee 1,128,UINT8
 {"EE[1]":{"byte":"128","r":"128"}}
 /0/ee? 1,UINT8
-{"EE[1]":{"r":"255"}}
-## so that is not working 
+{"EE[1]":{"r":"128"}}
+## so next is WIP
 /0/ee 2,65535,UINT16
 tbd
 /0/ee 0,4294967295,UINT32

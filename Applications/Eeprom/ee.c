@@ -19,21 +19,21 @@ Copyright (C) 2019 Ronald Sutherland
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <util/atomic.h>
-// use the new eeprom.h from Microchip 3.6.2 
-// the old 3.6.1 on most Linux machines does not work
+// the new eeprom.h from Microchip 3.6.2 (also the newer mplab 2.31 source for GCC)
+// does not work
 // the new Debain package has 3.6.2
 // https://salsa.debian.org/debian/avr-libc/-/blob/09632ba9991dc8f7ad6d208b6c946940eaefc29e/libc/avr-libc/include/avr/eeprom.h
-// the new eewr_block_xmega.c is setup for m4809, but not AVR128Dx so it will need updates
+// its eewr_block_xmega.c is setup for m4809, but not AVR128Dx
 // https://salsa.debian.org/debian/avr-libc/-/blob/09632ba9991dc8f7ad6d208b6c946940eaefc29e/libc/avr-libc/libc/misc/eewr_block_xmega.c
-// I will tinker with that; VScode is making me think I am smarter than I am.
-// gchapman post a link to mplab 2.31 source for GCC, xc8 is not gpl, but mplab has both compilers.
+// El Tangas post a link for the 3.6.2 source
+// https://www.avrfreaks.net/comment/3052341#comment-3052341
+// gchapman post a link for mplab 2.31 source for GCC, mplab has both xc8 and GCC compilers (xc8 is not gpl).
 // https://www.avrfreaks.net/comment/3023176#comment-3023176
 // which changes eewr_block_xmega.c a little. Basicly turning everything in it off for Dx parts.
-// That made me look a little at the .S files where I found eerd_byte.S and eewr_byte.S
-// I feel this is what I am after, but clueless about doing the Makefile for assembly.
-// https://www.avrfreaks.net/forum/avr128dx-eeprom-writing
-#include "../lib/eeprom.h"
-//#include <avr/eeprom.h>
+// That made me look a little at the .S files where I found eerd_byte.S and eewr_byte.S, but those are set up for m4809.
+// So I am doing what curtvm shows for this header.
+// https://www.avrfreaks.net/comment/3053261#comment-3053261
+#include "../lib/eerw_dx.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -41,15 +41,19 @@ Copyright (C) 2019 Ronald Sutherland
 #include "../lib/parse.h"
 #include "ee.h"
 
+//0 based (standard linker script)
+EEMEM uint8_t ee0 = 5;
+
 static uint32_t ee_mem;
 
 uint8_t ee_read_type(const char * addr, const char * type)
 {
     if ( (type == NULL) || (strcmp_P(type, PSTR("UINT8")) ==0) )
     {
-        ee_mem =(uint32_t) eeprom_read_byte((uint8_t*)(atoi(addr)) );
+        ee_mem = (uint32_t) EE_DX_RD_BYTE( (uint8_t*)(atoi(addr)) );
         return 1;
     }
+/*
     if ( strcmp_P(type, PSTR("UINT16")) == 0 )
     {
         ee_mem =(uint32_t) eeprom_read_word((uint16_t*)(atoi(addr)));
@@ -60,11 +64,12 @@ uint8_t ee_read_type(const char * addr, const char * type)
         ee_mem =(uint32_t) eeprom_read_dword((uint32_t*)(atoi(addr)));
         return 1;
     }
+*/
     return 0;
 }
 
 /* /0/ee? 0..1023, [UINT8|UINT16|UINT32] */
-void EEread(void)
+void EEread_cmd(void)
 {
     if (arg_count > 2)
     {
@@ -104,21 +109,18 @@ void EEread(void)
         }
         
         printf_P(PSTR("{\"EE[%s]\":{"),arg[0]);
-        ee_mem = -1;
+        ee_mem = 0;
         command_done = 11;
     }
     else if ( (command_done == 11) )
-    {  //  checking if we can use eeprom, or just loop. There is a delay after a write.
-        if ( eeprom_is_ready() ) 
+    {  // I don't think there is much blocking during the EEPROM read.
+        if (!ee_read_type(arg[0], arg[1]))
         {
-            if (!ee_read_type(arg[0], arg[1]))
-            {
-                printf_P(PSTR("\"err\":\"EeRdCmdDn11WTF\"}}\r\n"));
-                initCommandBuffer();
-                return;
-            }
-            command_done = 12;
+            printf_P(PSTR("\"err\":\"EeRdCmdDn11WTF\"}}\r\n"));
+            initCommandBuffer();
+            return;
         }
+        command_done = 12;
     }
     else if ( (command_done == 12) )
     {
@@ -127,13 +129,13 @@ void EEread(void)
     }
     else
     {
-        printf_P(PSTR("{\"err\":\"AdcCmdDoneWTF\"}\r\n"));
+        printf_P(PSTR("{\"err\":\"EeCmdDoneWTF\"}\r\n"));
         initCommandBuffer();
     }
 }
 
 /* /0/ee address,value[,type] */
-void EEwrite(void)
+void EEwrite_cmd(void)
 {
     if ( (command_done == 10) )
     {
@@ -178,15 +180,18 @@ void EEwrite(void)
         command_done = 11;
     }
     else if ( (command_done == 11) )
-    {  //  check if we can use eeprom, or just loop.
-        if ( eeprom_is_ready() ) 
+    {  
+        // add a check if we can use eeprom.
+        /*if ( eeprom_is_ready() ) 
         {
+        */
             if ( (arg[2] == NULL) || (strcmp_P(arg[2], PSTR("UINT8")) == 0) )
             {
                 uint8_t value = (uint8_t) (ee_mem & 0xFFU);
                 printf_P(PSTR("\"byte\":\"%u\","),value);
-                eeprom_write_byte( (uint8_t *) (atoi(arg[0])), value);
+                EE_DX_WRT_BYTE( (uint8_t *) (atoi(arg[0])), value);
             }
+/*
             if ( strcmp_P(arg[2], PSTR("UINT16")) == 0 )
             {
                 uint16_t value = (uint16_t) (ee_mem & 0xFFFFU);
@@ -198,21 +203,21 @@ void EEwrite(void)
                 printf_P(PSTR("\"dword\":\"%lu\","),ee_mem);
                 eeprom_write_dword( (uint32_t *) (atoi(arg[0])), ee_mem);
             }
+*/
             command_done = 12;
+        /*
         }
+        */
     }
     else if ( (command_done == 12) )
-    {  //  keep checking if we can use eeprom, there is a delay after a write
-        if ( eeprom_is_ready() ) 
+    {
+        if (!ee_read_type(arg[0], arg[2]))
         {
-            if (!ee_read_type(arg[0], arg[2]))
-            {
-                printf_P(PSTR("{\"err\":\"EeWrCmdDn12WTF\"}\r\n"));
-                initCommandBuffer();
-                return;
-            }
-            command_done = 13;
+            printf_P(PSTR("{\"err\":\"EeWrCmdDn12WTF\"}\r\n"));
+            initCommandBuffer();
+            return;
         }
+        command_done = 13;
     }
     else if ( (command_done == 13) )
     {
