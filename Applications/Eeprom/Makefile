@@ -4,6 +4,7 @@ LIBDIR = ../lib
 OBJECTS = main.o \
 	ee.o \
 	../Uart/id.o \
+	$(LIBDIR)/eerw_dx.o \
 	$(LIBDIR)/timers_bsd.o \
 	$(LIBDIR)/uart0_bsd.o \
 	$(LIBDIR)/twi0_bsd.o \

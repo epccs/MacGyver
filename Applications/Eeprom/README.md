@@ -2,8 +2,8 @@
 
 ## Todo
 
-EEPROM is WIP, but reading/writing a byte is working now. 
-The referances are going to be held on the manager. The application eeprom is for the user.
+EEPROM is WIP, but reading/writing a byte seems to be working. 
+
 
 ## Overview
 
@@ -95,11 +95,10 @@ __Warning__ writing EEPROM can lead to device failure, it is only rated for 100k
 {"EE[1]":{"byte":"128","r":"128"}}
 /0/ee? 1,UINT8
 {"EE[1]":{"r":"128"}}
-## so next is WIP
 /0/ee 2,65535,UINT16
-tbd
+# not working
 /0/ee 0,4294967295,UINT32
-tbd
+# not working
 ```
 Note: 4294967295 is 0xFFFFFFFF, it is the default for a blank chip.
 

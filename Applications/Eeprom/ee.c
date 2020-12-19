@@ -41,19 +41,15 @@ Copyright (C) 2019 Ronald Sutherland
 #include "../lib/parse.h"
 #include "ee.h"
 
-//0 based (standard linker script)
-EEMEM uint8_t ee0 = 5;
-
 static uint32_t ee_mem;
 
 uint8_t ee_read_type(const char * addr, const char * type)
 {
     if ( (type == NULL) || (strcmp_P(type, PSTR("UINT8")) ==0) )
     {
-        ee_mem = (uint32_t) EE_DX_RD_BYTE( (uint8_t*)(atoi(addr)) );
+        ee_mem = (uint32_t) eeprom_read_byte( (uint8_t*)(atoi(addr)) );
         return 1;
     }
-/*
     if ( strcmp_P(type, PSTR("UINT16")) == 0 )
     {
         ee_mem =(uint32_t) eeprom_read_word((uint16_t*)(atoi(addr)));
@@ -64,7 +60,6 @@ uint8_t ee_read_type(const char * addr, const char * type)
         ee_mem =(uint32_t) eeprom_read_dword((uint32_t*)(atoi(addr)));
         return 1;
     }
-*/
     return 0;
 }
 
@@ -189,7 +184,7 @@ void EEwrite_cmd(void)
             {
                 uint8_t value = (uint8_t) (ee_mem & 0xFFU);
                 printf_P(PSTR("\"byte\":\"%u\","),value);
-                EE_DX_WRT_BYTE( (uint8_t *) (atoi(arg[0])), value);
+                eeprom_write_byte( (uint8_t *) (atoi(arg[0])), value);
             }
 /*
             if ( strcmp_P(arg[2], PSTR("UINT16")) == 0 )

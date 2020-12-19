@@ -8,7 +8,6 @@
     
     int main(void) 
     {
-        eeprom_write_byte( &ee0, 0x55 );
         eeprom_write_byte( 1, 0xAA );
 
         //a bypass of the eeprom functions that can do multiple writes with eeprom unlocked
@@ -44,12 +43,33 @@ static inline void eeLock(bool tf){
 #define EEwrite(typ, addr, v)       (*(volatile typ*)(addr+0x1400)) = v
 #define EEread(typ, addr)          (*(volatile typ*)(addr+0x1400))
 
-//standard eeprom functions (0 based address)
-#define EE_DX_WRT_BYTE(addr,v)   EEdolock( EEwrite(uint8_t, addr, v); )
+//eeprom macros (with 0 based address)
 #define EE_DX_RD_BYTE(addr)      EEread(uint8_t, addr)
+#define EE_DX_RD_WORD(addr)      EEread(uint16_t, addr)
+#define EE_DX_RD_DWORD(addr)      EEread(uint32_t, addr)
+#define EE_DX_WRT_BYTE(addr,v)   EEdolock( EEwrite(uint8_t, addr, v); )
+#define EE_DX_WRT_WORD(addr,v)   EEdolock( EEwrite(uint16_t, addr, v); )
+#define EE_DX_WRT_DWORD(addr,v)   EEdolock( EEwrite(uint32_t, addr, v); )
 
+// some eeprom.h-like functions, a.k.a. how to use the macros
 
-//need to add some more eeprom.h-like functions
+// Read a byte from EEPROM address
+uint8_t eeprom_read_byte (const uint8_t *__p);
+
+// Read a word (16-bit) from EEPROM address
+uint16_t eeprom_read_word (const uint16_t *__p);
+
+// Read a double word (32-bit) from EEPROM address
+uint32_t eeprom_read_dword (const uint32_t *__p);
+
+// Write a byte to EEPROM address
+void eeprom_write_byte (uint8_t *__p, uint8_t __value);
+
+// Write a word (16-bit) to EEPROM address
+void eeprom_write_word (uint16_t *__p, uint16_t __value);
+
+// Write a double word (32-bit) to EEPROM address
+void eeprom_write_dword (uint32_t *__p, uint32_t __value);
 
 #endif  /* E2END && __AVR_XMEGA__ && defined(E2PAGESIZE) && (E2PAGESIZE = 1) */
 #endif  /* !__DOXYGEN__ */
