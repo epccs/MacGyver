@@ -186,7 +186,6 @@ void EEwrite_cmd(void)
                 printf_P(PSTR("\"byte\":\"%u\","),value);
                 eeprom_write_byte( (uint8_t *) (atoi(arg[0])), value);
             }
-/*
             if ( strcmp_P(arg[2], PSTR("UINT16")) == 0 )
             {
                 uint16_t value = (uint16_t) (ee_mem & 0xFFFFU);
@@ -198,7 +197,6 @@ void EEwrite_cmd(void)
                 printf_P(PSTR("\"dword\":\"%lu\","),ee_mem);
                 eeprom_write_dword( (uint32_t *) (atoi(arg[0])), ee_mem);
             }
-*/
             command_done = 12;
         /*
         }

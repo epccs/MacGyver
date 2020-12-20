@@ -96,9 +96,9 @@ __Warning__ writing EEPROM can lead to device failure, it is only rated for 100k
 /0/ee? 1,UINT8
 {"EE[1]":{"r":"128"}}
 /0/ee 2,65535,UINT16
-# not working
+{"EE[2]":{"word":"65535","r":"65535"}}
 /0/ee 0,4294967295,UINT32
-# not working
+{"EE[0]":{"dword":"4294967295","r":"4294967295"}}
 ```
 Note: 4294967295 is 0xFFFFFFFF, it is the default for a blank chip.
 
