@@ -95,7 +95,7 @@ reset: ## reset AVR with pyupid
 
 hdrcode: ## copy header for VSCode to find. Run with sudo
 	@echo VSCode will not look outside or cross-origin for an include,  
-	@echo so I have to put the MCU header where it can find it.
+	@echo so I have to put the MCU header where it can find.
 	cp -u ../lib/AVR-Dx_DFP/include/avr/ioavr128da28.h /usr/lib/avr/include/avr/ioavr128da28.h
 	chmod u-x /usr/lib/avr/include/avr/ioavr128da28.h
 
@@ -109,3 +109,6 @@ clean: ## remove the image and its related files
  
 %.lst: %.elf
 	$(OBJDUMP) -h -S $< > $@
+
+builtin: ## show list of builtin (hidden) defines, some may need to be added to VScode c_cpp_properties.json
+	$(CC) $(LDFLAGS) $(TARGET_ARCH) -E -dM - < /dev/null

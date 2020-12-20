@@ -48,8 +48,8 @@ void setup(void)
     ioDir(MCU_IO_TX2, DIRECTION_OUTPUT); 
     ioWrite(MCU_IO_TX2, LOGIC_LEVEL_HIGH);
     
-    //Timer0 Fast PWM mode, Timer1 & Timer2 Phase Correct PWM mode.
-    initTimers(); 
+    // Initialize Timers TCA0 is split into two 8 bit timers, the high underflow (HUNF) event it used for  time tracking
+    initTimers(); //PWM: TCA route A to PC0, PC1, PC2, PC3, PC4, PC5.
 
     /* Initialize UART to 38.4kbps, it returns a pointer to FILE so redirect of stdin and stdout works*/
     stderr = stdout = stdin = uart0_init(38400UL, UART0_RX_REPLACE_CR_WITH_NL);
@@ -63,16 +63,17 @@ void setup(void)
     // Enable global interrupts to start TIMER0 and UART
     sei(); 
     
-    blink_started_at = milliseconds();
+    // tick count is not milliseconds use cnvrt_milli() to convert time into ticks, thus tickAtomic()/cnvrt_milli(1000) gives seconds
+    blink_started_at = tickAtomic();
+    blink_delay = cnvrt_milli(BLINK_DELAY);
     
     rpu_addr = i2c_get_Rpu_address();
-    blink_delay = BLINK_DELAY;
     
     // blink fast if a default address from RPU manager not found
     if (rpu_addr == 0)
     {
         rpu_addr = '0';
-        blink_delay = BLINK_DELAY/4;
+        blink_delay = blink_delay/4;
     }
 }
 
