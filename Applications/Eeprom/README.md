@@ -1,13 +1,13 @@
 # EEPROM
 
-## Todo
-
-EEPROM is WIP, but reading/writing a byte seems to be working. 
-
-
 ## Overview
 
 Eeprom is an interactive command line program that demonstrates the control of the EEPROM.
+
+
+## Init EEPROM how to
+
+https://www.avrfreaks.net/comment/3065706#comment-3065706
 
 
 # Firmware Upload

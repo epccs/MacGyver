@@ -1,16 +1,13 @@
 # Digital Input/Output
 
-## Overview
-
-Digital is an interactive command line program that demonstrates control of the digital input/output from AVR128DA28 pins PD0..PD7 (AIN0..AIN7).
-
-
 ## ToDo
 
-Add Control so that digital Input Buffer can be enabled/disabled and pin used for ADC, which would allow ADC to use the pin. 
-The I2C and UART0 pins may not be used for general purpose I/O.
-SPI, Uart1 and Uart2 pins might be added at some point. 
+Add Control so that digital Input Buffer can be enabled/disabled, which would allow ADC to use the pin.
 
+
+## Overview
+
+Digital is an interactive command line program that demonstrates control of the digital input/output from AVR128DA28 pins PD0..PD7 (AIN0..AIN7). The I2C and UART0 pins may not be used for general purpose I/O. SPI, UART1 and UART2 pins might be added at some point.
 
 
 ## Firmware Upload

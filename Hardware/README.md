@@ -2,7 +2,7 @@
 
 ## Overview
 
-This board allows a Raspberry Pi serial hardware port (or [adaptor] board) to interface with a multi-drop. A local AVR128DA28 is on the multi-drop. Programing is done through the serial interface when a target (e.g., the local AVR128DA28) is is set by the manager for UPDI mode (the preferred method for all new AVRs).
+This board allows a Raspberry Pi serial hardware port (or [adaptor] board) to interface with a multi-drop. A local AVR128DA28 is on the multi-drop for applications. Programing is done through the serial interface when a target (e.g., the local AVR128DA28) is set by the manager (AVR128DB32) for UPDI mode. An uploaded program is sometimes called firmware; it is binary instructions (16 x 64k) executed at one per clock (with few exceptions). The instructions operate on 32 registers and 16k bytes of SRAM, for which the datasheet and related application notes have details.
 
 [adaptor]: https://github.com/epccs/RPUusb
 
@@ -41,9 +41,9 @@ This board allows a Raspberry Pi serial hardware port (or [adaptor] board) to in
 ![Status](./status_icon.png "Status")
 
 ```
-        ^2  Done: Design, Layout, BOM,
-            WIP: Review* (#= done),
-            Todo: Order Boards, Assembly, Testing, Evaluation.
+        ^2  Done: Design, Layout, BOM, Review* (#= done), Order Boards, 
+            WIP: Assembly,
+            Todo: Testing, Evaluation.
             *during review the Design may change without changing the revision.
             # LVT12R0100FER smd 1206 metal current sense element 0.01 Ohm 1W (e.g. 10A max)
             # change name on board to MacGyver
@@ -120,21 +120,27 @@ Your [Raspberry Pi] is your computer, you are the expert because I am not. Don't
 
 ## Pi Zero Setup 
 
-The Pi Zero is a Single Board Computer (SBC) running [Linux]. I use it as a network machine and to run a toolchain at the network edge. It has enough memory and processing power for the AVR toolchain (and others that I have not tested). It also does self-hosted compiling (e.g., compiles programs to run on itself) and has lots of applications and services. My use is sort of like a headless test bench computer embedded next to the bare metal control boards. It is a classic control system with a host and instruments on a communication bus (hard-link, e.g., GPIB and ilk), but it is headless, so I interact with the target over an SSH session where I run programs that operate the hard-link. 
+The Pi Zero is a Single Board Computer (SBC) running [Linux]. I use it as a network machine and to run a toolchain at the network edge. It has enough memory and processing power for the AVR toolchain (and others that I have not tested). It also does self-hosted compiling (e.g., compiles programs to run on itself) and can run lots of applications and services. My use is sort of like a headless computer embedded next to the control boards. It is a classic control system with a host and devices on a communication bus (hard-link, e.g., GPIB and ilk), but it is headless, so I interact with the target through an SSH session with the remote SBC where I can then run programs that operate the hard-link as a local connection. 
 
 [Linux]: https://github.com/epccs/RPUpi/blob/master/Hardware/Testing/linux.md
 
-The BCM2835 Broadcom chip used in the Raspberry Pi Zero is an ARM11 running at 1 GHz it has support with the [Raspbian] distribution. 
+The BCM2835 Broadcom chip used in the Raspberry Pi Zero is an ARM11 running at 1 GHz it has support with these [distribution]. 
 
-[Raspbian]: https://www.raspbian.org/
+[distribution]: https://www.raspberrypi.org/software/operating-systems/
 
 
 ## Serial
 
-The Pi serial port (RX is BCM 15 and TX is BCM 14) is crossover connected to the AVR128DA28 serial. 
+The Pi serial port (RX is BCM 15 and TX is BCM 14) is crossover connected through the Multi-Drop Bus (MDB) to the AVR128DA28 serial. 
 
 ![Pi Pinout](https://raw.githubusercontent.com/epccs/RPUpi/master/Hardware/Documents/Pi-pinout-graphic.png)
 
 UPDI does not use the nRTS/nCTS pins (16/17).
 
 Note: version ^0 did not crossover.
+
+
+## No Bootloader
+
+That is correct. There is no bootloader. UPDI is based on half-duplex asynchronous serial (ARM two-wire setup is based on synchronous serial, one is a clock). The UPDI uploader program can directly use the serial channel, which has hardware for full-duplex to the target, and then a buffer is enabled to send it to the half-duplex programming/debugging pin. You can set any fuse and code protection; then only an erase will clear it so another program and fuses can be loaded. However, you are responsible for sorting out the host program that will upload and protect your IP.
+
