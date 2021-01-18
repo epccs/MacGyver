@@ -40,7 +40,7 @@ ISR(TCA0_HUNF_vect)
 #elif defined(USE_TIMERRTC)
 ISR(RTC_CNT_vect)
 #else
-  #error "no millisec timer selected"
+  #error "no tick timer selected"
 #endif
 {
     // swap to local since volatile has to be read from memory on every access
