@@ -41,9 +41,15 @@ This board allows a Raspberry Pi serial hardware port (or [adaptor] board) to in
 ![Status](./status_icon.png "Status")
 
 ```
-        ^2  Done: Design, Layout, BOM, Review* (#= done), Order Boards, 
-            WIP: Assembly,
-            Todo: Testing, Evaluation.
+        ^3  Done: 
+            WIP:
+            Todo: Design, Layout, BOM, Review* (#= done), Order Boards,  Assembly, Testing, Evaluation.
+            *during review the Design may change without changing the revision.
+            # J9 J10 renumber to J8 J9
+
+        ^2  Done: Design, Layout, BOM, Review* (#= done), Order Boards, Assembly,
+            WIP: Testing,
+            Todo: Evaluation.
             *during review the Design may change without changing the revision.
             # LVT12R0100FER smd 1206 metal current sense element 0.01 Ohm 1W (e.g. 10A max)
             # change name on board to MacGyver
@@ -54,16 +60,16 @@ This board allows a Raspberry Pi serial hardware port (or [adaptor] board) to in
             # Rename DTR pair to OOB (Out Of Band).
             # Remove RTS/CTS, without a bootloader they will not be needed
 
-        ^1  Done: Design, Layout, BOM, Review* (#= done), Order Boards,
-            WIP: Assembly, 
-            Todo: Testing, Evaluation.
+        ^1  Done: Design, Layout, BOM, Review* (#= done), Order Boards, Assembly, Testing,
+            WIP: Evaluation.
+            Todo:  
             *during review the Design may change without changing the revision.
             # swap the m4809 for a AVR128DA28
             # UART0 crossover connection to R-Pi
  
             ^0  Done: Design, Layout, BOM, Review*, Order Boards,
-            WIP: Assembly (will not do),
-            Todo: Testing, Evaluation.
+            WIP:  stopped due to a serial crossover mistake
+            Todo: Assembly, Testing, Evaluation.
             *during review the Design may change without changing the revision.
             note this was not tested, and an error has been found with serial.
             # use Python https://github.com/mraardvark/pyupdi to upload AVR from R-Pi Zero
@@ -99,11 +105,15 @@ The BOM is a CVS file, import it into a spreadsheet program like LibreOffice Cal
 
 Option | BOM's included
 ----- | ----- 
-A. | [BRD] 
-M. | [BRD] [SMD] [HDR] 
-N. | [BRD] [SMD] [HDR] [POL] [PLUG]
+A. | [BRD]
+J. | [BRD] [SMD] [HDR]
+M. | [BRD] [SMD] [HDR] [CAT5]
+N. | [BRD] [SMD] [HDR] [CAT5] [POL]
+Y. | [BRD] [SMD] [HDR] [CAT5] [POL] [DIN] [PLUG] 
 
 [BRD]: ./Design/19260BRD,BOM.csv
+[CAT5]: ./Design/19260CAT,BOM.csv
+[DIN]: ./Design/19260DIN,BOM.csv
 [HDR]: ./Design/19260HDR,BOM.csv
 [PLUG]: ./Design/19260PLUG,BOM.csv
 [POL]: ./Design/19260POL,BOM.csv
