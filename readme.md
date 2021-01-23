@@ -9,7 +9,7 @@ This board allows a Raspberry Pi serial hardware port (or adaptor board) to inte
 
 Multi-drop serial allows the Raspberry Pi to reach other boards connected with a CAT5 cable. The managers have an out of band channel for the connection state (bus state) so that a host (R-Pi) can establish a point to point connection to the remote UPDI port. Regular serial communication can be a point to point or point to multi-point.
 
-I have improvised (mcgyvered) the use of IOFF buffers so the UPDI programming interface can be selected; it results in a UART mode or a UPDI mode. A Raspberry Pi hardware UART does not have latency like a USB-serial bridge, so the programming speed is the best possible. Programing sends many small sets of data back and forth; USB latency causes reduced UPDI speed.
+I have improvised some IOFF buffers so the UPDI programming interface can be selected; it allows selecting a UART mode or a UPDI mode. A Raspberry Pi hardware UART is ideal since it does not have latency like a USB-serial bridge; the programming speed is the best possible. Programing sends many small sets of data back and forth; USB latency reduces the apparent UPDI speed. UPDI programming allows the use of any fuse, code protection, and functional safety feature. An erase command will clear the part so another program and fuse combination can be loaded. Thus bricking is not possible, but you can wear out the flash memory (rated for 10k writes).
 
 
 ## Status
@@ -26,9 +26,11 @@ Hardware files include schematic and board images, bill of materials, and my not
 
 TBD
 
-Do not think of this as a PLC. A PLC runs a well-tested program that emulates logic (e.g., a logic sequence that historically was done with hardwired relay circuits) to implement control processes. The firmware that runs on this board is written in a general-purpose language C or assembly (C++ may also work if that is your thing, I have been avoiding it). The program needs careful reviewing and then compiled into the binary instructions that operate the processor. I recommend dividing the software into parts that are as minimally functional as possible for testing. Testing and ensuring correctness is the user's responsibility.
+The firmware that runs on this board is written in a general-purpose language C or assembly (C++ may also work if that is your thing, I have been avoiding it). The program needs careful reviewing and then compiled into the binary instructions that comprise the firmware. I recommend dividing the software into parts that are as minimal as possible for testing. Testing and ensuring correctness is the user's responsibility. PLCs are for anticipated Industrial Applications, but if what you are doing is not in their tool bag, or if you plan to make more than a handful, then it may be worth considering an MCU with functional safety features.
 
-The first UART on the application controller is used for the multi-drop serial bus that is interfaced with the serial hardware of the Single Board Computer (SBC). The 40 pin header of a Raspberry Pi uses pins 8 and 10 for RX and TX; other SBC's should also work (I do not test them). The RJ45 connectors are for the multi-drop serial bus daisy chain connection with terminations at the ends. The pairs are done the same as ethernet, so I can swap around cables if needed, but don't accidentally connect PoE devices since that would probably let out the smoke daemons. 
+https://library.automationdirect.com/microcontrollers-versus-plcs-theres-a-clear-winner-for-your-industrial-applications/
+
+The UART0 on the application controller is used for the multi-drop serial bus that is interfaced with the serial hardware of the Single Board Computer (SBC). The 40 pin header of a Raspberry Pi uses pins 8 and 10 for RX and TX; other SBC's should also work (I do not test them). The RJ45 connectors are for the multi-drop serial bus daisy chain connection with terminations at the ends. The pairs are done the same as ethernet, so I can swap around cables if needed, but don't accidentally connect PoE devices since that would probably let out some smoke. 
 
 The Raspberry Pi will start at power-up, a switch on the board is used to [halt] it.
 
@@ -55,6 +57,8 @@ note: 10.0.0 has float/double/long_double (32/32/64).
 sudo apt-get install git make avrdude gcc-avr binutils-avr gdb-avr avr-libc python3-pip
 pip3 install pyserial intelhex pylint
 pip3 install https://github.com/mraardvark/pyupdi/archive/master.zip
+# new (atm) uploader from Microchip https://pypi.org/project/pymcuprog/
+pip3 install pymcuprog
 # [<optional> side loaded toolchain(s)
 #   to side load avr8-gnu-toolchain-3.6.2.1759-linux.any.x86_64.tar.gz
    wget https://www.microchip.com/mymicrochip/filehandler.aspx?ddocname=en607660
@@ -76,7 +80,9 @@ Some device-specific files are from the [atpack] also added to this repo.
 
 [atpack]: http://packs.download.atmel.com/
 
-The AVR128DA28 is has avrxmega4 arch, and that is in the 3.6.1 toolchain. It is easy to use a package toolchain.
+The AVR128DA28 has an avrxmega4 arch, and that is in the 3.6.1 toolchain. It is easy to use a packaged toolchain.
+
+The compiler does not implement exception handling for dynamic memory allocation corruptions (e.g., when the stack and heap collide), so it is ill-advised to use dynamic allocation (heap) on this device. The C++ STL is full of dynamic allocation; much of the C++ found on the internet also uses the heap; I have noticed open-source projects done with C (and lack dynamic allocation) work better on these type of devices, which do not seperate the stack memory from the heap memory.
 
 
 ## BCM24 Cntl UPDI mode and BCM23 Cntl UART mode
@@ -128,7 +134,7 @@ https://github.com/Optiboot/optiboot/blob/master/Wiki/CompilingOptiboot_x.md
 There are two folders with independent ".vscode" setup, the Manager and Applications folders. Each uses different microcontrollers and needs unique defines. In the Applications/.vscode/c_cpp_properties.json, I put these defines.
 
 ```
-"defines": ["__AVR_DEV_LIB_NAME__=avr128da28","F_CPU=16000000UL"],
+"defines": ["__AVR_DEV_LIB_NAME__=avr128da28","__AVR_ARCH__=104","__AVR_XMEGA__=1","F_CPU=16000000UL"],
 ```
 
 The __AVR_DEV_LIB_NAME__ is from the -mmcu compiler option. Intellisense should track it through #include <avr/io.h> which would then include "io" + "avr128da28" + ".h". Intellisense does not look outside the includes origin (cross-origin), so it reports an error about not finding ioavr128da28.h, therefor the MCU header has to be put where it can find it. I have added a rule to do this (it needs admin rights).
@@ -147,10 +153,16 @@ Code is now seeing the same thing that the compiler does, and not recusing thoug
 
 https://blog.robenkleene.com/2020/09/21/the-era-of-visual-studio-code/
 
+The compiler has a long list of builtin (hidden) defines, and some need to be added to VScode c_cpp_properties.json
+
+```
+make builtin
+```
+
 
 ## Field Updates
 
-There is no bootloader. The basic idea is that the R-Pi can upload firmware to an AVR128DB32 UPDI directly to act as a manager to load firmware to the AVR128DA28 UPDI through a multi-drop full-duplex connection, which I have had good luck with so far. I want the DA28 to be easy to replace, and DIP can have a socket, which is perfect.
+There is no bootloader. The basic idea is that the R-Pi can upload firmware to an AVR128DB32 UPDI directly to act as a manager that can then link UPDI through a multi-drop full-duplex connection and load firmware to the AVR128DA28. The DA28 should be easy to replace, so the DIP socket is perfect.
 
 Updating flash from memory devices like SD cards has been a traditional way to do field updates. The update may be sent to the user as an SD card (or something similar) and then plugged into the product in the field to upgrade it. The idea is that providing an in-circuit programmer and a script to control that would be difficult; the customer would have to (climb up the tree and) access the products with their laptop and the programming cable to update them. An SD card eliminates the fiddly cable, but updates are still a nightmare. One of these boards could be remote (in the tree) without an R-Pi, and a CAT5 line could run (down) to an encloser (near the base) for access. When updates or data access are needed, another of these boards with an R-Pi (or RPUusb) could do what is required.
 

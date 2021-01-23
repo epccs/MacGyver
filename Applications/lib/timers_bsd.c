@@ -60,6 +60,8 @@ ISR(RTC_CNT_vect)
    milliseconds to the raw underflow count because I think that would work better than the milliseconds 
    function.
    Some F_CPU speeds do not track milliseconds perfectly with that function
+   Functional safty: UPDI has auto-bauds. The 4MHz startup clock will not switch unless the new clock is running.
+
 */
 void initTimers()
 {

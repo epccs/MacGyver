@@ -29,6 +29,8 @@ sent before the linefeed, its put() routine must implement this
 
 UART0_TX_REPLACE_NL_WITH_CR and UART0_RX_REPLACE_CR_WITH_NL may be used 
 to filter data into and out of the uart.
+
+Getting Started with USART: https://github.com/microchip-pic-avr-examples/avr128da48-getting-started-with-usart-mplab-mcc
 */
 
 #include <stdio.h>

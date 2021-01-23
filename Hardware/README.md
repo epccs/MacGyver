@@ -152,5 +152,5 @@ Note: version ^0 did not crossover.
 
 ## No Bootloader
 
-That is correct. There is no bootloader. UPDI is based on half-duplex asynchronous serial (ARM two-wire setup is based on synchronous serial, one is a clock). The UPDI uploader program can directly use the serial channel, which has hardware for full-duplex to the target, and then a buffer is enabled to send it to the half-duplex programming/debugging pin. You can set any fuse and code protection; then only an erase will clear it so another program and fuses can be loaded. However, you are responsible for sorting out the host program that will upload and protect your IP.
+That is correct. There is no bootloader. The programming interface (UPDI) is based on a half-duplex asynchronous serial. For reference, the ARM serial-wire (SWCLK, SWDIO) is based on synchronous serial. A UPDI uploader program (e.g., pyupdi or pymcuprog) can directly use the serial channel, which has hardware for full-duplex to the target. A pair of buffers are enabled to connect the full-duplex to the half-duplex programming/debugging pin of the target. You can set any fuse, code protection, and functional safety feature. An erase will always clear the part so another program and fuse combination can be loaded. Thus no bricking is possible, but you can wear out the flash memory (rated for 10k writes).
 
