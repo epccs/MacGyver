@@ -1,0 +1,9 @@
+{
+    "C_Cpp.errorSquiggles": "Enabled",
+    "C_Cpp.default.includePath": [
+        "{$workspaceFolder}/**",
+        "/usr/lib/avr/include/",
+        "/usr/lib/gcc/avr/5.4.0/include/"
+      ],
+    "C_Cpp.intelliSenseEngine": "Default"
+}
