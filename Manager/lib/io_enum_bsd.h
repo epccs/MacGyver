@@ -83,8 +83,8 @@ typedef enum MCU_IO_enum
     MCU_IO_RX_nRE, // PD5 controls RX pair transceiver receiver disable.
     MCU_IO_RX_DE, // PD6 controls RX pair transceiver driver enable
     MCU_IO_MGR_LED, // PD7 has red LED for manager status
-    //XTALHF1 pin is not mapped
-    //XTALHF2 pin is not mapped
+    //PA0(XTALHF1/TX0) pin is not mapped
+    //PA1(XTALHF2/RX0) pin is not mapped
     MCU_IO_PIPWR_EN, // PA2 has a 10k Ohm pull-up to enable power to the R-Pi (SBC), pull down with push-pull (OUTPUT mode) to turn off power. 
     MCU_IO_ALT_EN, // PA3 can pull up to enable the alternat power input, it has a 10k pull down on the board.
     MCU_IO_TX_nRE, // PA4 controls TX pair transceiver receiver disable.
@@ -95,8 +95,8 @@ typedef enum MCU_IO_enum
     MCU_IO_PI_TX, // PC1 is RX1 which has MVIO and is a direct crossover to R-Pi serial TX
     MCU_IO_SMBUS_SDA, // PC2 has MVIO and is an SMBus SDA slave that connects the manager to the R-Pi (SBC).
     MCU_IO_SMBUS_SCL, // PC3 has MVIO and is an SMBus SCL slave that connects the manager to the R-Pi (SBC).
-    MCU_IO_TO_RPU_OOB,  // PF0 has UART2 Tx used with half-duplex OOB pair for multi-drop bus state.
-    MCU_IO_FROM_RPU_OOB,  // PF1 has UART2 Rx used with half duplex OOB pair
+    MCU_IO_TO_RPU_OOB,  // PF0(TX2) used with half-duplex OOB pair for multi-drop bus state.
+    MCU_IO_FROM_RPU_OOB,  // PF1(RX2) used with half duplex OOB pair
     MCU_IO_I2C_SDA, // PF2 is an I2C SDA slave and connects the manager with application uC.
     MCU_IO_I2C_SCL, // PF3 is an I2C SCL slave and connects the manager with application uC.
     MCU_IO_APP_UART, // PF4 send RPU RX and TX to application UART.

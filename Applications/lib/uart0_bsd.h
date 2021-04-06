@@ -4,8 +4,8 @@
 #include <stdio.h>
 
 // Buffer size: (1<<5), (1<<4), (1<<3), (1<<2).
-#define UART0_RX0_SIZE (1<<5)
-#define UART0_TX0_SIZE (1<<5)
+#define RX0_SIZE (1<<5)
+#define TX0_SIZE (1<<5)
 
 // options
 #define UART0_TX_REPLACE_NL_WITH_CR 0x01         // replace transmited newline with carriage return
