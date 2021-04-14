@@ -45,7 +45,9 @@ This board allows a Raspberry Pi serial hardware port (or [adaptor] board) to in
             WIP:
             Todo: Design, Layout, BOM, Review* (#= done), Order Boards,  Assembly, Testing, Evaluation.
             *during review the Design may change without changing the revision.
-            # J9 J10 renumber to J8 J9
+            J9 J10 renumber to J8 J9
+            TO_RPU_TX has two pullup (R19 and R104), remove R104
+            Connect Manager Debug UART to the other side of IOFF buffer.
 
         ^2  Done: Design, Layout, BOM, Review* (#= done), Order Boards, Assembly,
             WIP: Testing,

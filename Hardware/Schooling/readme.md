@@ -4,10 +4,16 @@ Some lessons I learned doing MacGyver.
 
 # Table Of Contents:
 
+1. ^2 Manager Debug UART
 1. ^1 UPDI Mode Does Not Turn Off
 1. ^1 Name
 1. ^0 Serial 0 Does Not Crossover
 
+## ^2 Manager Debug UART
+
+Needs to connect on the other side of IOFF buffer so that it will disable when UART mode is off
+
+![MgrDebugUart_LayoutFix](./MacGyver^2,MgrDebugUart_LayoutFix.png "Manager Debug Uart Fix")
 
 ## ^1 UPDI Mode Does Not Turn Off
 
@@ -17,11 +23,9 @@ To help understan the problem I isolated UPDI mode to BCM24 and UART mode to BCM
 
 [RPUusb_029ec11]: https://github.com/epccs/RPUusb/commit/029ec1194d0428e7181b6f8db35fa39c39068542
 
-
 ## ^1 Name
 
 PiUpdi (the original name) is almost the same as the upload tool (pyupdi), don't do that. There are lots of unintentional consequences that happen after naming a thing. If I am getting confused, then others may also, it is best just to change the name. I have seen letter combinations that did not previously exist on the internet turn into unpleasant references, so I would preferably use a word that is in regular use, even though it makes the board invisible (I guess search for "MacGyver AVR"). I don't recall watching many of the TV shows, but some of the memes seem fitting. 
-
 
 ## ^0 Serial 0 Does Not Crossover
 

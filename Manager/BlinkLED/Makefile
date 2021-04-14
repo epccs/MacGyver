@@ -65,29 +65,30 @@ $(TARGET).hex: $(TARGET).elf
 
 # # This part has a built in UART based uploader (UPDI), so no bootloader is needed. Unfortunalty avrdude is not set up for this interface so...
 # sudo apt install python3-pip
-# pip3 install pyserial intelhex pylint
+# pip3 install pymcuprog
+# pip3 install pyserial intelhex pylint pymcuprog
 # pip3 install https://github.com/mraardvark/pyupdi/archive/master.zip
 # # place RPUusb next to this project since the BCM24 pin needs controled
 # git clone https://github.com/epccs/RPUusb
-# # This program expects oem fuses
+# pyupdi -v -d $(MCU) -c $(UPDI_PORT) -b 115200 -e -f $(TARGET).hex
 updi: ## Upload with pyupid.
 	@echo testing for prerequesetits a false will stop make
 	which python3 2>/dev/null || false
-	which pyupdi 2>/dev/null || false
+	which pymcuprog 2>/dev/null || false
 	ls ../../../RPUusb/UPDImode/UPDImode.py 2>/dev/null || false
 	ls ../../../RPUusb/UPDImode/UARTmode.py 2>/dev/null || false
 	python3 ../../../RPUusb/UPDImode/UPDImode.py
-	pyupdi -v -d $(MCU) -c $(UPDI_PORT) -b 115200 -e -f $(TARGET).hex
+	pymcuprog write -t uart -u $(UPDI_PORT) -d $(MCU) --verify -f $(TARGET).hex
 	python3 ../../../RPUusb/UPDImode/UARTmode.py
 
 reset: ## Reset AVR with pyupid.
 	@echo testing for prerequesetits a false will stop make
 	which python3 2>/dev/null || false
-	which pyupdi 2>/dev/null || false
+	which pymcuprog 2>/dev/null || false
 	ls ../../../RPUusb/UPDImode/UPDImode.py 2>/dev/null || false
 	ls ../../../RPUusb/UPDImode/UARTmode.py 2>/dev/null || false
 	python3 ../../../RPUusb/UPDImode/UPDImode.py
-	pyupdi -v -d $(MCU) -c $(UPDI_PORT) -b 115200 -e --reset
+	pymcuprog reset -t uart -u $(UPDI_PORT) -d $(MCU)
 	python3 ../../../RPUusb/UPDImode/UARTmode.py
 
 hdrcode: ## Copy header for VSCode to find. Run with sudo.
