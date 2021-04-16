@@ -11,9 +11,12 @@ Some lessons I learned doing MacGyver.
 
 ## ^2 Manager Debug UART
 
-Needs to connect on the other side of IOFF buffer so that it will disable when UART mode is off
+It needs to connect to an off-board UART like USBuart (with has IOFF buffers).
 
 ![MgrDebugUart_LayoutFix](./MacGyver^2,MgrDebugUart_LayoutFix.png "Manager Debug Uart Fix")
+
+Cut RX1 and TX1 from the manager, and run jumpers with RX1 and TX1 to a header for USBuart. Do not connect it to the onboard serial (that did not work). 
+
 
 ## ^1 UPDI Mode Does Not Turn Off
 
