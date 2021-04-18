@@ -42,7 +42,7 @@ void setup(void)
     /* Initialize UART1 to 38.4kbps for streaming, it returns a pointer to a FILE structure*/
     uart1 = uart1_init(38400UL, UART1_RX_REPLACE_CR_WITH_NL);
 
-    //TCA0_HUNF used for timing, TCA0 split for 6 PWM's, TCB0..TCB2 set for three more PWM's.
+    //TCA0_HUNF used for timing, TCA0 split for 6 PWM's.
     initTimers();
 
     /* Initialize I2C*/
@@ -65,11 +65,10 @@ void i2c_ping(void)
     uint8_t mgr_address = 41; //the address I have been useing for the manager (from the application MCU, the host would use 42)
     uint8_t data[] = {0};
     uint8_t length = 1;
-    for (uint8_t i =0;1; i++) // try a few times.
+    for (uint8_t i=0; i<5; i++) // try a few times.
     {
         uint8_t twi_errorCode = twi0_masterBlockingWrite(mgr_address, data, length, TWI0_PROTOCALL_STOP); 
         if (twi_errorCode == 0) break; // ping was error free
-        if (i>5) return; // give up after 5 trys
     }
     return; 
 }
@@ -81,7 +80,7 @@ void blink(void)
     if ( kRuntime > blink_delay)
     {
         ioToggle(MCU_IO_MGR_LED);
-        i2c_ping();
+        //i2c_ping();
         
         // next toggle 
         blink_started_at += blink_delay; 

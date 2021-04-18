@@ -158,30 +158,33 @@ FILE *uart1_init(uint32_t baudrate, uint8_t choices)
     // disconnect UART if baudrate is zero
     if (baudrate == 0)
     {
-        USART1.CTRLB &= ~(USART_RXEN_bm | USART_TXEN_bm); // Disable receiver and transmitter
+        // todo: wait for ongoing transmission to finish
+        // while( !USART1.STATUS & USART_TXCIF_bm ); // set when all data shifted out and no new data is in buffer
+
+        USART1.CTRLB = USART_RXMODE_NORMAL_gc; // normal mode, with receiver and transmitter disabled
         USART1.CTRLA &= ~(USART_RXCIE_bm | USART_DREIE_bm); // Disable RX complete and data register empty interrupts
     }
     else
-    {   
-        USART1.CTRLB &= (~USART_RXMODE_CLK2X_gc);
-        USART1.CTRLB |= USART_RXMODE_NORMAL_gc;
+    {
+        // set baud rate
         USART1.BAUD = UART1_BAUD_SELECT_NS(baudrate);
+        USART1.CTRLB = USART_RXMODE_NORMAL_gc; // normal mode, but keep receiver and transmitter disabled
 
-        // control frame format asynchronous, 8data, no parity, 1stop bit
+        // set frame format and mode of operation (asynchronous, 8data, no parity, 1stop bit)
         USART1.CTRLC = USART_CMODE_ASYNCHRONOUS_gc | USART_CHSIZE_8BIT_gc | USART_PMODE_DISABLED_gc | USART_SBMODE_1BIT_gc;
- 
+
+        // configure the pins set RX1 with weak pullup and TX1 as output
+        ioDir(MCU_IO_RX1, DIRECTION_INPUT);
+        ioCntl(MCU_IO_RX1, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_ENABLE, PORT_INVERT_NORMAL);
+        ioDir(MCU_IO_TX1, DIRECTION_OUTPUT);
+        ioCntl(MCU_IO_TX1, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
+
         // enable TX, RX, and Receive Complete Interrupt
-        USART1.CTRLB |= (USART_RXEN_bm | USART_TXEN_bm);
+        USART1.CTRLB |= (USART_RXEN_bm | USART_TXEN_bm); // enable receiver and transmitter
         USART1.CTRLA |= USART_RXCIE_bm;
 
-        // Default pins MCU_IO_RX0:PC1, MCU_IO_TX0:PC0 [or alternative MCU_IO_MISO:PA5, MCU_IO_MOSI:PA4]
-        PORTMUX.USARTROUTEA = PORTMUX_USART1_DEFAULT_gc; // [PORTMUX_USART1_ALT1_gc]
-
-        // set RX1 with weak pullup and TX1 as output
-        ioDir(MCU_IO_PI_RX, DIRECTION_INPUT);
-        ioCntl(MCU_IO_PI_RX, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_ENABLE, PORT_INVERT_NORMAL);
-        ioDir(MCU_IO_PI_TX, DIRECTION_OUTPUT);
-        ioCntl(MCU_IO_PI_TX, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
+        // Default pins MCU_IO_RX1:PC1, MCU_IO_TX1:PC0 [or alternative PC5, PC4]
+        PORTMUX.USARTROUTEA = PORTMUX_USART1_DEFAULT_gc; 
     }
 
     options = choices;

@@ -17,6 +17,14 @@ It needs to connect to an off-board UART like USBuart (with has IOFF buffers).
 
 Cut RX1 and TX1 from the manager, and run jumpers with RX1 and TX1 to a header for USBuart. Do not connect it to the onboard serial (that did not work). 
 
+![MgrDebugUart_Setup](./MacGyver^2,MgrDebugUart_Setup.jpg "Manager Debug Uart Setup")
+
+I had the RX1 and TX1 pins flipped in io_enum.h; that is fixed, the RX1 pin is reading data from USBuart, but the TX1 pin has a 100 Hz square wave.
+
+![MgrDebugUart_100Hz](./MacGyver^2,MgrDebugUart_100HzOutputOnTX1.jpg "Manager Debug Uart 100 Hz Output on TX1")
+
+The output is 1kHz and is from PWM; when the PWM is set up and routed, it is then enabled with the output direction control. I guess I will route it to PORTG for now, which does not connect to I/O pins.
+
 
 ## ^1 UPDI Mode Does Not Turn Off
 

@@ -6,7 +6,7 @@ The UPDImode.py script needs some attention, the output is out of sync.
 
 ## Overview
 
-TBD
+UART1 is on PORTC, which I plan to use for debugging. I copied timers_bsd.h from the application (AVR128DA) in which I had routed the TCA0 PWMs to PORTC. That caused a lot of confusion since enabling the TX1 pin as an output caused a PWM output.
 
 ## Firmware Upload
 
@@ -37,6 +37,15 @@ python3 ../../../RPUusb/UPDImode/UPDImode.py
 junk: ds include
 cmd echo: /0/id?
 response: /0/updi
+pymcuprog erase -t uart -u /dev/ttyUSB0 -d avr128db32
+Chip/Bulk erase,
+Memory type eeprom is conditionally erased (depending upon EESAVE fuse setting)
+Memory type flash is always erased
+Memory type internal_sram is always erased
+Memory type lockbits is always erased
+...
+Erased.
+Done.
 pymcuprog write -t uart -u /dev/ttyUSB0 -d avr128db32 --verify -f BlinkLED.hex
 Writing from hex file...
 Writing flash...

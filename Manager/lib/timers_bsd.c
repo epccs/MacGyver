@@ -112,7 +112,7 @@ void initTimers()
     /* change to split mode */
     TCA0.SPLIT.CTRLD = TCA_SPLIT_SPLITM_bm;
 
-    /* Period setting, 8-bit register in SPLIT mode which makes both OVF_LUNF and HUNF events */
+    /* Period setting [Freq= F_CPU / (64 * 256)], 8-bit register in SPLIT mode which makes both OVF_LUNF and HUNF events */
     TCA0.SPLIT.LPER    = 0xFF; // the counter counts from 0 to 255 and then restarts from 0 and generates an "underflow" event
     TCA0.SPLIT.HPER    = 0xFF; // that is 256 counts, like a ATmega328p Timer0 set for fast PWM would do. I think they called it UNF because OVF is used in the 16 bit counter mode.
 
@@ -171,7 +171,7 @@ void initTimers()
 #endif
 
     /* TCA0 [and TCA1] Signals select */
-    PORTMUX.TCAROUTEA = PORTMUX_TCA0_PORTC_gc
+    PORTMUX.TCAROUTEA = PORTMUX_TCA0_PORTG_gc // PORTG is only connected with parts that have 64 pins
 #if defined(TCA1)
                       | PORTMUX_TCA1_PORTB_gc
 #endif

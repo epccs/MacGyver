@@ -78,6 +78,7 @@ updi: ## Upload with pyupid.
 	ls ../../../RPUusb/UPDImode/UPDImode.py 2>/dev/null || false
 	ls ../../../RPUusb/UPDImode/UARTmode.py 2>/dev/null || false
 	python3 ../../../RPUusb/UPDImode/UPDImode.py
+	pymcuprog erase -t uart -u $(UPDI_PORT) -d $(MCU)
 	pymcuprog write -t uart -u $(UPDI_PORT) -d $(MCU) --verify -f $(TARGET).hex
 	python3 ../../../RPUusb/UPDImode/UARTmode.py
 
