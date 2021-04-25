@@ -46,8 +46,13 @@ This board allows a Raspberry Pi serial hardware port (or [adaptor] board) to in
             Todo: Design, Layout, BOM, Review* (#= done), Order Boards,  Assembly, Testing, Evaluation.
             *during review the Design may change without changing the revision.
             J9 J10 renumber to J8 J9
-            TO_RPU_TX has two pullup (R19 and R104), remove R104
-            Connect Manager Debug UART (RX1 and TX1) to test points.
+            TO_RPU_TX has two pullup (R19 and R104), remove R104. 
+            Connect Manager Debug UART (MVIO_RX1 and MVIO_TX1) to test points.
+            Add test point to 0V and PI3V3 for level shifting the debug uart test points.
+            R104 is an extra pull-up on TO_RPU_TX; use it to pull-up FROM_RPU_TX instead.
+            Rename PC2 and PC3 nodes MVIO_SDA0 and MVIO_SCL0 (used for R-Pi SMBus)
+            Rename PF2 and PF3 nodes MGR_SDA1 and MGR_SCL1 (used between manager and applicaion)
+            Rename PF4 and PF5 nodes MGR_SETAPP4_UART and MGR_SETAPP4_UPDI
 
         ^2  Done: Design, Layout, BOM, Review* (#= done), Order Boards, Assembly,
             WIP: Testing,

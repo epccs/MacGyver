@@ -59,7 +59,7 @@ python3 ../../../RPUusb/UPDImode/UARTmode.py
 
 Kicking the tires
 
-Hopefully, the firmware upload worked; it should have switched the serial port connection back to UART mode so I can use picocom to interact with the AVR's USART0.
+After the firmware upload the mulit-drop connection should have switched back to UART mode, which does nothing at this time. The manager debug port does not connect to this, it will have test points that may be used for development/test.
 
 ```bash
 picocom -b 38400 /dev/ttyUSB0
@@ -71,23 +71,30 @@ a
 make reset
 ```
 
-Using picocom send an 'a' to toggle the blinking (and ping i2c after that is working) on and off; after a few toggles, it will abort.
-
-To test the i2c (TWI) I am using an RPUusb board that plugs into where the R-Pi would. It has a m328pb with i2c-debug software and is acceses from its second serial port /dev/ttyUSB1.
+To test the i2c (TWI) between the manager and SBC, I am using an RPUusb board that plugs into where the R-Pi would. It has an m328pb with i2c-debug software and is accessed from its second serial port /dev/ttyUSB1.
 
 ```bash
 picocom -b 38400 /dev/ttyUSB1
 ...
-/0/id?
-{"id":{"name":"I2Cdebug^2","desc":"RPUusb (14145^5) Board /w ATmega328pb","avr-gcc":"5.4.0"}}
+Terminal ready
+i2c-debug at addr 48: commands include
+/0/id? 
+/0/iscan?
+{"scan":[{"addr":"0x2A"}]}
+# send "a" on manager debug
+# send "$" on manarer debug to abort
 /0/iscan?
 {"scan":[]}
-/0/imon? 41
-{"monitor_0x29":[{"data":"0x0"}]}
-{"monitor_0x29":[{"data":"0x0"}]}
-...
+# scan finished because abort turned off I2C, it locked up until that was fixed.
 ```
 
-Ping TWI with each LED toggle; imon does not show updates if it is swamped with pings. The twi0_mc lib was first checked and then twi0_bsd was debuged and then ran (it is not much of a test but is a start).
+At the same time a USBuart board is connected to the manager debug port /dev/ttyUSB2. Send an 'a' to toggle the blinking on and off; send an '$' to abort, other keys echo.
 
-The AVR128DB28 starts running at 24MHz/6 (4MHz) from the factory. To run at another frequency change the F_CPU define in the Makefile. The timers_bsd.c will select the correct option based on the F_CPU value passed to the compiler during the build.
+```bash
+picocom -b 38400 /dev/ttyUSB2
+...
+a
+{"abort":"egg found"}
+```
+
+The AVR128DB28 starts running at 24MHz/6 (4MHz) from the factory. To run at another frequency change, the F_CPU define in the Makefile. The timers_bsd.c will select the correct option based on the F_CPU value passed to the compiler during the build. That is unusual for AVR but works on these new devices; it is also worth noting that if the clock fails (perhaps due to supply voltage), it will switch back to 4MHz, which operates at all valid voltages.

@@ -33,36 +33,14 @@ static int got_a;
 
 FILE *uart1;
 
-void setup(void)
-{
-    ioCntl(MCU_IO_MGR_LED, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
-    ioDir(MCU_IO_MGR_LED, DIRECTION_OUTPUT);
-    ioWrite(MCU_IO_MGR_LED,LOGIC_LEVEL_HIGH);
-
-    /* Initialize UART1 to 38.4kbps for streaming, it returns a pointer to a FILE structure*/
-    uart1 = uart1_init(38400UL, UART1_RX_REPLACE_CR_WITH_NL);
-
-    //TCA0_HUNF used for timing, TCA0 split for 6 PWM's.
-    initTimers();
-
-    /* Initialize I2C*/
-    twi0_init(100000UL, TWI0_PINS_PULLUP); // twi0_bsd
-    //TWI_MasterInit(100000UL); // twi0_mc
-
-    sei(); // Enable global interrupts to start TIMER0
-    
-    // tick count is not milliseconds use cnvrt_milli() to convert time into ticks, thus tickAtomic()/cnvrt_milli(1000) gives seconds
-    blink_started_at = tickAtomic();
-    blink_delay = cnvrt_milli(BLINK_DELAY);
-
-    got_a = 0;
-}
-
-// cycle the twi state machine on both the master and slave(s)
+// cycle the twi state machine
+/* This is a place holder for now
+   the master mode is not used with the SMBus connection between R-Pi and manager
+*/
 void i2c_ping(void)
 { 
     // ping I2C for a manager 
-    uint8_t mgr_address = 41; //the address I have been useing for the manager (from the application MCU, the host would use 42)
+    uint8_t mgr_address = 41; //the address I have been useing for the manager from the application MCU
     uint8_t data[] = {0};
     uint8_t length = 1;
     for (uint8_t i=0; i<5; i++) // try a few times.
@@ -80,7 +58,6 @@ void blink(void)
     if ( kRuntime > blink_delay)
     {
         ioToggle(MCU_IO_MGR_LED);
-        //i2c_ping();
         
         // next toggle 
         blink_started_at += blink_delay; 
@@ -95,6 +72,7 @@ void abort_safe(void)
     ioWrite(MCU_IO_MGR_LED,LOGIC_LEVEL_LOW);
     // flush the UART befor halt
     uart1_flush();
+    twi0_init(0, TWI0_PINS_FLOATING); // disable I2C0
     _delay_ms(20); // wait for last byte to send
     uart1_init(0, 0); // disable UART hardware 
     // turn off interrupts and then spin loop a LED toggle 
@@ -106,45 +84,155 @@ void abort_safe(void)
     }
 }
 
+
+static uint8_t slave_addr = 42; // address I have been using for host to connect with the manager on SMBus
+
+static uint8_t localBuffer[TWI0_BUFFER_LENGTH];
+static uint8_t localBufferLength;
+
+static uint8_t printBuffer[TWI0_BUFFER_LENGTH];
+static uint8_t printBufferLength;
+static uint8_t printBufferIndex;
+
+// echo what was received
+void twi0_transmit_callback(void)
+{
+    /*uint8_t return_code = */ twi0_fillSlaveTxBuffer(localBuffer, localBufferLength);
+    
+    /* todo: add status_byt to main so I can use it to blink the LED fast or for abort
+    if (return_code != 0)
+        status_byt &= (1<<DTR_I2C_TRANSMIT_FAIL);
+    */
+    return;
+}
+
+// Place the received data in local buffer so it can echo back.
+// If monitor is running, printing done, and UART is available 
+// fill the print buffer and reset the index for printing
+void twi0_receive_callback(uint8_t *data, uint8_t length)
+{
+    localBufferLength = length;
+    for(int i = 0; i < length; ++i)
+    {
+        localBuffer[i] = data[i];
+    }
+    if (slave_addr && (printBufferLength == printBufferIndex) && uart1_availableForWrite())
+    {
+        printBufferLength = length;
+        printBufferIndex = 0;
+        for(int i = 0; i < length; ++i)
+        {
+            printBuffer[i] = data[i];
+        }
+    }
+    return;
+}
+
+void setup(void)
+{
+    ioCntl(MCU_IO_MGR_LED, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
+    ioDir(MCU_IO_MGR_LED, DIRECTION_OUTPUT);
+    ioWrite(MCU_IO_MGR_LED,LOGIC_LEVEL_HIGH);
+
+    /* Initialize UART1 to 38.4kbps for streaming, it returns a pointer to a FILE structure*/
+    uart1 = uart1_init(38400UL, UART1_RX_REPLACE_CR_WITH_NL);
+
+    //TCA0_HUNF used for timing, TCA0 split for 6 PWM's.
+    initTimers();
+
+    /* Initialize I2C master*/
+    twi0_init(100000UL, TWI0_PINS_PULLUP); // twi0_bsd
+    //TWI_MasterInit(100000UL); // twi0_mc
+
+    /* Initialize I2C slave*/
+    twi0_registerSlaveRxCallback(twi0_receive_callback);
+    twi0_registerSlaveTxCallback(twi0_transmit_callback);
+    twi0_slaveAddress(slave_addr); // ISR is enabled so register callback first
+
+    sei(); // Enable global interrupts to start TIMER0
+    
+    // tick count is not milliseconds use cnvrt_milli() to convert time into ticks, thus tickAtomic()/cnvrt_milli(1000) gives seconds
+    blink_started_at = tickAtomic();
+    blink_delay = cnvrt_milli(BLINK_DELAY);
+
+    got_a = 0;
+}
+
+uint8_t debug_print_done = 0;
+
+// Monitor the I2C slave address with the debug UART
+void I2c0_monitor(void)
+{
+    if ( (debug_print_done == 0) )
+    {
+        if (printBufferIndex < printBufferLength)
+        {
+            if (printBufferIndex > 0)
+            {
+                fprintf_P(uart1,PSTR(","));
+            }
+            else
+            {
+                fprintf_P(uart1,PSTR("{\"monitor_0x%X\":["),slave_addr); // start of JSON for monitor
+            }
+            fprintf_P(uart1,PSTR("{\"data\":\"0x%X\"}"),printBuffer[printBufferIndex]);
+            printBufferIndex += 1;
+            if (printBufferIndex >= printBufferLength) 
+            {
+                debug_print_done = 1; // done printing 
+            }
+        }
+        else
+        {
+            return; // slave receive did not happen yet
+        }
+    }
+
+    else if ( (debug_print_done == 1) )
+    {
+        fprintf_P(uart1,PSTR("]"));
+        debug_print_done = 2;
+    }
+    
+    if ( (debug_print_done == 2) )
+    {
+        fprintf_P(uart1,PSTR("}\r\n"));
+        debug_print_done = 0; // wait for next slave receive event to fill printBuffer
+    }
+}
+
+
 int main(void)
 {
     setup();
-
-    int abort_yet = 0;
 
     while (1)
     {
         if(uart1_available())
         {
-            // A standard C libc streaming function used for input of one char.
+            // A standard libc streaming function used for input of one char.
             int input = fgetc(uart1);
 
-            // A standard C libc streaming function used for output.
+            // A standard libc streaming function used for output.
             fprintf(uart1,"%c\r", input); 
 
             if (input == '$') 
             {
                 // Variant of fprintf() that uses a format string which resides in flash memory.
-                fprintf_P(uart1,PSTR("{\"abort\":\"egg found\"}\r\n")); 
+                fprintf_P(uart1,PSTR("{\"abort\":\"'$' found\"}\r\n"));
                 abort_safe();
             }
 
             // press 'a' to stop blinking.
             if(input == 'a') 
             {
-                got_a = 1; 
-                ++abort_yet; 
+                got_a = 1;  
             }
             else
             {
               got_a = 0;
             }
 
-            // press 'a' more than five times to hault
-            if (abort_yet >= 5) 
-            {
-                abort_safe();
-            }
         }
         if (!got_a)
         {

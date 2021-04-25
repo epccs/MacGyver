@@ -105,12 +105,15 @@ void initTimers()
     TCA0.SINGLE.CTRLA &= ~(TCA_SINGLE_ENABLE_bm);
     TCA0.SINGLE.CTRLESET = TCA_SINGLE_CMD_RESET_gc;
 
-    /* Waveform Generation Mode 
-       Single-slope PWM only (WGMODE = SINGLESLOPE in TCAn.CTRLB) in split mode */
-    TCA0.SINGLE.CTRLB = TCA_SINGLE_WGMODE_SINGLESLOPE_gc;
-
     /* change to split mode */
     TCA0.SPLIT.CTRLD = TCA_SPLIT_SPLITM_bm;
+
+    /* "Control B - Split Mode" is not the same as "Control B - Normal Mode"
+       use it to overrid the port output register */
+    TCA0.SPLIT.CTRLB = 0; // all disabled
+    //TCA0.SPLIT.CTRLB |= TCA_SPLIT_LCMP0EN_bm; // WO0 ENABLE e.g., PA0 if route is PORTMUX_TCA0_PORTA_gc
+    //TCA0.SPLIT.CTRLB |= TCA_SPLIT_LCMP1EN_bm; // add WO1 ENABLE (PA1)
+    //TCA0.SPLIT.CTRLB |= TCA_SPLIT_LCMP2EN_bm | TCA_SPLIT_HCMP0EN_bm | TCA_SPLIT_HCMP1EN_bm | TCA_SPLIT_HCMP2EN_bm; // add WO2-5
 
     /* Period setting [Freq= F_CPU / (64 * 256)], 8-bit register in SPLIT mode which makes both OVF_LUNF and HUNF events */
     TCA0.SPLIT.LPER    = 0xFF; // the counter counts from 0 to 255 and then restarts from 0 and generates an "underflow" event
@@ -146,9 +149,9 @@ void initTimers()
     TCA1.SINGLE.CTRLA &= ~(TCA_SINGLE_ENABLE_bm);
     TCA1.SINGLE.CTRLESET = TCA_SINGLE_CMD_RESET_gc;
 
-    TCA1.SINGLE.CTRLB = TCA_SINGLE_WGMODE_SINGLESLOPE_gc;
-
     TCA1.SPLIT.CTRLD = TCA_SPLIT_SPLITM_bm;
+
+    TCA1.SPLIT.CTRLB = 0;
 
     TCA1.SPLIT.LPER = 0xFF;
     TCA1.SPLIT.HPER = 0xFF;
@@ -170,7 +173,7 @@ void initTimers()
 #endif
 #endif
 
-    /* TCA0 [and TCA1] Signals select */
+    /* TCA0 [and TCA1] Signals select. Use TCA0.SPLIT.CTRLB to enable WOn outputs */
     PORTMUX.TCAROUTEA = PORTMUX_TCA0_PORTG_gc // PORTG is only connected with parts that have 64 pins
 #if defined(TCA1)
                       | PORTMUX_TCA1_PORTB_gc

@@ -91,16 +91,16 @@ typedef enum MCU_IO_enum
     MCU_IO_TX_DE, // PA5 controls TX pair transceiver driver enable.
     MCU_IO_OOB_nRE, // PA6 controls OOB pair transceiver receiver disable.
     MCU_IO_OOB_DE, // PA7 controls OOB pair transceiver driver enable.
-    MCU_IO_TX1, // PC0 is TX1 which has MVIO and is a direct crossover to R-Pi serial RX
-    MCU_IO_RX1, // PC1 is RX1 which has MVIO and is a direct crossover to R-Pi serial TX
-    MCU_IO_SMBUS_SDA, // PC2 has MVIO and is an SMBus SDA slave that connects the manager to the R-Pi (SBC).
-    MCU_IO_SMBUS_SCL, // PC3 has MVIO and is an SMBus SCL slave that connects the manager to the R-Pi (SBC).
+    MCU_IO_TX1, // PC0 is TX1 which has MVIO and is a debug/test interface.
+    MCU_IO_RX1, // PC1 is RX1 which has MVIO and is a debug/test interface.
+    MCU_IO_MVIO_SDA0, // PC2 is SDA0 which has MVIO and is used for SMBus connection between manager and R-Pi (SBC).
+    MCU_IO_MVIO_SCL0, // PC3 is SCL0 which has MVIO and is used for SMBus connection between manager and R-Pi (SBC).
     MCU_IO_TO_RPU_OOB,  // PF0(TX2) used with half-duplex OOB pair for multi-drop bus state.
     MCU_IO_FROM_RPU_OOB,  // PF1(RX2) used with half duplex OOB pair
-    MCU_IO_I2C_SDA, // PF2 is an I2C SDA slave and connects the manager with application uC.
-    MCU_IO_I2C_SCL, // PF3 is an I2C SCL slave and connects the manager with application uC.
-    MCU_IO_APP_UART, // PF4 send RPU RX and TX to application UART.
-    MCU_IO_APP_UPDI, // PF5 send RPU RX and TX to application UPDI programing pin.
+    MCU_IO_MGR_SDA1, // PF2 is SDA1 and is used for I2C connection between the manager and application MCU.
+    MCU_IO_MGR_SCL1, // PF3 is SCL1 and is used for I2C connection between the manager and application MCU.
+    MGR_SETAPP4_UART, // PF4 connect application MCU RX0 and TX0 to the multi-drop serial link.
+    MGR_SETAPP4_UPDI, // PF5 connect application MCU UPDI to the multi-drop serial link.
     MCU_IO_SHUTDOWN, // PF6 needs a weak pullup enabled so a manual switch can HALT the R-Pi on BCM6 (pin 31 on SBC header) 
     MCU_IO_END
 } MCU_IO_t;
@@ -154,14 +154,14 @@ const static struct IO_Map ioMap[MCU_IO_END] = {
     [MCU_IO_OOB_DE] = { .port= &PORTA, .mask= PIN7_bm },
     [MCU_IO_TX1] = { .port= &PORTC, .mask= PIN0_bm },
     [MCU_IO_RX1] = { .port= &PORTC, .mask= PIN1_bm },
-    [MCU_IO_SMBUS_SDA] = { .port= &PORTC, .mask= PIN2_bm }, 
-    [MCU_IO_SMBUS_SCL] = { .port= &PORTC, .mask= PIN3_bm },
+    [MCU_IO_MVIO_SDA0] = { .port= &PORTC, .mask= PIN2_bm }, 
+    [MCU_IO_MVIO_SCL0] = { .port= &PORTC, .mask= PIN3_bm },
     [MCU_IO_TO_RPU_OOB] = { .port= &PORTF, .mask= PIN0_bm },
     [MCU_IO_FROM_RPU_OOB] = { .port= &PORTF, .mask= PIN1_bm },
-    [MCU_IO_I2C_SDA] = { .port= &PORTF, .mask= PIN2_bm },
-    [MCU_IO_I2C_SCL] = { .port= &PORTF, .mask= PIN3_bm },
-    [MCU_IO_APP_UART] = { .port= &PORTF, .mask= PIN4_bm },
-    [MCU_IO_APP_UPDI] = { .port= &PORTF, .mask= PIN5_bm },
+    [MCU_IO_MGR_SDA1] = { .port= &PORTF, .mask= PIN2_bm },
+    [MCU_IO_MGR_SCL1] = { .port= &PORTF, .mask= PIN3_bm },
+    [MGR_SETAPP4_UART] = { .port= &PORTF, .mask= PIN4_bm },
+    [MGR_SETAPP4_UPDI] = { .port= &PORTF, .mask= PIN5_bm },
     [MCU_IO_SHUTDOWN] = { .port= &PORTF, .mask= PIN6_bm }
 };
 

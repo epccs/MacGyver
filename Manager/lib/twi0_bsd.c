@@ -496,8 +496,8 @@ void twi0_init(uint32_t bitrate, TWI0_PINS_t pull_up)
         TWI0.SCTRLA = 0x00;
   
         // deactivate internal pullups for twi.
-        ioCntl(MCU_IO_SMBUS_SCL, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
-        ioCntl(MCU_IO_SMBUS_SDA, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
+        ioCntl(MCU_IO_MVIO_SCL0, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
+        ioCntl(MCU_IO_MVIO_SDA0, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
         twim_mode = TWIM_MODE_UNKNOWN;
     }
     else
@@ -512,14 +512,14 @@ void twi0_init(uint32_t bitrate, TWI0_PINS_t pull_up)
         // use ALT2 to place master/slave pins on PC2, PC3. Use TWIn.DUALCTRL register to configure
         PORTMUX.TWIROUTEA |= PORTMUX_TWI0_ALT2_gc;
 
-        ioDir(MCU_IO_SMBUS_SCL, DIRECTION_INPUT);
-        ioDir(MCU_IO_SMBUS_SDA, DIRECTION_INPUT);
+        ioDir(MCU_IO_MVIO_SCL0, DIRECTION_INPUT);
+        ioDir(MCU_IO_MVIO_SDA0, DIRECTION_INPUT);
 
         // weak pullup pull-up.
         if (pull_up == TWI0_PINS_PULLUP)
         {
-            ioCntl(MCU_IO_SMBUS_SCL, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_ENABLE, PORT_INVERT_NORMAL);
-            ioCntl(MCU_IO_SMBUS_SDA, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_ENABLE, PORT_INVERT_NORMAL);
+            ioCntl(MCU_IO_MVIO_SCL0, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_ENABLE, PORT_INVERT_NORMAL);
+            ioCntl(MCU_IO_MVIO_SDA0, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_ENABLE, PORT_INVERT_NORMAL);
         }
 
         master_result = TWIM_RESULT_OK;
