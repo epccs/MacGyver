@@ -45,8 +45,6 @@ typedef enum TWI_STATE_enum {
     TWI_STATE_SLAVE_TRANSMITTER  // TWI state machine is slave transmitter
 } TWI_STATE_t;
 
-static volatile uint8_t twi0_MastSlav_RxTx_state;
-
 // TWI modes for master module
 typedef enum TWIM_MODE_enum
 {
@@ -505,7 +503,6 @@ void twi0_init(uint32_t bitrate, TWI0_PINS_t pull_up)
         if(twim_mode != TWIM_MODE_UNKNOWN) return;
 
         // initialize state machine
-        twi0_MastSlav_RxTx_state = TWI_STATE_READY;
         twim_mode = TWIM_MODE_ENABLE;
         twi0_protocall = TWI0_PROTOCALL_STOP & ~TWI0_PROTOCALL_REPEATEDSTART;
 
@@ -580,7 +577,6 @@ TWI0_WRT_t twi0_masterAsyncWrite(uint8_t slave_address, uint8_t *write_data, uin
             TWI0.MADDR = writeAddress;
         }
 
-        twi0_MastSlav_RxTx_state = TWI_STATE_MASTER_TRANSMITTER;
         twi0_error = TWI_ERROR_NONE;
         return TWI0_WRT_TRANSACTION_STARTED;
     }
@@ -719,7 +715,6 @@ TWI0_RD_t twi0_masterAsyncRead(uint8_t slave_address, uint8_t bytes_to_read, TWI
             TWI0.MADDR = writeAddress;
         }
 
-        twi0_MastSlav_RxTx_state = TWI_STATE_MASTER_RECEIVER;
         twi0_error = TWI_ERROR_NONE;
         return TWI0_RD_TRANSACTION_STARTED;
     }
@@ -932,11 +927,6 @@ uint8_t twi0_fillSlaveTxBuffer(const uint8_t* slave_data, uint8_t bytes_to_send)
     if(TWI0_BUFFER_LENGTH < bytes_to_send)
     {
         return 1;
-    }
-
-    if(TWI_STATE_SLAVE_TRANSMITTER != twi0_MastSlav_RxTx_state)
-    {
-        return 2;
     }
 
     for(uint8_t i = 0; i < bytes_to_send; ++i)

@@ -94,9 +94,12 @@ static uint8_t printBuffer[TWI0_BUFFER_LENGTH];
 static uint8_t printBufferLength;
 static uint8_t printBufferIndex;
 
+static uint8_t twi0_slave_status_cpy;
+
 // echo what was received
 void twi0_transmit_callback(void)
 {
+    twi0_slave_status_cpy = TWI0.SSTATUS;
     /*uint8_t return_code = */ twi0_fillSlaveTxBuffer(localBuffer, localBufferLength);
     
     /* todo: add status_byt to main so I can use it to blink the LED fast or for abort
@@ -167,20 +170,8 @@ void I2c0_monitor(void)
     {
         if (printBufferIndex < printBufferLength)
         {
-            if (printBufferIndex > 0)
-            {
-                fprintf_P(uart1,PSTR(","));
-            }
-            else
-            {
-                fprintf_P(uart1,PSTR("{\"monitor_0x%X\":["),slave_addr); // start of JSON for monitor
-            }
-            fprintf_P(uart1,PSTR("{\"data\":\"0x%X\"}"),printBuffer[printBufferIndex]);
-            printBufferIndex += 1;
-            if (printBufferIndex >= printBufferLength) 
-            {
-                debug_print_done = 1; // done printing 
-            }
+            fprintf_P(uart1,PSTR("{\"monitor_0x%X\":["),slave_addr); // start of JSON for monitor
+            debug_print_done = 1;
         }
         else
         {
@@ -188,15 +179,34 @@ void I2c0_monitor(void)
         }
     }
 
-    else if ( (debug_print_done == 1) )
+    else if ( (debug_print_done == 1) ) // twi slave status when transmit_callback is done
     {
-        fprintf_P(uart1,PSTR("]"));
+        fprintf_P(uart1,PSTR("{\"status\":\"%d\"}"),twi0_slave_status_cpy);
         debug_print_done = 2;
     }
-    
-    if ( (debug_print_done == 2) )
+
+    else if ( (debug_print_done == 2) )
     {
-        fprintf_P(uart1,PSTR("}\r\n"));
+        fprintf_P(uart1,PSTR(",{\"len\":\"%d\"}"),printBufferLength - 1); 
+        debug_print_done = 3;
+    }
+
+    else if ( (debug_print_done == 3) )
+    {
+        printBufferIndex += 1;
+        if (printBufferIndex >= printBufferLength) 
+        {
+            debug_print_done = 4; // done printing 
+        }
+        else
+        {
+            fprintf_P(uart1,PSTR(",{\"dat\":\"0x%X\"}"),printBuffer[printBufferIndex-1]);
+        }
+    }
+    
+    if ( (debug_print_done == 4) )
+    {
+        fprintf_P(uart1,PSTR("]}\r\n"));
         debug_print_done = 0; // wait for next slave receive event to fill printBuffer
     }
 }
@@ -233,6 +243,10 @@ int main(void)
               got_a = 0;
             }
 
+        }
+        if(uart1_availableForWrite())
+        {
+            I2c0_monitor();
         }
         if (!got_a)
         {
