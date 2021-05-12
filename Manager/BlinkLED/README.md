@@ -55,9 +55,11 @@ Done.
 python3 ../../../RPUusb/UPDImode/UARTmode.py
 ```
 
+[https://github.com/microchip-pic-avr-tools/pymcuprog]
+
 ## How To Use
 
-Kicking the tires
+Kicking the tires.
 
 After the firmware upload the mulit-drop connection should have switched back to UART mode, which does nothing at this time. The manager debug port does not connect to this, it will have test points that may be used for development/test.
 
@@ -65,7 +67,6 @@ After the firmware upload the mulit-drop connection should have switched back to
 picocom -b 38400 /dev/ttyUSB0
 [picocom -b 38400 /dev/ttyAMA0]
 ...
-a
 # exit is C-a, C-x
 # if it aborts you can reset with pymcuprog
 make reset

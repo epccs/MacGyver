@@ -106,10 +106,10 @@ static uint8_t twi0_slaveRxBuffer[TWI0_BUFFER_LENGTH];
 static volatile uint8_t  slave_bytesToWrite;
 static volatile uint8_t  slave_bytesWritten;
 static volatile uint8_t  slave_bytesRead;
-static volatile uint8_t  slave_result;
+static volatile uint8_t  slave_result;  // value are from TWIS_RESULT_enum
 static volatile uint8_t  run_user_receive_callback_after_STOP_or_REPSTART; // preventing clock streatching
 
-// used to initalize the slave Transmit functions in case they are not used.
+// used to initalize the slave Transmit function in case it is not used.
 void twi0_transmit_default(void)
 {
     // In a real callback, the data to send needs to be copied from a local buffer.
@@ -121,7 +121,7 @@ void twi0_transmit_default(void)
     return;
 }
 
-// used to initalize the slave Receive functions in case they are not used.
+// used to initalize the slave Receive function in case is not used.
 void twi0_receive_default(uint8_t *data, uint8_t length)
 {
     // In a real callback, the data to send needs to be copied to a local buffer.
@@ -426,6 +426,7 @@ ISR(TWI0_TWIS_vect)
             slave_bytesWritten = 0;
             slave_bytesToWrite = 0;
             TWI_SlaveTransactionFinished(TWIS_RESULT_TRANSMIT_COLLISION);
+            TWI0.SSTATUS = TWI_COLL_bm; // clear the collision flag
         } 
         else 
         {
@@ -469,6 +470,7 @@ ISR(TWI0_TWIS_vect)
                 }
             }
         }
+        // TWI0.SSTATUS = TWI_DIF_bm; // the Data Interrupt Flag bit was cleared when reading TWI0.SDATA or writing SCMD bit to TWI0.SCTRLB
     }
     
     // unexpected SSTATUS 

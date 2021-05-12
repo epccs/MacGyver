@@ -99,8 +99,8 @@ typedef enum MCU_IO_enum
     MCU_IO_FROM_RPU_OOB,  // PF1(RX2) used with half duplex OOB pair
     MCU_IO_MGR_SDA1, // PF2 is SDA1 and is used for I2C connection between the manager and application MCU.
     MCU_IO_MGR_SCL1, // PF3 is SCL1 and is used for I2C connection between the manager and application MCU.
-    MGR_SETAPP4_UART, // PF4 connect application MCU RX0 and TX0 to the multi-drop serial link.
-    MGR_SETAPP4_UPDI, // PF5 connect application MCU UPDI to the multi-drop serial link.
+    MCU_IO_MGR_SETAPP4_UART, // PF4 connect application MCU RX0 and TX0 to the multi-drop serial link.
+    MCU_IO_MGR_SETAPP4_UPDI, // PF5 connect application MCU UPDI to the multi-drop serial link.
     MCU_IO_SHUTDOWN, // PF6 needs a weak pullup enabled so a manual switch can HALT the R-Pi on BCM6 (pin 31 on SBC header) 
     MCU_IO_END
 } MCU_IO_t;
@@ -160,8 +160,8 @@ const static struct IO_Map ioMap[MCU_IO_END] = {
     [MCU_IO_FROM_RPU_OOB] = { .port= &PORTF, .mask= PIN1_bm },
     [MCU_IO_MGR_SDA1] = { .port= &PORTF, .mask= PIN2_bm },
     [MCU_IO_MGR_SCL1] = { .port= &PORTF, .mask= PIN3_bm },
-    [MGR_SETAPP4_UART] = { .port= &PORTF, .mask= PIN4_bm },
-    [MGR_SETAPP4_UPDI] = { .port= &PORTF, .mask= PIN5_bm },
+    [MCU_IO_MGR_SETAPP4_UART] = { .port= &PORTF, .mask= PIN4_bm },
+    [MCU_IO_MGR_SETAPP4_UPDI] = { .port= &PORTF, .mask= PIN5_bm },
     [MCU_IO_SHUTDOWN] = { .port= &PORTF, .mask= PIN6_bm }
 };
 
