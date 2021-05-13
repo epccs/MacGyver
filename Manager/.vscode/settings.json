@@ -5,5 +5,6 @@
         "/usr/lib/avr/include/",
         "/usr/lib/gcc/avr/5.4.0/include/"
       ],
-    "C_Cpp.intelliSenseEngine": "Default"
+    "C_Cpp.intelliSenseEngine": "Default",
+    "python.pythonPath": "/bin/python3"
 }

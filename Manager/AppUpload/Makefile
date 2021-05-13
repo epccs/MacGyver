@@ -70,8 +70,7 @@ $(TARGET).hex: $(TARGET).elf
 # pip3 install https://github.com/mraardvark/pyupdi/archive/master.zip
 # # place RPUusb next to this project since the BCM24 pin needs controled
 # git clone https://github.com/epccs/RPUusb
-# pyupdi -v -d $(MCU) -c $(UPDI_PORT) -b 115200 -e -f $(TARGET).hex
-updi: ## Upload with pyupid.
+updi: ## Upload with pymcuprog.
 	@echo testing for prerequesetits a false will stop make
 	which python3 2>/dev/null || false
 	which pymcuprog 2>/dev/null || false
@@ -82,7 +81,7 @@ updi: ## Upload with pyupid.
 	pymcuprog write -t uart -u $(UPDI_PORT) -d $(MCU) --verify -f $(TARGET).hex
 	python3 ../../../RPUusb/UPDImode/UARTmode.py
 
-reset: ## Reset AVR with pyupid.
+reset: ## Reset AVR with pymcuprog.
 	@echo testing for prerequesetits a false will stop make
 	which python3 2>/dev/null || false
 	which pymcuprog 2>/dev/null || false

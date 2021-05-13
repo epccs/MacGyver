@@ -64,7 +64,7 @@ void blink(void)
     }
 }
 
-// abort++. 
+// abort++.
 void abort_safe(void)
 {
     // make sure controled devices are safe befor waiting on UART 
@@ -137,7 +137,7 @@ void setup(void)
     ioDir(MCU_IO_MGR_LED, DIRECTION_OUTPUT);
     ioWrite(MCU_IO_MGR_LED,LOGIC_LEVEL_HIGH);
 
-    /* Initialize UART1 to 38.4kbps for streaming, it returns a pointer to a FILE structure*/
+    /* Initialize UART1 to 38.4kbps for streaming, it returns a pointer to a FILE structure */
     uart1 = uart1_init(38400UL, UART1_RX_REPLACE_CR_WITH_NL);
 
     //TCA0_HUNF used for timing, TCA0 split for 6 PWM's.

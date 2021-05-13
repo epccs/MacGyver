@@ -31,30 +31,7 @@ unsigned long blink_delay;
 
 static int got_a;
 
-void setup(void)
-{
-    ioCntl(MCU_IO_TX2, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
-    ioDir(MCU_IO_TX2, DIRECTION_OUTPUT);
-    ioWrite(MCU_IO_TX2,LOGIC_LEVEL_HIGH);
-
-    /* Initialize UART to 38.4kbps, it returns a pointer to FILE so redirect of stdin and stdout works*/
-    stderr = stdout = stdin = uart0_init(38400UL, UART0_RX_REPLACE_CR_WITH_NL);
-
-    //TCA0_HUNF used for timing, TCA0 split for 6 PWM's, TCB0..TCB2 set for three more PWM's.
-    initTimers();
-
-    /* Initialize I2C*/
-    twi0_init(100000UL, TWI0_PINS_PULLUP); // twi0_bsd
-    //TWI_MasterInit(100000UL); // twi0_mc
-
-    sei(); // Enable global interrupts to start TIMER0
-    
-    // tick count is not milliseconds use cnvrt_milli() to convert time into ticks, thus tickAtomic()/cnvrt_milli(1000) gives seconds
-    blink_started_at = tickAtomic();
-    blink_delay = cnvrt_milli(BLINK_DELAY);
-
-    got_a = 0;
-}
+FILE *uart0;
 
 // cycle the twi state machine on both the master and slave(s)
 void i2c_ping(void)
@@ -79,7 +56,7 @@ void blink(void)
     if ( kRuntime > blink_delay)
     {
         ioToggle(MCU_IO_TX2);
-        i2c_ping();
+        //i2c_ping();
         
         // next toggle 
         blink_started_at += blink_delay; 
@@ -103,6 +80,31 @@ void abort_safe(void)
         _delay_ms(100); 
         ioToggle(MCU_IO_TX2);
     }
+}
+
+void setup(void)
+{
+    ioCntl(MCU_IO_TX2, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
+    ioDir(MCU_IO_TX2, DIRECTION_OUTPUT);
+    ioWrite(MCU_IO_TX2,LOGIC_LEVEL_HIGH);
+
+    /* Initialize UART0 to 38.4kbps for streaming, it returns a pointer to a FILE structure */
+    uart0 = uart0_init(38400UL, UART0_RX_REPLACE_CR_WITH_NL);
+
+    //TCA0_HUNF used for timing, TCA0 split for 6 PWM's (WO0..WO5).
+    initTimers();
+
+    /* Initialize I2C*/
+    twi0_init(100000UL, TWI0_PINS_PULLUP); // twi0_bsd
+    //TWI_MasterInit(100000UL); // twi0_mc
+
+    sei(); // Enable global interrupts to start TIMER0
+    
+    // tick count is not milliseconds use cnvrt_milli() to convert time into ticks, thus tickAtomic()/cnvrt_milli(1000) gives seconds
+    blink_started_at = tickAtomic();
+    blink_delay = cnvrt_milli(BLINK_DELAY);
+
+    got_a = 0;
 }
 
 int main(void)

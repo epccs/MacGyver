@@ -37,16 +37,6 @@ done: removed interleaving buffer twi0_slaveRxBufferA twi0_slaveRxBufferB use tw
 
 static volatile uint8_t twi0_slave_read_write;
 
-typedef enum TWI_STATE_enum {
-    TWI_STATE_READY, // TWI state machine ready for use
-    TWI_STATE_MASTER_RECEIVER, // TWI state machine is master receiver
-    TWI_STATE_MASTER_TRANSMITTER, // TWI state machine is master transmitter
-    TWI_STATE_SLAVE_RECEIVER, // TWI state machine is slave receiver
-    TWI_STATE_SLAVE_TRANSMITTER  // TWI state machine is slave transmitter
-} TWI_STATE_t;
-
-static volatile uint8_t twi0_MastSlav_RxTx_state;
-
 // TWI modes for master module
 typedef enum TWIM_MODE_enum
 {
@@ -428,6 +418,7 @@ ISR(TWI0_TWIS_vect)
             slave_bytesWritten = 0;
             slave_bytesToWrite = 0;
             TWI_SlaveTransactionFinished(TWIS_RESULT_TRANSMIT_COLLISION);
+            TWI0.SSTATUS = TWI_COLL_bm; // clear the collision flag
         } 
         else 
         {
@@ -471,6 +462,7 @@ ISR(TWI0_TWIS_vect)
                 }
             }
         }
+        // TWI0.SSTATUS = TWI_DIF_bm; // the Data Interrupt Flag bit was cleared when reading TWI0.SDATA or writing SCMD bit to TWI0.SCTRLB
     }
     
     // unexpected SSTATUS 
@@ -505,11 +497,10 @@ void twi0_init(uint32_t bitrate, TWI0_PINS_t pull_up)
         if(twim_mode != TWIM_MODE_UNKNOWN) return;
 
         // initialize state machine
-        twi0_MastSlav_RxTx_state = TWI_STATE_READY;
         twim_mode = TWIM_MODE_ENABLE;
         twi0_protocall = TWI0_PROTOCALL_STOP & ~TWI0_PROTOCALL_REPEATEDSTART;
 
-        // use default pins PA2, PA3, PC2, PC3
+        // use default to place master/slave pins on PA2, PA3 Use TWIn.DUALCTRL register to configure
         PORTMUX.TWIROUTEA |= PORTMUX_TWI0_DEFAULT_gc;
 
         ioDir(MCU_IO_SCL0, DIRECTION_INPUT);
@@ -524,6 +515,8 @@ void twi0_init(uint32_t bitrate, TWI0_PINS_t pull_up)
 
         master_result = TWIM_RESULT_OK;
 
+        // dual contorl mode is used to split the functions, thus master on PA2 and PA3; slave on PA6,PA7
+        // TWI0.DUALCTRL = TWI_ENABLE_bm; // but I want both on PA2 and PA3
         // enable twi module, acks, and twi interrupt
         TWI0.MCTRLA = TWI_RIEN_bm | TWI_WIEN_bm | TWI_ENABLE_bm;
         TWI_SetBaud(bitrate);
@@ -578,7 +571,6 @@ TWI0_WRT_t twi0_masterAsyncWrite(uint8_t slave_address, uint8_t *write_data, uin
             TWI0.MADDR = writeAddress;
         }
 
-        twi0_MastSlav_RxTx_state = TWI_STATE_MASTER_TRANSMITTER;
         twi0_error = TWI_ERROR_NONE;
         return TWI0_WRT_TRANSACTION_STARTED;
     }
@@ -717,7 +709,6 @@ TWI0_RD_t twi0_masterAsyncRead(uint8_t slave_address, uint8_t bytes_to_read, TWI
             TWI0.MADDR = writeAddress;
         }
 
-        twi0_MastSlav_RxTx_state = TWI_STATE_MASTER_RECEIVER;
         twi0_error = TWI_ERROR_NONE;
         return TWI0_RD_TRANSACTION_STARTED;
     }
@@ -930,11 +921,6 @@ uint8_t twi0_fillSlaveTxBuffer(const uint8_t* slave_data, uint8_t bytes_to_send)
     if(TWI0_BUFFER_LENGTH < bytes_to_send)
     {
         return 1;
-    }
-
-    if(TWI_STATE_SLAVE_TRANSMITTER != twi0_MastSlav_RxTx_state)
-    {
-        return 2;
     }
 
     for(uint8_t i = 0; i < bytes_to_send; ++i)

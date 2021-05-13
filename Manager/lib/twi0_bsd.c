@@ -37,14 +37,6 @@ done: removed interleaving buffer twi0_slaveRxBufferA twi0_slaveRxBufferB use tw
 
 static volatile uint8_t twi0_slave_read_write;
 
-typedef enum TWI_STATE_enum {
-    TWI_STATE_READY, // TWI state machine ready for use
-    TWI_STATE_MASTER_RECEIVER, // TWI state machine is master receiver
-    TWI_STATE_MASTER_TRANSMITTER, // TWI state machine is master transmitter
-    TWI_STATE_SLAVE_RECEIVER, // TWI state machine is slave receiver
-    TWI_STATE_SLAVE_TRANSMITTER  // TWI state machine is slave transmitter
-} TWI_STATE_t;
-
 // TWI modes for master module
 typedef enum TWIM_MODE_enum
 {
