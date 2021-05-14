@@ -11,7 +11,9 @@ This shows the setup and methods used for evaluation of MacGyver.
 
 ## ^1 Upload Applicaiton
 
-The manager controls if the application is in UPDI mode or UART mode (^1 or higher). To test if this functions, I have written Manager/AppUpload firmware and loaded it on the manager. Next, I changed Applications/BlinkLED to use the new upload method, which was previously similar to how the manager presently gets uploads. Anyway, the details are part of the commit that this evaluation note shows up with; I will add a reference in a later commit.
+The manager controls if the application is in UPDI mode or UART mode (^1 or higher). To test if this functions, I have written Manager/AppUpload firmware and loaded it on the manager. Next, I changed Applications/BlinkLED to use the new upload method, which was previously similar to how the manager presently gets uploads. Anyway, the details are part of the commit that this evaluation note shows up with.
+
+[https://github.com/epccs/MacGyver/commit/00a37766a14d920a9899c27006a3b6b0cbc58a4d]
 
 ## ^1 TWI0
 

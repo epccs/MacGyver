@@ -84,12 +84,12 @@ a
 make reset
 ```
 
-An 'a' will toggle the blinking and i2c ping (off), and another will toggle it on; after a few toggles, it will abort.
+An 'a' will toggle the blinking and i2c ping (off), and another will toggle it on; an '$' will abort.
 
 To test the i2c (TWI) I will add a monitor to output on the manager debug interface.
 
 ```bash
-picocom -b 38400 /dev/ttyUSB2
+picocom -b 38400 /dev/ttyUSB0
 ...
 TBD
 ...

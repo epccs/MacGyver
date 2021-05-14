@@ -71,13 +71,14 @@ void abort_safe(void)
     ioWrite(MCU_IO_TX2,LOGIC_LEVEL_LOW);
     // flush the UART befor halt
     uart0_flush();
+    twi0_init(0, TWI0_PINS_FLOATING); // disable I2C0
     _delay_ms(20); // wait for last byte to send
-    uart0_init(0, 0); // disable UART hardware 
-    // turn off interrupts and then spin loop a LED toggle 
+    uart0_init(0, 0); // disable UART hardware
+    // turn off interrupts and then spin loop a LED toggle
     cli();
-    while(1) 
+    while(1)
     {
-        _delay_ms(100); 
+        _delay_ms(100);
         ioToggle(MCU_IO_TX2);
     }
 }
@@ -117,20 +118,16 @@ int main(void)
     {
         if(uart0_available())
         {
-            // standard C has a libc function getchar() 
-            // which gets a byte from stdin.
-            // Since I redirected stdin to be from the UART0 this works.
-            int input = getchar();
+            // A standard libc streaming function used for input of one char.
+            int input = fgetc(uart0);
 
-            // standard C has a libc function printf() 
-            // which sends a formated string to stdout.
-            // stdout was also redirected to UART0, so this also works.
-            printf("%c\r", input); 
+            // A standard libc streaming function used for output.
+            fprintf(uart0,"%c\r", input); 
 
             if (input == '$') 
             {
-                // Variant of printf() that uses a format string that resides in flash memory.
-                printf_P(PSTR("{\"abort\":\"egg found\"}\r\n")); 
+                // Variant of fprintf() that uses a format string which resides in flash memory.
+                fprintf_P(uart0,PSTR("{\"abort\":\"'$' found\"}\r\n"));
                 abort_safe();
             }
 
@@ -143,12 +140,6 @@ int main(void)
             else
             {
               got_a = 0;
-            }
-
-            // press 'a' more than five times to hault
-            if (abort_yet >= 5) 
-            {
-                abort_safe();
             }
         }
         if (!got_a)

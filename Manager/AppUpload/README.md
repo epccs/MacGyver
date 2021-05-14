@@ -2,7 +2,7 @@
 
 ## ToDo
 
-The UPDImode.py script needs some attention, the output is out of sync.
+Add TWI1, then monitor (to debug UART) at address 41 much like TWI0 that is at address 42
 
 ## Overview
 
@@ -15,11 +15,8 @@ Uses a UPDI upload tool. Run 'make' to compile and 'make updi' to upload.
 ```bash
 sudo apt-get install make git gcc-avr binutils-avr gdb-avr avr-libc python3-pip
 pip3 install pymcuprog
-# I was using pyupdi, but it does not seem to support AVR128DB's so I will start using pymcuprog
 # pip3 install pyserial intelhex pylint https://github.com/mraardvark/pyupdi/archive/master.zip
 git clone https://github.com/epccs/MacGyver/
-# RPUusb has some programs to control UPDI and UART modes
-git clone https://github.com/epccs/RPUusb
 cd /MacGyver/Manager/BlinkLED
 make all
 ...

@@ -74,22 +74,22 @@ updi: ## Upload with pymcuprog.
 	@echo testing for prerequesetits a false will stop make
 	which python3 2>/dev/null || false
 	which pymcuprog 2>/dev/null || false
-	ls ../../../RPUusb/UPDImode/UPDImode.py 2>/dev/null || false
-	ls ../../../RPUusb/UPDImode/UARTmode.py 2>/dev/null || false
-	python3 ../../../RPUusb/UPDImode/UPDImode.py
+	ls ../../../MacGyver/Manager/AppUpload/MgrUPDImode.py 2>/dev/null || false
+	ls ../../../MacGyver/Manager/AppUpload/MgrUARTmode.py 2>/dev/null || false
+	python3 ../../../MacGyver/Manager/AppUpload/MgrUPDImode.py
 	pymcuprog erase -t uart -u $(UPDI_PORT) -d $(MCU)
 	pymcuprog write -t uart -u $(UPDI_PORT) -d $(MCU) --verify -f $(TARGET).hex
-	python3 ../../../RPUusb/UPDImode/UARTmode.py
+	python3 ../../../MacGyver/Manager/AppUpload/MgrUARTmode.py
 
 reset: ## Reset AVR with pymcuprog.
 	@echo testing for prerequesetits a false will stop make
 	which python3 2>/dev/null || false
 	which pymcuprog 2>/dev/null || false
-	ls ../../../RPUusb/UPDImode/UPDImode.py 2>/dev/null || false
-	ls ../../../RPUusb/UPDImode/UARTmode.py 2>/dev/null || false
-	python3 ../../../RPUusb/UPDImode/UPDImode.py
+	ls ../../../MacGyver/Manager/AppUpload/MgrUPDImode.py 2>/dev/null || false
+	ls ../../../MacGyver/Manager/AppUpload/MgrUARTmode.py 2>/dev/null || false
+	python3 ../../../MacGyver/Manager/AppUpload/MgrUPDImode.py
 	pymcuprog reset -t uart -u $(UPDI_PORT) -d $(MCU)
-	python3 ../../../RPUusb/UPDImode/UARTmode.py
+	python3 ../../../MacGyver/Manager/AppUpload/MgrUARTmode.py
 
 hdrcode: ## Copy header for VSCode to find. Run with sudo.
 	@echo VSCode will not look outside or cross-origin for an include,  
