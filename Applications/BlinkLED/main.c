@@ -24,6 +24,7 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 #include "../lib/io_enum_bsd.h"
 #include "../lib/timers_bsd.h"
 #include "../lib/twi0_bsd.h"
+//#include "../lib/twi0_mc.h"
 
 #define BLINK_DELAY 1000UL
 unsigned long blink_started_at;
@@ -33,22 +34,6 @@ static int got_a;
 
 FILE *uart0;
 
-// cycle the twi state machine on both the master and slave(s)
-void i2c_ping(void)
-{ 
-    // ping I2C for a manager 
-    uint8_t mgr_address = 41; //the address I have been useing for the manager (from the application MCU, the host would use 42)
-    uint8_t data[] = {0};
-    uint8_t length = 1;
-    for (uint8_t i =0;1; i++) // try a few times.
-    {
-        uint8_t twi_errorCode = twi0_masterBlockingWrite(mgr_address, data, length, TWI0_PROTOCALL_STOP); 
-        if (twi_errorCode == 0) break; // ping was error free
-        if (i>5) return; // give up after 5 trys
-    }
-    return; 
-}
-
 // don't block (e.g. _delay_ms(1000) ), ckeck if time has elapsed to toggle 
 void blink(void)
 {
@@ -56,7 +41,14 @@ void blink(void)
     if ( kRuntime > blink_delay)
     {
         ioToggle(MCU_IO_TX2);
-        //i2c_ping();
+        if(ioRead(MCU_IO_TX2)) // ping i2c every other toggle
+        {
+            uint8_t mgr_address = 41; //the address I have been useing for the manager (from the application MCU, the host would use 42)
+            uint8_t data[] = {'a'};
+            uint8_t length = 1;
+            twi0_masterBlockingWrite(mgr_address, data, length, TWI0_PROTOCALL_STOP);
+            // TWI_MasterWrite(mgr_address,data,length,1);
+        }
         
         // next toggle 
         blink_started_at += blink_delay; 
@@ -71,7 +63,7 @@ void abort_safe(void)
     ioWrite(MCU_IO_TX2,LOGIC_LEVEL_LOW);
     // flush the UART befor halt
     uart0_flush();
-    twi0_init(0, TWI0_PINS_FLOATING); // disable I2C0
+    //twi0_init(0, TWI0_PINS_FLOATING); // disable I2C0
     _delay_ms(20); // wait for last byte to send
     uart0_init(0, 0); // disable UART hardware
     // turn off interrupts and then spin loop a LED toggle
@@ -106,13 +98,17 @@ void setup(void)
     blink_delay = cnvrt_milli(BLINK_DELAY);
 
     got_a = 0;
+
+    uint8_t mgr_address = 41;
+    uint8_t data[] = {108};
+    uint8_t length = 1;
+    twi0_masterBlockingWrite(mgr_address, data, length, TWI0_PROTOCALL_STOP);
+    //TWI_MasterWrite(mgr_address,data,length,1);
 }
 
 int main(void)
 {
     setup();
-
-    int abort_yet = 0;
 
     while (1)
     {
@@ -135,11 +131,10 @@ int main(void)
             if(input == 'a') 
             {
                 got_a = 1; 
-                ++abort_yet; 
             }
             else
             {
-              got_a = 0;
+                got_a = 0;
             }
         }
         if (!got_a)

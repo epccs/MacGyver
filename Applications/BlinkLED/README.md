@@ -2,7 +2,7 @@
 
 ## To Do
 
-twi0 ping is off, the ping would send to managers twi1 but that is yet to be done.
+i2c_bsd master screaming non-stop, i2c_mc is OK, looking for the issue.
 
 ## Overview
 
@@ -86,13 +86,25 @@ make reset
 
 An 'a' will toggle the blinking and i2c ping (off), and another will toggle it on; an '$' will abort.
 
-To test the i2c (TWI) I will add a monitor to output on the manager debug interface.
-
 ```bash
 picocom -b 38400 /dev/ttyUSB0
 ...
-TBD
+a
+$
+{"abort":"'$' found"}
 ...
+```
+
+To test the i2c (TWI) I will add a monitor to output on the manager debug interface.
+
+```bash
+picocom -b 38400 /dev/ttyUSB2
+...
+Terminal ready
+...
+ڵх͉ډbu5Rډjѽ}ڵх͉ډbu5Rډjѽ}ڵх͉bu5Rډjѽ}ڵх͉ډbu5Rډjѽ}ڵх͉
+...
+# welp 'a' does not toggle, but it did abort with '$'
 ```
 
 The AVR128DA28 starts running at 24MHz/6 (4MHz) from the factory. To run at another frequency, we can change the clock select bit field (e.g., CLKCTRL_FREQSEL_16M_gc). The timers_bsd.c will select the correct option based on the F_CPU value that the Makefile passes to the compiler during the build.

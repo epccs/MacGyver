@@ -115,7 +115,7 @@ void initTimers()
     //TCA0.SPLIT.CTRLB |= TCA_SPLIT_LCMP1EN_bm; // add WO1 ENABLE (PA1)
     //TCA0.SPLIT.CTRLB |= TCA_SPLIT_LCMP2EN_bm | TCA_SPLIT_HCMP0EN_bm | TCA_SPLIT_HCMP1EN_bm | TCA_SPLIT_HCMP2EN_bm; // add WO2-5
 
-    /* Period setting, 8-bit register in SPLIT mode which makes both OVF_LUNF and HUNF events */
+    /* Period setting [Freq= F_CPU / (64 * 256)], 8-bit register in SPLIT mode which makes both OVF_LUNF and HUNF events */
     TCA0.SPLIT.LPER    = 0xFF; // the counter counts from 0 to 255 and then restarts from 0 and generates an "underflow" event
     TCA0.SPLIT.HPER    = 0xFF; // that is 256 counts, like a ATmega328p Timer0 set for fast PWM would do. I think they called it UNF because OVF is used in the 16 bit counter mode.
 
@@ -149,9 +149,9 @@ void initTimers()
     TCA1.SINGLE.CTRLA &= ~(TCA_SINGLE_ENABLE_bm);
     TCA1.SINGLE.CTRLESET = TCA_SINGLE_CMD_RESET_gc;
 
-    TCA1.SINGLE.CTRLB = TCA_SINGLE_WGMODE_SINGLESLOPE_gc;
-
     TCA1.SPLIT.CTRLD = TCA_SPLIT_SPLITM_bm;
+
+    TCA1.SPLIT.CTRLB = 0;
 
     TCA1.SPLIT.LPER = 0xFF;
     TCA1.SPLIT.HPER = 0xFF;
@@ -173,14 +173,15 @@ void initTimers()
 #endif
 #endif
 
-    /* TCA0 [and TCA1] Signals select */
-    PORTMUX.TCAROUTEA = PORTMUX_TCA0_PORTC_gc
+    /* TCA0 [and TCA1] Signals select. Use TCA0.SPLIT.CTRLB to enable WOn outputs */
+    PORTMUX.TCAROUTEA = PORTMUX_TCA0_PORTA_gc
 #if defined(TCA1)
                       | PORTMUX_TCA1_PORTB_gc
 #endif
     ;
 
-    /* TCB0..TCB2 [and TCB3..TCB4] Signals select. e.g., PWM is going to default pins*/
+/* Setup TCB for Input Capture, bellow shows PWM setup
+    // TCB0..TCB2 [and TCB3..TCB4] Signals select. e.g., PWM is going to default pins
     PORTMUX.TCBROUTEA = PORTMUX_TCB0_DEFAULT_gc | PORTMUX_TCB1_DEFAULT_gc | PORTMUX_TCB2_DEFAULT_gc
 #if defined(TCB3)
                         | PORTMUX_TCB3_DEFAULT_gc
@@ -208,9 +209,9 @@ void initTimers()
       timer_B->CTRLA = (TCB_CLKSEL_TCA0_gc) | (TCB_ENABLE_bm);
       timer_B++;
     } while (timer_B <= timer_B_end);
+*/
 
-
-
+/* do not setup TCD0 for PWM
 #ifdef TCD0
     PORTMUX.TCDROUTEA = PORTMUX_TCD0_DEFAULT_gc;
     TCD0.CMPBCLR = 510; // 50% duty
@@ -219,6 +220,7 @@ void initTimers()
     TCD0.CTRLB = TCD_WGMODE_ONERAMP_gc;
     TCD0.CTRLA = (TCD_CNTPRES_DIV32_gc | TCD_SYNCPRES_DIV1_gc | TCD_CLKSEL_OSCHF_gc);
 #endif
+*/
 
 #ifdef USE_TIMERA0
     TCA0.SPLIT.INTCTRL |= TCA_SPLIT_HUNF_bm;

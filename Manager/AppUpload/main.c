@@ -24,6 +24,7 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 #include "../lib/io_enum_bsd.h"
 #include "../lib/timers_bsd.h"
 #include "../lib/twi0_bsd.h"
+#include "../lib/twi1_bsd.h"
 
 #define BLINK_DELAY 1000UL
 unsigned long blink_started_at;
@@ -60,6 +61,7 @@ void abort_safe(void)
     // flush the UART befor halt
     uart1_flush();
     twi0_init(0, TWI0_PINS_FLOATING); // disable I2C0
+    twi1_init(0, TWI1_PINS_FLOATING); // disable I2C0
     _delay_ms(20); // wait for last byte to send
     uart1_init(0, 0); // disable UART hardware 
     // turn off interrupts and then spin loop a LED toggle 
@@ -71,25 +73,25 @@ void abort_safe(void)
     }
 }
 
-
 static uint8_t twi0_slave_addr = 42; // address I have been using for host to connect with the manager on SMBus
 
-static uint8_t localBuffer[TWI0_BUFFER_LENGTH];
-static uint8_t localBufferLength;
+static uint8_t twi0_localBuffer[TWI0_BUFFER_LENGTH];
+static uint8_t twi0_localBufferLength;
+static uint8_t twi0_cpy_of_txstatus;
 
 static uint8_t printBuffer[TWI0_BUFFER_LENGTH];
 static uint8_t printBufferLength;
 static uint8_t printBufferIndex;
-
-static uint8_t twi0_slave_status_cpy;
+static uint8_t print_slave_addr;
+static uint8_t print_slave_status;
 
 static uint8_t got_twi0;
 
 // echo what was received
 void twi0_transmit_callback(void)
 {
-    twi0_slave_status_cpy = TWI0.SSTATUS;
-    twi0_fillSlaveTxBuffer(localBuffer, localBufferLength);
+    twi0_cpy_of_txstatus = TWI0.SSTATUS;
+    twi0_fillSlaveTxBuffer(twi0_localBuffer, twi0_localBufferLength);
     return;
 }
 
@@ -98,16 +100,59 @@ void twi0_transmit_callback(void)
 // fill the print buffer and reset the index for printing
 void twi0_receive_callback(uint8_t *data, uint8_t length)
 {
-    localBufferLength = length;
+    twi0_localBufferLength = length;
     for(int i = 0; i < length; ++i)
     {
-        localBuffer[i] = data[i];
+        twi0_localBuffer[i] = data[i];
     }
     got_twi0 = 1;
-    if (twi0_slave_addr && (printBufferLength == printBufferIndex) && uart1_availableForWrite())
+    if ((printBufferLength == printBufferIndex) && uart1_availableForWrite())
     {
         printBufferLength = length;
         printBufferIndex = 0;
+        print_slave_addr = twi0_slave_addr;
+        print_slave_status = twi0_cpy_of_txstatus;
+        for(int i = 0; i < length; ++i)
+        {
+            printBuffer[i] = data[i];
+        }
+    }
+    return;
+}
+
+static uint8_t twi1_slave_addr = 41; // address I have been using for application to connect with the manager
+
+static uint8_t twi1_localBuffer[TWI1_BUFFER_LENGTH];
+static uint8_t twi1_localBufferLength;
+static uint8_t twi1_cpy_of_txstatus;
+
+static uint8_t got_twi1;
+
+// echo what was received
+void twi1_transmit_callback(void)
+{
+    twi1_cpy_of_txstatus =  TWI1.SSTATUS;
+    twi1_fillSlaveTxBuffer(twi1_localBuffer, twi1_localBufferLength);
+    return;
+}
+
+// Place the received data in local buffer so it can echo back.
+// If monitor is running, printing done, and UART is available 
+// fill the print buffer and reset the index for printing
+void twi1_receive_callback(uint8_t *data, uint8_t length)
+{
+    twi1_localBufferLength = length;
+    for(int i = 0; i < length; ++i)
+    {
+        twi1_localBuffer[i] = data[i];
+    }
+    got_twi1 = 1;
+    if ((printBufferLength == printBufferIndex) && uart1_availableForWrite())
+    {
+        printBufferLength = length;
+        printBufferIndex = 0;
+        print_slave_addr = twi1_slave_addr;
+        print_slave_status = twi1_cpy_of_txstatus;
         for(int i = 0; i < length; ++i)
         {
             printBuffer[i] = data[i];
@@ -158,13 +203,17 @@ void setup(void)
     //TCA0_HUNF used for timing, TCA0 split for 6 PWM's.
     initTimers();
 
-    /* Initialize I2C master*/
+    /* Initialize I2C*/
     twi0_init(100000UL, TWI0_PINS_PULLUP); // twi0_bsd
+    twi1_init(100000UL, TWI0_PINS_PULLUP); // twi1_bsd
 
-    /* Initialize I2C slave*/
+    /* Initialize I2C client*/
     twi0_registerSlaveRxCallback(twi0_receive_callback);
     twi0_registerSlaveTxCallback(twi0_transmit_callback);
     twi0_slaveAddress(twi0_slave_addr); // ISR is enabled so register callback first
+    //twi1_registerSlaveRxCallback(twi1_receive_callback);
+    //twi1_registerSlaveTxCallback(twi1_transmit_callback);
+    //twi1_slaveAddress(twi1_slave_addr);
 
     sei(); // Enable global interrupts to start TIMER0
     
@@ -174,18 +223,19 @@ void setup(void)
 
     got_a = 0;
     got_twi0 = 0;
+    got_twi1 = 0;
 }
 
 uint8_t debug_print_done = 0;
 
-// Monitor the I2C slave address with the debug UART
-void I2c0_monitor(void)
+// Monitor for the I2C clients, output to the debug UART
+void i2c_monitor(void)
 {
     if ( (debug_print_done == 0) )
     {
         if (printBufferIndex < printBufferLength)
         {
-            fprintf_P(uart1,PSTR("{\"monitor_0x%X\":["),twi0_slave_addr); // start of JSON for monitor
+            fprintf_P(uart1,PSTR("{\"monitor_0x%X\":["),print_slave_addr); // start of JSON for monitor
             debug_print_done = 1;
         }
         else
@@ -196,7 +246,7 @@ void I2c0_monitor(void)
 
     else if ( (debug_print_done == 1) ) // twi slave status when transmit_callback is done
     {
-        fprintf_P(uart1,PSTR("{\"status\":\"0x%X\"}"),twi0_slave_status_cpy);
+        fprintf_P(uart1,PSTR("{\"status\":\"0x%X\"}"),print_slave_status);
         debug_print_done = 2;
     }
 
@@ -259,31 +309,32 @@ int main(void)
             }
 
         }
-        if(uart1_availableForWrite())
-        {
-            I2c0_monitor();
-        }
         if (!got_a)
         {
             blink(); // also ping_i2c() at the toggle time
         }
-        if (got_twi0)
+        if(uart1_availableForWrite())
         {
-            if (localBuffer[0] == 7) // command byte is 7 
+            i2c_monitor();
+            if (got_twi1) got_twi1 = 0;
+            if (got_twi0)
             {
-                // UPDI mode, application uploaded over multi-drop serial
-                ioWrite(MCU_IO_MGR_SETAPP4_UART,LOGIC_LEVEL_LOW); // disconnect to UART
-                ioWrite(MCU_IO_MGR_SETAPP4_UPDI,LOGIC_LEVEL_HIGH); // connect UPDI
-                blink_delay = cnvrt_milli(BLINK_DELAY/4);
+                if (twi0_localBuffer[0] == 7) // if command byte is 7 on SMBus from host
+                {
+                    // UPDI mode, application uploaded over multi-drop serial
+                    ioWrite(MCU_IO_MGR_SETAPP4_UART,LOGIC_LEVEL_LOW); // disconnect to UART
+                    ioWrite(MCU_IO_MGR_SETAPP4_UPDI,LOGIC_LEVEL_HIGH); // connect UPDI
+                    blink_delay = cnvrt_milli(BLINK_DELAY/4);
+                }
+                else
+                {
+                    // UART mode, application serial connected to multi-drop serial
+                    ioWrite(MCU_IO_MGR_SETAPP4_UART,LOGIC_LEVEL_HIGH); // connect to UART
+                    ioWrite(MCU_IO_MGR_SETAPP4_UPDI,LOGIC_LEVEL_LOW); // disconnect UPDI
+                    blink_delay = cnvrt_milli(BLINK_DELAY);
+                }
+                got_twi0=0;
             }
-            else
-            {
-                // UART mode, application serial connected to multi-drop serial
-                ioWrite(MCU_IO_MGR_SETAPP4_UART,LOGIC_LEVEL_HIGH); // connect to UART
-                ioWrite(MCU_IO_MGR_SETAPP4_UPDI,LOGIC_LEVEL_LOW); // disconnect UPDI
-                blink_delay = cnvrt_milli(BLINK_DELAY);
-            }
-            got_twi0=0;
         }
     }
 }

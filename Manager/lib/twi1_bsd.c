@@ -20,7 +20,7 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 
 An AVR128D[AB] has two ISR driven state machines, one for the master and another for the slave.
 
-done: removed interleaving buffer twi0_slaveRxBufferA twi0_slaveRxBufferB use twi0_slaveRxBuffer as the buffer
+done: removed interleaving buffer twi1_slaveRxBufferA twi1_slaveRxBufferB use twi1_slaveRxBuffer as the buffer
 
 */
 
@@ -29,13 +29,13 @@ done: removed interleaving buffer twi0_slaveRxBufferA twi0_slaveRxBufferB use tw
 #include <avr/interrupt.h>
 #include <util/twi.h>
 #include "io_enum_bsd.h"
-#include "twi0_bsd.h"
+#include "twi1_bsd.h"
 
 /*! For adding R/_W bit to address */
 #define ADD_READ_BIT(address)    (address | 0x01)
 #define ADD_WRITE_BIT(address)  (address & ~0x01)
 
-static volatile uint8_t twi0_slave_read_write;
+static volatile uint8_t twi1_slave_read_write;
 
 // TWI modes for master module
 typedef enum TWIM_MODE_enum
@@ -65,7 +65,7 @@ typedef enum TWI_ACK_enum {
     TWI_NACK
 } TWI_ACK_t;
 
-static volatile TWI0_PROTOCALL_t twi0_protocall; 
+static volatile TWI1_PROTOCALL_t twi1_protocall; 
 
 typedef enum TWI_ERROR_enum {
     TWI_ERROR_ILLEGAL = TW_BUS_ERROR, // illegal start or stop condition
@@ -78,11 +78,11 @@ typedef enum TWI_ERROR_enum {
     TWI_ERROR_NONE = 0xFF // No errors
 } TWI_ERROR_t;
 
-static volatile TWI_ERROR_t twi0_error;
+static volatile TWI_ERROR_t twi1_error;
 
-static uint8_t twi0_masterBuffer[TWI0_BUFFER_LENGTH];
-static volatile uint8_t twi0_masterBufferIndex;
-static volatile uint8_t twi0_masterBufferLength;
+static uint8_t twi1_masterBuffer[TWI1_BUFFER_LENGTH];
+static volatile uint8_t twi1_masterBufferIndex;
+static volatile uint8_t twi1_masterBufferLength;
 static volatile uint8_t  master_slaveAddress;
 static volatile uint8_t *master_writeData;
 static volatile uint8_t *master_readData;
@@ -93,28 +93,28 @@ static volatile uint8_t  master_bytesRead;
 static volatile uint8_t  master_sendStop;
 static volatile uint8_t master_result;
 
-static uint8_t twi0_slaveTxBuffer[TWI0_BUFFER_LENGTH];
-static uint8_t twi0_slaveRxBuffer[TWI0_BUFFER_LENGTH];
+static uint8_t twi1_slaveTxBuffer[TWI1_BUFFER_LENGTH];
+static uint8_t twi1_slaveRxBuffer[TWI1_BUFFER_LENGTH];
 static volatile uint8_t  slave_bytesToWrite;
 static volatile uint8_t  slave_bytesWritten;
 static volatile uint8_t  slave_bytesRead;
-static volatile uint8_t  slave_result;  // value are from TWI0S_RESULT_enum
+static volatile uint8_t  slave_result;  // value are from TWI1S_RESULT_enum
 static volatile uint8_t  run_user_receive_callback_after_STOP_or_REPSTART; // preventing clock streatching
 
 // used to initalize the slave Transmit function in case it is not used.
-void twi0_transmit_default(void)
+void twi1_transmit_default(void)
 {
     // In a real callback, the data to send needs to be copied from a local buffer.
-    // uint8_t return_code = twi0_fillSlaveTxBuffer(localBuffer, localBufferLength);
+    // uint8_t return_code = twi1_fillSlaveTxBuffer(localBuffer, localBufferLength);
 
     // this default puts a NUL byte in the buffer and bypasses the provided function
     slave_bytesToWrite = 1;
-    twi0_slaveTxBuffer[0] = 0x00;
+    twi1_slaveTxBuffer[0] = 0x00;
     return;
 }
 
 // used to initalize the slave Receive function in case is not used.
-void twi0_receive_default(uint8_t *data, uint8_t length)
+void twi1_receive_default(uint8_t *data, uint8_t length)
 {
     // In a real callback, the data to send needs to be copied to a local buffer.
     // 
@@ -131,13 +131,13 @@ void twi0_receive_default(uint8_t *data, uint8_t length)
 
 typedef void (*PointerToTransmit)(void);
 typedef void (*PointerToReceive)(uint8_t*, uint8_t);
-static PointerToTransmit twi0_onSlaveTx = twi0_transmit_default; // user must call twi0_fillSlaveTxBuffer(bytes, length) in callback
-static PointerToReceive twi0_onSlaveRx = twi0_receive_default;
+static PointerToTransmit twi1_onSlaveTx = twi1_transmit_default; // user must call twi1_fillSlaveTxBuffer(bytes, length) in callback
+static PointerToReceive twi1_onSlaveRx = twi1_receive_default;
 // static uint8_t (*TWI_onSlaveTransmit)(void) __attribute__((unused));
 // static void (*TWI_onSlaveReceive)(int) __attribute__((unused));
 
 // Set the BAUD bit field in the TWIn.MBAUD
-void TWI0_SetBaud(uint32_t f_scl)
+void TWI1_SetBaud(uint32_t f_scl)
 {
 
     uint16_t t_rise; // is determined by the bus impedance and pull-up, this is only a ball-park.
@@ -165,36 +165,36 @@ void TWI0_SetBaud(uint32_t f_scl)
     
     // from equation 2 DS40002183B-page 401
     uint32_t baud = (F_CPU/(2*f_scl)) - ( (5 + (((F_CPU/1000)/1000)*t_rise)/1000 )/2 );
-    TWI0.MBAUD = (uint8_t)baud;
+    TWI1.MBAUD = (uint8_t)baud;
 
 }
 
-void TWI0_MasterTransactionFinished(TWI0M_RESULT_t result)
+void TWI1_MasterTransactionFinished(TWI1M_RESULT_t result)
 {
     master_result = result;
     twim_mode = TWIM_MODE_ENABLE;
 }
 
-// TWI0 Master event
-ISR(TWI0_TWIM_vect)
+// TWI1 Master event
+ISR(TWI1_TWIM_vect)
 {
-    uint8_t currentStatus = TWI0.MSTATUS;
+    uint8_t currentStatus = TWI1.MSTATUS;
 
     // arbitration lost or bus error.
     if ((currentStatus & TWI_ARBLOST_bm) || (currentStatus & TWI_BUSERR_bm))
     {
-        uint8_t currentStatus = TWI0.MSTATUS;
+        uint8_t currentStatus = TWI1.MSTATUS;
 
         if (currentStatus & TWI_BUSERR_bm)
         {
-            master_result = TWI0M_RESULT_BUS_ERROR;
+            master_result = TWI1M_RESULT_BUS_ERROR;
         }
         else
         {
-            master_result = TWI0M_RESULT_ARBITRATION_LOST;
+            master_result = TWI1M_RESULT_ARBITRATION_LOST;
         }
 
-        TWI0.MSTATUS = currentStatus; // clear operation
+        TWI1.MSTATUS = currentStatus; // clear operation
 
         twim_mode = TWIM_MODE_ENABLE;
     }
@@ -206,33 +206,33 @@ ISR(TWI0_TWIM_vect)
         uint8_t bytesToRead   = master_bytesToRead;
 
         // If missing acknowledge (NACK) stop
-        if (TWI0.MSTATUS & TWI_RXACK_bm) 
+        if (TWI1.MSTATUS & TWI_RXACK_bm) 
         {
             if(master_sendStop)
             {
-                TWI0.MCTRLB = TWI_MCMD_STOP_gc;
+                TWI1.MCTRLB = TWI_MCMD_STOP_gc;
             } 
             else 
             {
-                TWI0.MCTRLB = TWI_MCMD_REPSTART_gc;
+                TWI1.MCTRLB = TWI_MCMD_REPSTART_gc;
 
             }
             if ( (bytesToRead > 0) || (bytesToWrite > 0) ) // address NACK
             {
-                twi0_error = TWI_ERROR_MT_SLAVE_ADDR_NACK; 
+                twi1_error = TWI_ERROR_MT_SLAVE_ADDR_NACK; 
             }
             else // data NACK
             {
-                twi0_error = TWI_ERROR_MT_DATA_NACK;
+                twi1_error = TWI_ERROR_MT_DATA_NACK;
             }
-            TWI0_MasterTransactionFinished(TWI0M_RESULT_NACK_RECEIVED);
+            TWI1_MasterTransactionFinished(TWI1M_RESULT_NACK_RECEIVED);
         }
 
-        //  acknowledged (ACK) by slave, If more bytes to write then send next.
-        else if ( (master_bytesWritten < bytesToWrite) && (master_writeData != NULL) ) 
+        // acknowledged (ACK) by slave, If more bytes to write then send next.
+        else if ( (master_bytesWritten < bytesToWrite) && (master_writeData != NULL) )
         {
             uint8_t data = master_writeData[master_bytesWritten];
-            TWI0.MDATA = data;
+            TWI1.MDATA = data;
             master_bytesWritten++;
         }
 
@@ -242,7 +242,7 @@ ISR(TWI0_TWIM_vect)
         {
             twim_mode = TWIM_MODE_RECEIVE;
             uint8_t readAddress = ADD_READ_BIT(master_slaveAddress);
-            TWI0.MADDR = readAddress;
+            TWI1.MADDR = readAddress;
         }
 
         // If finished (or master_writeData is NULL), transaction done.
@@ -250,13 +250,13 @@ ISR(TWI0_TWIM_vect)
         {
             if(master_sendStop)
             {
-                TWI0.MCTRLB = TWI_MCMD_STOP_gc;
+                TWI1.MCTRLB = TWI_MCMD_STOP_gc;
             } 
             else 
             {
-                TWI0.MCTRLB = TWI_MCMD_REPSTART_gc;
+                TWI1.MCTRLB = TWI_MCMD_REPSTART_gc;
             }
-            TWI0_MasterTransactionFinished(TWI0M_RESULT_OK);
+            TWI1_MasterTransactionFinished(TWI1M_RESULT_OK);
         }
     }
 
@@ -265,7 +265,7 @@ ISR(TWI0_TWIM_vect)
     {
         if (master_bytesRead < master_bytesToRead) 
         {
-            uint8_t data = TWI0.MDATA;
+            uint8_t data = TWI1.MDATA;
             master_readData[master_bytesRead] = data;
             master_bytesRead++;
         }
@@ -273,14 +273,14 @@ ISR(TWI0_TWIM_vect)
         { 
             if(master_sendStop)
             {
-                TWI0.MCTRLB = TWI_ACKACT_bm | TWI_MCMD_STOP_gc;
+                TWI1.MCTRLB = TWI_ACKACT_bm | TWI_MCMD_STOP_gc;
             } 
             else 
             {
-                TWI0.MCTRLB = TWI_ACKACT_bm | TWI_MCMD_REPSTART_gc;
+                TWI1.MCTRLB = TWI_ACKACT_bm | TWI_MCMD_REPSTART_gc;
             }
             
-            TWI0_MasterTransactionFinished(TWI0M_RESULT_BUFFER_OVERFLOW);
+            TWI1_MasterTransactionFinished(TWI1M_RESULT_BUFFER_OVERFLOW);
             master_bytesToRead = 0;
             return;
         }
@@ -289,43 +289,43 @@ ISR(TWI0_TWIM_vect)
 
         if (master_bytesRead < bytesToRead) 
         {
-            TWI0.MCTRLB = TWI_MCMD_RECVTRANS_gc; // issue ACK to start next byte read.
+            TWI1.MCTRLB = TWI_MCMD_RECVTRANS_gc; // issue ACK to start next byte read.
         }
         else 
         {
             if(master_sendStop)
             {
-                TWI0.MCTRLB = TWI_ACKACT_bm | TWI_MCMD_STOP_gc;
+                TWI1.MCTRLB = TWI_ACKACT_bm | TWI_MCMD_STOP_gc;
             }
             else 
             {
-                TWI0.MCTRLB = TWI_ACKACT_bm | TWI_MCMD_REPSTART_gc;
+                TWI1.MCTRLB = TWI_ACKACT_bm | TWI_MCMD_REPSTART_gc;
             }
             
-            TWI0_MasterTransactionFinished(TWI0M_RESULT_OK);
+            TWI1_MasterTransactionFinished(TWI1M_RESULT_OK);
         }
     }
 
     // unexpected 
     else
     {
-        twi0_error = TWI_ERROR_ILLEGAL;
-        TWI0_MasterTransactionFinished(TWI0M_RESULT_FAIL);
+        twi1_error = TWI_ERROR_ILLEGAL;
+        TWI1_MasterTransactionFinished(TWI1M_RESULT_FAIL);
     }
 }
 
-void TWI0_SlaveAddressMatchHandler()
+void TWI1_SlaveAddressMatchHandler()
 {
-    slave_result = TWI0S_RESULT_UNKNOWN;
+    slave_result = TWI1S_RESULT_UNKNOWN;
     
     // ACK, data should be on the way
-    TWI0.SCTRLB = TWI_SCMD_RESPONSE_gc;
+    TWI1.SCTRLB = TWI_SCMD_RESPONSE_gc;
     
-    if(TWI0.SSTATUS & TWI_DIR_bm) // Slave Writes to Master
+    if(TWI1.SSTATUS & TWI_DIR_bm) // Slave Writes to Master
     { 
         slave_bytesWritten = 0;
         /* Call user function  */
-        twi0_onSlaveTx(); // user must call twi0_fillSlaveTxBuffer(bytes, length) in callback
+        twi1_onSlaveTx(); // user must call twi1_fillSlaveTxBuffer(bytes, length) in callback
         twis_mode = TWIS_MODE_TRANSMIT;
     } 
     else // Master Writes to Slave
@@ -336,24 +336,24 @@ void TWI0_SlaveAddressMatchHandler()
     }
 }
 
-void TWI0_SlaveTransactionFinished(TWI0S_RESULT_t result)
+void TWI1_SlaveTransactionFinished(TWI1S_RESULT_t result)
 {
-    TWI0.SCTRLA |= (TWI_APIEN_bm | TWI_PIEN_bm);
+    TWI1.SCTRLA |= (TWI_APIEN_bm | TWI_PIEN_bm);
     twis_mode = TWIS_MODE_ENABLE;
     slave_result = result;
 }
 
-void TWI0_SlaveStopHandler()
+void TWI1_SlaveStopHandler()
 {
     // Clear Address/Stop Interrupt Flag, don't ACK or NACK
-    TWI0.SSTATUS = TWI_APIF_bm;
-    TWI0_SlaveTransactionFinished(TWI0S_RESULT_OK);
+    TWI1.SSTATUS = TWI_APIF_bm;
+    TWI1_SlaveTransactionFinished(TWI1S_RESULT_OK);
 }
 
-// TWI0 Slave event
-ISR(TWI0_TWIS_vect)
+// TWI1 Slave event
+ISR(TWI1_TWIS_vect)
 {
-    uint8_t currentStatus = TWI0.SSTATUS;
+    uint8_t currentStatus = TWI1.SSTATUS;
     
     //bus error
     if(currentStatus & TWI_BUSERR_bm)
@@ -361,7 +361,7 @@ ISR(TWI0_TWIS_vect)
         slave_bytesRead = 0;
         slave_bytesWritten = 0;
         slave_bytesToWrite = 0;
-        TWI0_SlaveTransactionFinished(TWI0S_RESULT_BUS_ERROR);
+        TWI1_SlaveTransactionFinished(TWI1S_RESULT_BUS_ERROR);
     }
     
     // Address or Stop
@@ -369,16 +369,16 @@ ISR(TWI0_TWIS_vect)
     {
         // run user receive function after Master Write/Slave Read.
         // should get to this point after the STOP or REPSTART 
-        // TWI0_SlaveAddressMatchHandler sets run_user_receive_callback_after_STOP_or_REPSTART
+        // TWI1_SlaveAddressMatchHandler sets run_user_receive_callback_after_STOP_or_REPSTART
         // a.k.a. preventing clock streatching
         if(run_user_receive_callback_after_STOP_or_REPSTART == 1)
         {
-            if(slave_bytesRead < TWI0_BUFFER_LENGTH)
+            if(slave_bytesRead < TWI1_BUFFER_LENGTH)
             {
-                twi0_slaveRxBuffer[slave_bytesRead] = '\0';
+                twi1_slaveRxBuffer[slave_bytesRead] = '\0';
                 slave_bytesRead += 1;
             }
-            twi0_onSlaveRx(twi0_slaveRxBuffer, slave_bytesRead);
+            twi1_onSlaveRx(twi1_slaveRxBuffer, slave_bytesRead);
             slave_bytesRead = 0;
             run_user_receive_callback_after_STOP_or_REPSTART = 0;
         }
@@ -386,19 +386,19 @@ ISR(TWI0_TWIS_vect)
         // address match
         if(currentStatus & TWI_AP_bm)
         {
-            TWI0_SlaveAddressMatchHandler();    
+            TWI1_SlaveAddressMatchHandler();    
         }
 
         // If stop
         else 
         {
-            TWI0_SlaveStopHandler();
+            TWI1_SlaveStopHandler();
 
             // When the APIF interupt occures for a STOP we can miss an 
             // address event if we don't check the CLKHOLD bit.
-            if(TWI0.SSTATUS & TWI_CLKHOLD_bm)
+            if(TWI1.SSTATUS & TWI_CLKHOLD_bm)
             {
-                TWI0_SlaveAddressMatchHandler(); // clears CLKHOLD
+                TWI1_SlaveAddressMatchHandler(); // clears CLKHOLD
             }
         }
     }
@@ -412,79 +412,79 @@ ISR(TWI0_TWIS_vect)
             slave_bytesRead = 0;
             slave_bytesWritten = 0;
             slave_bytesToWrite = 0;
-            TWI0_SlaveTransactionFinished(TWI0S_RESULT_TRANSMIT_COLLISION);
-            TWI0.SSTATUS = TWI_COLL_bm; // clear the collision flag
+            TWI1_SlaveTransactionFinished(TWI1S_RESULT_TRANSMIT_COLLISION);
+            TWI1.SSTATUS = TWI_COLL_bm; // clear the collision flag
         } 
         else 
         {
-            TWI0.SCTRLA |= (TWI_APIEN_bm | TWI_PIEN_bm); // Enable STOP interrupt
-            if(TWI0.SSTATUS & TWI_DIR_bm) // Master Read/Slave Write
+            TWI1.SCTRLA |= (TWI_APIEN_bm | TWI_PIEN_bm); // Enable STOP interrupt
+            if(TWI1.SSTATUS & TWI_DIR_bm) // Master Read/Slave Write
             {
-                if((slave_bytesWritten > 0) && (TWI0.SSTATUS & TWI_RXACK_bm)) // got NACK
+                if((slave_bytesWritten > 0) && (TWI1.SSTATUS & TWI_RXACK_bm)) // got NACK
                 {
-                    TWI0.SCTRLB = TWI_SCMD_COMPTRANS_gc;
-                    TWI0_SlaveTransactionFinished(TWI0S_RESULT_OK);
+                    TWI1.SCTRLB = TWI_SCMD_COMPTRANS_gc;
+                    TWI1_SlaveTransactionFinished(TWI1S_RESULT_OK);
                 }
                 else // got ACK, more data expected
                 {        
                     if(slave_bytesWritten < slave_bytesToWrite){
-                        // twi0_fillSlaveTxBuffer is used to save buffer into twi0_slaveTxBuffer
-                        uint8_t data = twi0_slaveTxBuffer[slave_bytesWritten];
-                        TWI0.SDATA = data; // send data
+                        // twi1_fillSlaveTxBuffer is used to save buffer into twi1_slaveTxBuffer
+                        uint8_t data = twi1_slaveTxBuffer[slave_bytesWritten];
+                        TWI1.SDATA = data; // send data
                         slave_bytesWritten++;    
-                        TWI0.SCTRLB = TWI_SCMD_RESPONSE_gc; // wait for next data interrupt
+                        TWI1.SCTRLB = TWI_SCMD_RESPONSE_gc; // wait for next data interrupt
                     }
                     else // buffer overflow
                     {
-                        TWI0.SCTRLB = TWI_SCMD_COMPTRANS_gc;
-                        TWI0_SlaveTransactionFinished(TWI0S_RESULT_BUFFER_OVERFLOW);   
+                        TWI1.SCTRLB = TWI_SCMD_COMPTRANS_gc;
+                        TWI1_SlaveTransactionFinished(TWI1S_RESULT_BUFFER_OVERFLOW);   
                     }     
                 }
             }
             else // Master Write/Slave Read
             {
-                if(slave_bytesRead < TWI0_BUFFER_LENGTH) // check for free buffer space
+                if(slave_bytesRead < TWI1_BUFFER_LENGTH) // check for free buffer space
                 {  
-                    uint8_t data = TWI0.SDATA;
-                    twi0_slaveRxBuffer[slave_bytesRead] = data;
+                    uint8_t data = TWI1.SDATA;
+                    twi1_slaveRxBuffer[slave_bytesRead] = data;
                     slave_bytesRead++;
-                    TWI0.SCTRLB = TWI_SCMD_RESPONSE_gc; // Send ACK and wait for next data interrupt
+                    TWI1.SCTRLB = TWI_SCMD_RESPONSE_gc; // Send ACK and wait for next data interrupt
                 }
                 else // buffer overflow, send NACK and wait for next START. Set result buffer overflow
                 {
-                    TWI0.SCTRLB = TWI_ACKACT_bm | TWI_SCMD_COMPTRANS_gc;
-                    TWI0_SlaveTransactionFinished(TWI0S_RESULT_BUFFER_OVERFLOW);
+                    TWI1.SCTRLB = TWI_ACKACT_bm | TWI_SCMD_COMPTRANS_gc;
+                    TWI1_SlaveTransactionFinished(TWI1S_RESULT_BUFFER_OVERFLOW);
                 }
             }
         }
-        // TWI0.SSTATUS = TWI_DIF_bm; // the Data Interrupt Flag bit was cleared when reading TWI0.SDATA or writing SCMD bit to TWI0.SCTRLB
+        // TWI1.SSTATUS = TWI_DIF_bm; // the Data Interrupt Flag bit was cleared when reading TWI1.SDATA or writing SCMD bit to TWI1.SCTRLB
     }
     
     // unexpected SSTATUS 
     else 
     {
-        TWI0_SlaveTransactionFinished(TWI0S_RESULT_FAIL);
+        TWI1_SlaveTransactionFinished(TWI1S_RESULT_FAIL);
     }
 }
 
 /*************** PUBLIC ***********************************/
 
-// Initialize TWI0 modules (bitrate, pull-up)
+// Initialize TWI1 modules (bitrate, pull-up)
 // if bitrate is 0 then disable twi, a normal bitrate is 100000UL, 
-void twi0_init(uint32_t bitrate, TWI0_PINS_t pull_up)
+void twi1_init(uint32_t bitrate, TWI1_PINS_t pull_up)
 {
     if (bitrate == 0)
     {
         // disable twi modules (master and slave), acks, and twi interrupt
-        TWI0.MCTRLA = 0x00;
-        TWI0.MBAUD = 0x00;
-        TWI0.MSTATUS = TWI_BUSSTATE_IDLE_gc;
-        TWI0.SADDR = 0x00;
-        TWI0.SCTRLA = 0x00;
+        TWI1.MCTRLA = 0x00;
+        TWI1.MBAUD = 0x00;
+        TWI1.MSTATUS = TWI_BUSSTATE_IDLE_gc;
+        TWI1.SADDR = 0x00;
+        TWI1.SCTRLA = 0x00;
   
         // deactivate internal pullups for twi.
-        ioCntl(MCU_IO_MVIO_SCL0, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
-        ioCntl(MCU_IO_MVIO_SDA0, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
+        ioCntl(MCU_IO_MGR_SCL1, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
+        ioCntl(MCU_IO_MGR_SDA1, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
         twim_mode = TWIM_MODE_UNKNOWN;
     }
     else
@@ -493,29 +493,29 @@ void twi0_init(uint32_t bitrate, TWI0_PINS_t pull_up)
 
         // initialize state machine
         twim_mode = TWIM_MODE_ENABLE;
-        twi0_protocall = TWI0_PROTOCALL_STOP & ~TWI0_PROTOCALL_REPEATEDSTART;
+        twi1_protocall = TWI1_PROTOCALL_STOP & ~TWI1_PROTOCALL_REPEATEDSTART;
 
-        // use ALT2 to place master/slave pins on PC2, PC3. Use TWIn.DUALCTRL register to configure
-        PORTMUX.TWIROUTEA |= PORTMUX_TWI0_ALT2_gc;
+        // use DEFAULT to place master/slave pins on PF2, PF3. Use TWIn.DUALCTRL register to configure
+        PORTMUX.TWIROUTEA |= PORTMUX_TWI1_DEFAULT_gc;
 
-        ioDir(MCU_IO_MVIO_SCL0, DIRECTION_INPUT);
-        ioDir(MCU_IO_MVIO_SDA0, DIRECTION_INPUT);
+        ioDir(MCU_IO_MGR_SCL1, DIRECTION_INPUT);
+        ioDir(MCU_IO_MGR_SDA1, DIRECTION_INPUT);
 
         // weak pullup pull-up.
-        if (pull_up == TWI0_PINS_PULLUP)
+        if (pull_up == TWI1_PINS_PULLUP)
         {
-            ioCntl(MCU_IO_MVIO_SCL0, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_ENABLE, PORT_INVERT_NORMAL);
-            ioCntl(MCU_IO_MVIO_SDA0, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_ENABLE, PORT_INVERT_NORMAL);
+            ioCntl(MCU_IO_MGR_SCL1, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_ENABLE, PORT_INVERT_NORMAL);
+            ioCntl(MCU_IO_MGR_SDA1, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_ENABLE, PORT_INVERT_NORMAL);
         }
 
-        master_result = TWI0M_RESULT_OK;
+        master_result = TWI1M_RESULT_OK;
 
-        // dual contorl mode is used to split the functions, thus master on PC2 and PC3; slave on PC6,PC7
-        // TWI0.DUALCTRL = TWI_ENABLE_bm; // but I want both on PC2 and PC3
+        // dual contorl mode is used to split the functions, thus master on PF2 and PF3; slave on PB2,PB3
+        // TWI1.DUALCTRL = TWI_ENABLE_bm; // but I want both on PF2 and PF3
         // enable twi module, acks, and twi interrupt
-        TWI0.MCTRLA = TWI_RIEN_bm | TWI_WIEN_bm | TWI_ENABLE_bm;
-        TWI0_SetBaud(bitrate);
-        TWI0.MSTATUS = TWI_BUSSTATE_IDLE_gc;
+        TWI1.MCTRLA = TWI_RIEN_bm | TWI_WIEN_bm | TWI_ENABLE_bm;
+        TWI1_SetBaud(bitrate);
+        TWI1.MSTATUS = TWI_BUSSTATE_IDLE_gc;
     }
 }
 
@@ -523,27 +523,27 @@ void twi0_init(uint32_t bitrate, TWI0_PINS_t pull_up)
 // 0 .. Transaction started, check status for success
 // 1 .. to much data, it did not fit in buffer
 // 2 .. TWI state machine not ready for use
-TWI0_WRT_t twi0_masterAsyncWrite(uint8_t slave_address, uint8_t *write_data, uint8_t bytes_to_write, TWI0_PROTOCALL_t send_stop)
+TWI1_WRT_t twi1_masterAsyncWrite(uint8_t slave_address, uint8_t *write_data, uint8_t bytes_to_write, TWI1_PROTOCALL_t send_stop)
 {
-    if(twim_mode != TWIM_MODE_ENABLE) return TWI0_WRT_NOT_READY; // may be receving, writing or unknown
+    if(twim_mode != TWIM_MODE_ENABLE) return TWI1_WRT_NOT_READY; // may be receving, writing or unknown
 
-    if(bytes_to_write > TWI0_BUFFER_LENGTH) return TWI0_WRT_TO_MUCH_DATA;
+    if(bytes_to_write > TWI1_BUFFER_LENGTH) return TWI1_WRT_TO_MUCH_DATA;
 
     // Initiate the new transaction if bus is ready
-    if (master_result == TWI0M_RESULT_UNKNOWN)
+    if (master_result == TWI1M_RESULT_UNKNOWN)
     { 
-        return TWI0_WRT_NOT_READY;
+        return TWI1_WRT_NOT_READY;
     }
     else
     {
-        master_result = TWI0M_RESULT_UNKNOWN;
+        master_result = TWI1M_RESULT_UNKNOWN;
 
         // buffer data so wright can return without blocking. NOT_READY until buffer is sent.
         for(uint8_t i = 0; i < bytes_to_write; ++i)
         {
-            twi0_masterBuffer[i] = write_data[i];
+            twi1_masterBuffer[i] = write_data[i];
         }
-        master_writeData = twi0_masterBuffer;
+        master_writeData = twi1_masterBuffer;
 
         master_bytesToWrite = bytes_to_write;
         master_bytesToRead = 0;
@@ -557,86 +557,86 @@ TWI0_WRT_t twi0_masterAsyncWrite(uint8_t slave_address, uint8_t *write_data, uin
         {
             twim_mode = TWIM_MODE_TRANSMIT;
             uint8_t writeAddress = ADD_WRITE_BIT(master_slaveAddress);
-            TWI0.MADDR = writeAddress;
+            TWI1.MADDR = writeAddress;
         }
         else // ping
         {
             twim_mode = TWIM_MODE_TRANSMIT;
             uint8_t writeAddress = ADD_WRITE_BIT(master_slaveAddress);
-            TWI0.MADDR = writeAddress;
+            TWI1.MADDR = writeAddress;
         }
 
-        twi0_error = TWI_ERROR_NONE;
-        return TWI0_WRT_TRANSACTION_STARTED;
+        twi1_error = TWI_ERROR_NONE;
+        return TWI1_WRT_TRANSACTION_STARTED;
     }
 }
 
 // TWI master write transaction status.
-TWI0_WRT_STAT_t twi0_masterAsyncWrite_status(void)
+TWI1_WRT_STAT_t twi1_masterAsyncWrite_status(void)
 {
-    if (master_result == TWI0M_RESULT_UNKNOWN)
-        return TWI0_WRT_STAT_BUSY;
-    else if (TWI_ERROR_NONE == twi0_error)
-        return TWI0_WRT_STAT_SUCCESS;
-    else if (TWI_ERROR_MT_SLAVE_ADDR_NACK == twi0_error) 
-        return TWI0_WRT_STAT_ADDR_NACK;
-    else if (TWI_ERROR_MT_DATA_NACK == twi0_error) 
-        return TWI0_WRT_STAT_DATA_NACK;
-    else if (TWI_ERROR_ILLEGAL == twi0_error) 
-        return TWI0_WRT_STAT_ILLEGAL;
+    if (master_result == TWI1M_RESULT_UNKNOWN)
+        return TWI1_WRT_STAT_BUSY;
+    else if (TWI_ERROR_NONE == twi1_error)
+        return TWI1_WRT_STAT_SUCCESS;
+    else if (TWI_ERROR_MT_SLAVE_ADDR_NACK == twi1_error) 
+        return TWI1_WRT_STAT_ADDR_NACK;
+    else if (TWI_ERROR_MT_DATA_NACK == twi1_error) 
+        return TWI1_WRT_STAT_DATA_NACK;
+    else if (TWI_ERROR_ILLEGAL == twi1_error) 
+        return TWI1_WRT_STAT_ILLEGAL;
     else 
         return 5; // can not happen
 }
 
 // TWI write with a state machine so the wait can be done elsewhere
-// loop until loop_state == TWI0_LOOP_STATE_DONE, then return value is 
+// loop until loop_state == TWI1_LOOP_STATE_DONE, then return value is 
 // 0 .. success
 // 1 .. length to long for buffer
 // 2 .. address send, NACK received
 // 3 .. data send, NACK received
 // 4 .. illegal start or stop condition
-uint8_t twi0_masterWrite(uint8_t slave_address, uint8_t* write_data, uint8_t bytes_to_write, TWI0_PROTOCALL_t send_stop, TWI0_LOOP_STATE_t *loop_state)
+uint8_t twi1_masterWrite(uint8_t slave_address, uint8_t* write_data, uint8_t bytes_to_write, TWI1_PROTOCALL_t send_stop, TWI1_LOOP_STATE_t *loop_state)
 {
-    TWI0_WRT_t twi_state_machine = TWI0_WRT_TRANSACTION_STARTED;
-    TWI0_WRT_STAT_t status = TWI0_WRT_STAT_SUCCESS;
+    TWI1_WRT_t twi_state_machine = TWI1_WRT_TRANSACTION_STARTED;
+    TWI1_WRT_STAT_t status = TWI1_WRT_STAT_SUCCESS;
     switch (*loop_state)
     {
-        case TWI0_LOOP_STATE_RAW:
-        case TWI0_LOOP_STATE_DONE:
+        case TWI1_LOOP_STATE_RAW:
+        case TWI1_LOOP_STATE_DONE:
             break; // there was nothing to do
-        case TWI0_LOOP_STATE_ASYNC_WRT:
-            twi_state_machine = twi0_masterAsyncWrite(slave_address, write_data, bytes_to_write, send_stop);
-            if (twi_state_machine == TWI0_WRT_TO_MUCH_DATA) 
+        case TWI1_LOOP_STATE_ASYNC_WRT:
+            twi_state_machine = twi1_masterAsyncWrite(slave_address, write_data, bytes_to_write, send_stop);
+            if (twi_state_machine == TWI1_WRT_TO_MUCH_DATA) 
             {
-                *loop_state = TWI0_LOOP_STATE_DONE;
-                status = TWI0_WRT_STAT_BUSY; // report TWI0_WRT_STAT_BUSY (1) when TWI0_WRT_TO_MUCH_DATA occures
+                *loop_state = TWI1_LOOP_STATE_DONE;
+                status = TWI1_WRT_STAT_BUSY; // report TWI1_WRT_STAT_BUSY (1) when TWI1_WRT_TO_MUCH_DATA occures
                 break; // data did not fit in the buffer, request ignored
             }
-            else if (twi_state_machine == TWI0_WRT_NOT_READY)
+            else if (twi_state_machine == TWI1_WRT_NOT_READY)
             {
                 break; // the twi state machine is in use.
             }
             else 
             {
-                *loop_state = TWI0_LOOP_STATE_STATUS_WRT;
+                *loop_state = TWI1_LOOP_STATE_STATUS_WRT;
                 break; // the twi state machine was given data and made ready.
             }
-        case TWI0_LOOP_STATE_STATUS_WRT:
-            status = twi0_masterAsyncWrite_status();
-            if (status == TWI0_WRT_STAT_BUSY)
+        case TWI1_LOOP_STATE_STATUS_WRT:
+            status = twi1_masterAsyncWrite_status();
+            if (status == TWI1_WRT_STAT_BUSY)
             {
                 break; // the twi state machine has the data and we are waiting for it to finish.
             }
             else
             {
-                *loop_state = TWI0_LOOP_STATE_DONE;
+                *loop_state = TWI1_LOOP_STATE_DONE;
                 break; // all done
             }
-        case TWI0_LOOP_STATE_INIT:
-        case TWI0_LOOP_STATE_ASYNC_RD:
-        case TWI0_LOOP_STATE_STATUS_RD:
+        case TWI1_LOOP_STATE_INIT:
+        case TWI1_LOOP_STATE_ASYNC_RD:
+        case TWI1_LOOP_STATE_STATUS_RD:
             {
-                *loop_state = TWI0_LOOP_STATE_DONE;
+                *loop_state = TWI1_LOOP_STATE_DONE;
                 break; // wrong state was set befor running
             }
     }
@@ -649,40 +649,40 @@ uint8_t twi0_masterWrite(uint8_t slave_address, uint8_t* write_data, uint8_t byt
 // 2 .. address send, NACK received
 // 3 .. data send, NACK received
 // 4 .. illegal start or stop condition
-uint8_t twi0_masterBlockingWrite(uint8_t slave_address, uint8_t* write_data, uint8_t bytes_to_write, TWI0_PROTOCALL_t send_stop)
+uint8_t twi1_masterBlockingWrite(uint8_t slave_address, uint8_t* write_data, uint8_t bytes_to_write, TWI1_PROTOCALL_t send_stop)
 {
     uint8_t twi_wrt_code = 0;
-    TWI0_LOOP_STATE_t loop_state = TWI0_LOOP_STATE_ASYNC_WRT; // loop state is in this blocking function rather than in the main loop
-    while (loop_state != TWI0_LOOP_STATE_DONE)
+    TWI1_LOOP_STATE_t loop_state = TWI1_LOOP_STATE_ASYNC_WRT; // loop state is in this blocking function rather than in the main loop
+    while (loop_state != TWI1_LOOP_STATE_DONE)
     {
-        twi_wrt_code = twi0_masterWrite(slave_address, write_data, bytes_to_write, send_stop, &loop_state);
+        twi_wrt_code = twi1_masterWrite(slave_address, write_data, bytes_to_write, send_stop, &loop_state);
     }
     return twi_wrt_code;
 }
 
 // TWI Asynchronous Read Transaction.
-// 0 .. data fit in buffer, check twi0_masterAsyncRead_bytesRead for when it is done
+// 0 .. data fit in buffer, check twi1_masterAsyncRead_bytesRead for when it is done
 // 1 .. data will not fit in the buffer, request ignored
 // 2 .. TWI state machine not ready for use
-TWI0_RD_t twi0_masterAsyncRead(uint8_t slave_address, uint8_t bytes_to_read, TWI0_PROTOCALL_t send_stop)
+TWI1_RD_t twi1_masterAsyncRead(uint8_t slave_address, uint8_t bytes_to_read, TWI1_PROTOCALL_t send_stop)
 {
-    if(twim_mode != TWIM_MODE_ENABLE) return TWI0_RD_NOT_READY; // add TWI0_RD_WRONG_MODE
+    if(twim_mode != TWIM_MODE_ENABLE) return TWI1_RD_NOT_READY; // add TWI1_RD_WRONG_MODE
 
-    if(bytes_to_read > TWI0_BUFFER_LENGTH) return TWI0_RD_TO_MUCH_DATA;
+    if(bytes_to_read > TWI1_BUFFER_LENGTH) return TWI1_RD_TO_MUCH_DATA;
 
     // Initiate the new transaction if bus is ready
-    if (master_result == TWI0M_RESULT_UNKNOWN)
+    if (master_result == TWI1M_RESULT_UNKNOWN)
     { 
-        return TWI0_WRT_NOT_READY;
+        return TWI1_WRT_NOT_READY;
     }
     else
     {
-        master_result = TWI0M_RESULT_UNKNOWN;
+        master_result = TWI1M_RESULT_UNKNOWN;
 
         master_writeData = NULL;
 
         // use buffer to hold data so read can return without blocking. NOT_READY until done.
-        master_readData = twi0_masterBuffer;
+        master_readData = twi1_masterBuffer;
 
         master_bytesToWrite = 0;
         master_bytesToRead = bytes_to_read;
@@ -695,45 +695,45 @@ TWI0_RD_t twi0_masterAsyncRead(uint8_t slave_address, uint8_t bytes_to_read, TWI
         if (master_bytesToRead > 0) {
             twim_mode = TWIM_MODE_RECEIVE;
             uint8_t readAddress = ADD_READ_BIT(master_slaveAddress);
-            TWI0.MADDR = readAddress;
+            TWI1.MADDR = readAddress;
         }
          else // ping
         {
             twim_mode = TWIM_MODE_TRANSMIT;
             uint8_t writeAddress = ADD_WRITE_BIT(master_slaveAddress);
-            TWI0.MADDR = writeAddress;
+            TWI1.MADDR = writeAddress;
         }
 
-        twi0_error = TWI_ERROR_NONE;
-        return TWI0_RD_TRANSACTION_STARTED;
+        twi1_error = TWI_ERROR_NONE;
+        return TWI1_RD_TRANSACTION_STARTED;
     }
 }
 
 // TWI master Asynchronous Read Transaction status 
-// clears the twi0_error value so that getBytes can read data NACKed befor finishing.
-TWI0_RD_STAT_t twi0_masterAsyncRead_status(void)
+// clears the twi1_error value so that getBytes can read data NACKed befor finishing.
+TWI1_RD_STAT_t twi1_masterAsyncRead_status(void)
 {
-    TWI_ERROR_t twi0_error_temp = TWI_ERROR_NONE;
-    if (master_result == TWI0M_RESULT_UNKNOWN)
-        return TWI0_RD_STAT_BUSY;
-    else if (TWI_ERROR_NONE == twi0_error)
-        twi0_error_temp = TWI0_RD_STAT_SUCCESS;
-    else if (TWI_ERROR_MS_SLAVE_ADDR_NACK == twi0_error) 
-        twi0_error_temp = TWI0_RD_STAT_ADDR_NACK;
-    else if (TWI_ERROR_MS_DATA_NACK == twi0_error) 
-        twi0_error_temp = TWI0_RD_STAT_DATA_NACK;
-    else if (TWI_ERROR_ILLEGAL == twi0_error) 
-        twi0_error_temp = TWI0_RD_STAT_ILLEGAL;
-    return twi0_error_temp;
+    TWI_ERROR_t twi1_error_temp = TWI_ERROR_NONE;
+    if (master_result == TWI1M_RESULT_UNKNOWN)
+        return TWI1_RD_STAT_BUSY;
+    else if (TWI_ERROR_NONE == twi1_error)
+        twi1_error_temp = TWI1_RD_STAT_SUCCESS;
+    else if (TWI_ERROR_MS_SLAVE_ADDR_NACK == twi1_error) 
+        twi1_error_temp = TWI1_RD_STAT_ADDR_NACK;
+    else if (TWI_ERROR_MS_DATA_NACK == twi1_error) 
+        twi1_error_temp = TWI1_RD_STAT_DATA_NACK;
+    else if (TWI_ERROR_ILLEGAL == twi1_error) 
+        twi1_error_temp = TWI1_RD_STAT_ILLEGAL;
+    return twi1_error_temp;
 }
 
 // TWI master Asynchronous Read Transaction get bytes. 
 // Output   0 .. twi busy, read operation not complete or has error (check status)
 //      1..32 .. number of bytes read
-// note that a data NACK will give no output, but reading status will clear twi0_error so you can get what is available.
-uint8_t twi0_masterAsyncRead_getBytes(uint8_t *read_data)
+// note that a data NACK will give no output, but reading status will clear twi1_error so you can get what is available.
+uint8_t twi1_masterAsyncRead_getBytes(uint8_t *read_data)
 {
-    if ( (master_result == TWI0M_RESULT_UNKNOWN) || (TWI_ERROR_NONE != twi0_error) )
+    if ( (master_result == TWI1M_RESULT_UNKNOWN) || (TWI_ERROR_NONE != twi1_error) )
     {
         return 0;
     }
@@ -750,64 +750,64 @@ uint8_t twi0_masterAsyncRead_getBytes(uint8_t *read_data)
 
     for(uint8_t i = 0; i < bytes_read; ++i)
     {
-        read_data[i] = twi0_masterBuffer[i];
+        read_data[i] = twi1_masterBuffer[i];
     }
 
     return bytes_read;
 }
 
 // TWI read with a state machine so the wait can be done elsewhere
-// loop until loop_state == TWI0_LOOP_STATE_DONE, then return value is 
-// 0 returns when somthing went wrong, was it from TWI0_RD_TO_MUCH_DATA, or check twi0_masterAsyncRead_status
+// loop until loop_state == TWI1_LOOP_STATE_DONE, then return value is 
+// 0 returns when somthing went wrong, was it from TWI1_RD_TO_MUCH_DATA, or check twi1_masterAsyncRead_status
 // 1..32 returns the number of bytes
-uint8_t twi0_masterRead(uint8_t slave_address, uint8_t* read_data, uint8_t bytes_to_read, TWI0_PROTOCALL_t send_stop, TWI0_LOOP_STATE_t *loop_state)
+uint8_t twi1_masterRead(uint8_t slave_address, uint8_t* read_data, uint8_t bytes_to_read, TWI1_PROTOCALL_t send_stop, TWI1_LOOP_STATE_t *loop_state)
 {
-    TWI0_RD_t twi_state_machine = TWI0_RD_TRANSACTION_STARTED;
-    TWI0_RD_STAT_t status = TWI0_RD_STAT_BUSY;
+    TWI1_RD_t twi_state_machine = TWI1_RD_TRANSACTION_STARTED;
+    TWI1_RD_STAT_t status = TWI1_RD_STAT_BUSY;
     uint8_t bytes_read = 0;
     switch (*loop_state)
     {
-        case TWI0_LOOP_STATE_RAW:
-        case TWI0_LOOP_STATE_DONE:
+        case TWI1_LOOP_STATE_RAW:
+        case TWI1_LOOP_STATE_DONE:
             break; // there was nothing to do
-        case TWI0_LOOP_STATE_ASYNC_RD:
-            twi_state_machine = twi0_masterAsyncRead(slave_address, bytes_to_read, send_stop);
-            if (twi_state_machine == TWI0_RD_TO_MUCH_DATA) 
+        case TWI1_LOOP_STATE_ASYNC_RD:
+            twi_state_machine = twi1_masterAsyncRead(slave_address, bytes_to_read, send_stop);
+            if (twi_state_machine == TWI1_RD_TO_MUCH_DATA) 
             {
-                *loop_state = TWI0_LOOP_STATE_DONE; // done, 
+                *loop_state = TWI1_LOOP_STATE_DONE; // done, 
                 break; // read request ignored, data did not fit in the buffer.
             }
-            else if (twi_state_machine == TWI0_RD_NOT_READY)
+            else if (twi_state_machine == TWI1_RD_NOT_READY)
             {
                 break; // but the twi state machine is in use.
             }
             else 
             {
-                *loop_state = TWI0_LOOP_STATE_STATUS_RD;
+                *loop_state = TWI1_LOOP_STATE_STATUS_RD;
                 break; // machine was told to read data and made ready.
             }
-        case TWI0_LOOP_STATE_STATUS_RD:
-            status = twi0_masterAsyncRead_status();
-            if (status == TWI0_RD_STAT_BUSY)
+        case TWI1_LOOP_STATE_STATUS_RD:
+            status = twi1_masterAsyncRead_status();
+            if (status == TWI1_RD_STAT_BUSY)
             {
                 break; // state machine is getting the data and we are waiting for it to finish.
             }
-            else if ( (status == TWI0_RD_STAT_ADDR_NACK) || (status == TWI0_RD_STAT_DATA_NACK) || (status == TWI0_RD_STAT_ILLEGAL) ) // read faild 
+            else if ( (status == TWI1_RD_STAT_ADDR_NACK) || (status == TWI1_RD_STAT_DATA_NACK) || (status == TWI1_RD_STAT_ILLEGAL) ) // read faild 
             {
-                *loop_state = TWI0_LOOP_STATE_DONE; // done,
+                *loop_state = TWI1_LOOP_STATE_DONE; // done,
                 break; // read failed, the status command can be used again to get the error
             }
             else
             {
-                bytes_read = twi0_masterAsyncRead_getBytes(read_data);
-                *loop_state = TWI0_LOOP_STATE_DONE;
+                bytes_read = twi1_masterAsyncRead_getBytes(read_data);
+                *loop_state = TWI1_LOOP_STATE_DONE;
                 break; // all done
             }
-        case TWI0_LOOP_STATE_INIT:
-        case TWI0_LOOP_STATE_ASYNC_WRT:
-        case TWI0_LOOP_STATE_STATUS_WRT:
+        case TWI1_LOOP_STATE_INIT:
+        case TWI1_LOOP_STATE_ASYNC_WRT:
+        case TWI1_LOOP_STATE_STATUS_WRT:
             {
-                *loop_state = TWI0_LOOP_STATE_DONE;
+                *loop_state = TWI1_LOOP_STATE_DONE;
                 break; // wrong state was set befor running
             }
     }
@@ -817,44 +817,44 @@ uint8_t twi0_masterRead(uint8_t slave_address, uint8_t* read_data, uint8_t bytes
 // TWI read busy-wait transaction, do not use with multi-master.
 // 0 returns if requeste for data will not fit in buffer
 // 1..32 returns the number of bytes
-uint8_t twi0_masterBlockingRead(uint8_t slave_address, uint8_t* read_data, uint8_t bytes_to_read, TWI0_PROTOCALL_t send_stop)
+uint8_t twi1_masterBlockingRead(uint8_t slave_address, uint8_t* read_data, uint8_t bytes_to_read, TWI1_PROTOCALL_t send_stop)
 {
     uint8_t bytes_read = 0;
-    TWI0_LOOP_STATE_t loop_state = TWI0_LOOP_STATE_ASYNC_RD; // loop state is in this blocking function rather than in the main loop
-    while (loop_state != TWI0_LOOP_STATE_DONE)
+    TWI1_LOOP_STATE_t loop_state = TWI1_LOOP_STATE_ASYNC_RD; // loop state is in this blocking function rather than in the main loop
+    while (loop_state != TWI1_LOOP_STATE_DONE)
     {
-        bytes_read = twi0_masterRead(slave_address, read_data, bytes_to_read, send_stop, &loop_state);
+        bytes_read = twi1_masterRead(slave_address, read_data, bytes_to_read, send_stop, &loop_state);
     }
     return bytes_read;
 }
 
 // TWI Write and then Read with a state machine so the wait can be done elsewhere
 // befor calling define a variable for the stat machine to use 
-// static TWI0_LOOP_STATE_t twi0_loop_state = TWI0_LOOP_STATE_DONE;
+// static TWI1_LOOP_STATE_t twi1_loop_state = TWI1_LOOP_STATE_DONE;
 // each time the loop_state machine is used it needs started with
-// twi0_loop_state = TWI0_LOOP_STATE_ASYNC_WRT;
-// when operations are finished twi0_loop_state == TWI0_LOOP_STATE_DONE 
+// twi1_loop_state = TWI1_LOOP_STATE_ASYNC_WRT;
+// when operations are finished twi1_loop_state == TWI1_LOOP_STATE_DONE 
 // and the return value should have the bytes_read in lower 5 bits (0..32)
-// error codes are moved to the upper 3 bits (e.g., twi_wrt_code<<5 or twi0_masterAsyncRead_status()<<5)
-uint8_t twi0_masterWriteRead(uint8_t slave_address, uint8_t* write_data, uint8_t bytes_to_write, uint8_t* read_data, uint8_t bytes_to_read, TWI0_LOOP_STATE_t *loop_state)
+// error codes are moved to the upper 3 bits (e.g., twi_wrt_code<<5 or twi1_masterAsyncRead_status()<<5)
+uint8_t twi1_masterWriteRead(uint8_t slave_address, uint8_t* write_data, uint8_t bytes_to_write, uint8_t* read_data, uint8_t bytes_to_read, TWI1_LOOP_STATE_t *loop_state)
 {
-    if ( (*loop_state == TWI0_LOOP_STATE_ASYNC_WRT) || (*loop_state == TWI0_LOOP_STATE_STATUS_WRT) )
+    if ( (*loop_state == TWI1_LOOP_STATE_ASYNC_WRT) || (*loop_state == TWI1_LOOP_STATE_STATUS_WRT) )
     {
-        uint8_t twi_wrt_code = twi0_masterWrite(slave_address, write_data, bytes_to_write, TWI0_PROTOCALL_REPEATEDSTART, loop_state);
-        if ( (*loop_state == TWI0_LOOP_STATE_DONE) && (twi_wrt_code == 0) )
+        uint8_t twi_wrt_code = twi1_masterWrite(slave_address, write_data, bytes_to_write, TWI1_PROTOCALL_REPEATEDSTART, loop_state);
+        if ( (*loop_state == TWI1_LOOP_STATE_DONE) && (twi_wrt_code == 0) )
         {
-            *loop_state = TWI0_LOOP_STATE_ASYNC_RD;
+            *loop_state = TWI1_LOOP_STATE_ASYNC_RD;
         }
         else
         {
-            // twi_wrt_code may have an error in which case loop_state is set as TWI0_LOOP_STATE_DONE
+            // twi_wrt_code may have an error in which case loop_state is set as TWI1_LOOP_STATE_DONE
             // or write is not done and we can check again after a spin through the outside loop
-            return twi_wrt_code<<5; // if twi_wrt_code has an error use twi0_masterAsyncWrite_status to see it
+            return twi_wrt_code<<5; // if twi_wrt_code has an error use twi1_masterAsyncWrite_status to see it
         }
     }
 
-    uint8_t bytes_read = twi0_masterRead(slave_address, read_data, bytes_to_read, TWI0_PROTOCALL_STOP, loop_state);
-    if (*loop_state == TWI0_LOOP_STATE_DONE)
+    uint8_t bytes_read = twi1_masterRead(slave_address, read_data, bytes_to_read, TWI1_PROTOCALL_STOP, loop_state);
+    if (*loop_state == TWI1_LOOP_STATE_DONE)
     {
         if (bytes_read)
         {
@@ -862,7 +862,7 @@ uint8_t twi0_masterWriteRead(uint8_t slave_address, uint8_t* write_data, uint8_t
         }
         else
         {
-            return twi0_masterAsyncRead_status()<<5;
+            return twi1_masterAsyncRead_status()<<5;
         }
     }
     else
@@ -875,7 +875,7 @@ uint8_t twi0_masterWriteRead(uint8_t slave_address, uint8_t* write_data, uint8_t
 // init slave with a valid address (0x08..0x77), otherwise slave hardware is disabled
 // slave is dual mode, both master and slave should be able to run
 // return address if set
-uint8_t twi0_slaveAddress(uint8_t slave)
+uint8_t twi1_slaveAddress(uint8_t slave)
 {
     if(twis_mode != TWIS_MODE_UNKNOWN) return 0;
     if( (slave>=0x8) && (slave<=0x77))
@@ -883,44 +883,44 @@ uint8_t twi0_slaveAddress(uint8_t slave)
         twis_mode = TWIS_MODE_ENABLE;
         slave_bytesRead = 0;
         slave_bytesWritten = 0;
-        slave_result = TWI0S_RESULT_UNKNOWN;
+        slave_result = TWI1S_RESULT_UNKNOWN;
         run_user_receive_callback_after_STOP_or_REPSTART = 0;
         
-        TWI0.SADDR = slave << 1;
+        TWI1.SADDR = slave << 1;
         // enable an interrupt on the Data Interrupt Flag (DIF) from the Slave Status (TWIn.SSTATUS) register
         // enable an interrupt on the Address or Stop Interrupt Flag (APIF) from the Slave Status (TWIn.SSTATUS) register
         // allow the Address or Stop Interrupt Flag (APIF) in the Slave Status (TWIn.SSTATUS) register to be set when a Stop condition occurs
-        TWI0.SCTRLA = TWI_DIEN_bm | TWI_APIEN_bm | TWI_PIEN_bm  | TWI_ENABLE_bm;
+        TWI1.SCTRLA = TWI_DIEN_bm | TWI_APIEN_bm | TWI_PIEN_bm  | TWI_ENABLE_bm;
         
         // Dual Control Enable bit mask which should allow the slave to operate simultaneously with master
-        TWI0.MCTRLA = TWI_ENABLE_bm;
+        TWI1.MCTRLA = TWI_ENABLE_bm;
         return slave;
     }
     else
     {
         // turn off all Slave Control A bits so only master hardware is running
-        TWI0.SCTRLA = 0;
+        TWI1.SCTRLA = 0;
         twis_mode = TWIS_MODE_UNKNOWN;
-        twi0_onSlaveTx = twi0_transmit_default;
-        twi0_onSlaveRx = twi0_receive_default;
+        twi1_onSlaveTx = twi1_transmit_default;
+        twi1_onSlaveRx = twi1_receive_default;
         return 0;
     }
 }
 
-// fill twi0_slaveTxBuffer using callback returns
+// fill twi1_slaveTxBuffer using callback returns
 // 0: OK
 // 1: bytes_to_send is to much for buffer, so request ignored
 // 2: TWI state machine is not in slave mode, so request ignored
-uint8_t twi0_fillSlaveTxBuffer(const uint8_t* slave_data, uint8_t bytes_to_send)
+uint8_t twi1_fillSlaveTxBuffer(const uint8_t* slave_data, uint8_t bytes_to_send)
 {
-    if(TWI0_BUFFER_LENGTH < bytes_to_send)
+    if(TWI1_BUFFER_LENGTH < bytes_to_send)
     {
         return 1;
     }
 
     for(uint8_t i = 0; i < bytes_to_send; ++i)
     {
-        twi0_slaveTxBuffer[i] = slave_data[i];
+        twi1_slaveTxBuffer[i] = slave_data[i];
     }
     slave_bytesToWrite = bytes_to_send;
 
@@ -929,28 +929,28 @@ uint8_t twi0_fillSlaveTxBuffer(const uint8_t* slave_data, uint8_t bytes_to_send)
 
 // record callback to use durring a slave read operation 
 // a NULL pointer will use the default callback
-void twi0_registerSlaveRxCallback( void (*function)(uint8_t*, uint8_t) )
+void twi1_registerSlaveRxCallback( void (*function)(uint8_t*, uint8_t) )
 {
     if (function == NULL )
     {
-        twi0_onSlaveRx = twi0_receive_default;
+        twi1_onSlaveRx = twi1_receive_default;
     }
     else
     {
-        twi0_onSlaveRx = function;
+        twi1_onSlaveRx = function;
     }
 }
 
 // record callback to use before a slave write operation
 // a NULL pointer will use the default callback
-void twi0_registerSlaveTxCallback( void (*function)(void) )
+void twi1_registerSlaveTxCallback( void (*function)(void) )
 {
     if (function == NULL )
     {
-        twi0_onSlaveTx = twi0_transmit_default;
+        twi1_onSlaveTx = twi1_transmit_default;
     }
     else
     {
-        twi0_onSlaveTx = function;
+        twi1_onSlaveTx = function;
     }
 }

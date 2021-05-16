@@ -81,7 +81,7 @@ void TWI_MasterInit(uint32_t frequency)
     ioCntl(MCU_IO_SDA0,PORT_ISC_INTDISABLE_gc,PORT_PULLUP_ENABLE,PORT_INVERT_NORMAL);
     ioCntl(MCU_IO_SCL0,PORT_ISC_INTDISABLE_gc,PORT_PULLUP_ENABLE,PORT_INVERT_NORMAL);
 #endif
-    PORTMUX.TWIROUTEA |= TWI_MUX;  // on m4809 the TWISPIROUTEA register was used to set route A
+    PORTMUX.TWIROUTEA |= PORTMUX_TWI0_DEFAULT_gc;
 
     twi_mode = TWI_MODE_MASTER;
     
@@ -446,24 +446,23 @@ void TWI_MasterWriteHandler()
 
     /* If NOT acknowledged (NACK) by slave cancel the transaction. */
     if (TWI0.MSTATUS & TWI_RXACK_bm) {
-        if(master_sendStop){
+        if(master_sendStop) {
             TWI0.MCTRLB = TWI_MCMD_STOP_gc;
         } else {
             TWI0.MCTRLB = TWI_MCMD_REPSTART_gc;
-
         }
         TWI_MasterTransactionFinished(TWIM_RESULT_NACK_RECEIVED);
     }
 
-    /* If more bytes to write, send data. */
+    /* acknowledged (ACK) by slave, If more bytes to write then send next. */
     else if (master_bytesWritten < bytesToWrite) {
         uint8_t data = master_writeData[master_bytesWritten];
         TWI0.MDATA = data;
         master_bytesWritten++;
     }
 
-    /* If bytes to read, send START condition + Address +
-     * 'R/_W = 1'
+    /* acknowledged (ACK) by slave without more data to send. Maybe bytes to read?
+     * i2c read frame looks like: START condition + (Address + 'R/_W = 1')
      */
     else if (master_bytesRead < bytesToRead) {
         twi_mode = TWI_MODE_MASTER_RECEIVE;
@@ -471,7 +470,7 @@ void TWI_MasterWriteHandler()
         TWI0.MADDR = readAddress;
     }
 
-    /* If transaction finished, send ACK/STOP condition if instructed and set RESULT OK. */
+    /* transaction finished, send STOP or REPSTART condition and set RESULT OK. */
     else {
         if(master_sendStop){
             TWI0.MCTRLB = TWI_MCMD_STOP_gc;
@@ -520,7 +519,7 @@ void TWI_MasterReadHandler()
         TWI0.MCTRLB = TWI_MCMD_RECVTRANS_gc;
     }
 
-    /* If transaction finished, issue NACK and STOP condition if instructed. */
+    /* If transaction finished, transaction done, issue NACK (1 to ACKACT bit) and STOP or REPSTART condition. */
     else {
         if(master_sendStop){
             TWI0.MCTRLB = TWI_ACKACT_bm | TWI_MCMD_STOP_gc;

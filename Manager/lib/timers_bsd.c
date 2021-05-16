@@ -174,13 +174,14 @@ void initTimers()
 #endif
 
     /* TCA0 [and TCA1] Signals select. Use TCA0.SPLIT.CTRLB to enable WOn outputs */
-    PORTMUX.TCAROUTEA = PORTMUX_TCA0_PORTG_gc // PORTG is only connected with parts that have 64 pins
+    PORTMUX.TCAROUTEA = PORTMUX_TCA0_PORTA_gc
 #if defined(TCA1)
                       | PORTMUX_TCA1_PORTB_gc
 #endif
     ;
 
-    /* TCB0..TCB2 [and TCB3..TCB4] Signals select. e.g., PWM is going to default pins*/
+/* Setup TCB for Input Capture, bellow shows PWM setup
+    // TCB0..TCB2 [and TCB3..TCB4] Signals select. e.g., PWM is going to default pins
     PORTMUX.TCBROUTEA = PORTMUX_TCB0_DEFAULT_gc | PORTMUX_TCB1_DEFAULT_gc | PORTMUX_TCB2_DEFAULT_gc
 #if defined(TCB3)
                         | PORTMUX_TCB3_DEFAULT_gc
@@ -208,9 +209,9 @@ void initTimers()
       timer_B->CTRLA = (TCB_CLKSEL_TCA0_gc) | (TCB_ENABLE_bm);
       timer_B++;
     } while (timer_B <= timer_B_end);
+*/
 
-
-
+/* do not setup TCD0 for PWM
 #ifdef TCD0
     PORTMUX.TCDROUTEA = PORTMUX_TCD0_DEFAULT_gc;
     TCD0.CMPBCLR = 510; // 50% duty
@@ -219,6 +220,7 @@ void initTimers()
     TCD0.CTRLB = TCD_WGMODE_ONERAMP_gc;
     TCD0.CTRLA = (TCD_CNTPRES_DIV32_gc | TCD_SYNCPRES_DIV1_gc | TCD_CLKSEL_OSCHF_gc);
 #endif
+*/
 
 #ifdef USE_TIMERA0
     TCA0.SPLIT.INTCTRL |= TCA_SPLIT_HUNF_bm;

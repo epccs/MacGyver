@@ -71,8 +71,6 @@ updi: ## upload with pymcuprog
 	which pymcuprog 2>/dev/null || false
 	ls ../../../MacGyver/Manager/AppUpload/AppUPDImode.py 2>/dev/null || false
 	ls ../../../MacGyver/Manager/AppUpload/AppUARTmode.py 2>/dev/null || false
-	ls ../../../MacGyver/Manager/AppUpload/MgrUARTmode.py 2>/dev/null || false
-	python3 ../../../MacGyver/Manager/AppUpload/MgrUARTmode.py
 	python3 ../../../MacGyver/Manager/AppUpload/AppUPDImode.py
 	pymcuprog erase -t uart -u $(UPDI_PORT) -d $(MCU)
 	pymcuprog write -t uart -u $(UPDI_PORT) -d $(MCU) --verify -f $(TARGET).hex
@@ -84,8 +82,6 @@ reset: ## reset AVR with pymcuprog
 	which pymcuprog 2>/dev/null || false
 	ls ../../../MacGyver/Manager/AppUpload/AppUPDImode.py 2>/dev/null || false
 	ls ../../../MacGyver/Manager/AppUpload/AppUARTmode.py 2>/dev/null || false
-	ls ../../../MacGyver/Manager/AppUpload/MgrUARTmode.py 2>/dev/null || false
-	python3 ../../../MacGyver/Manager/AppUpload/MgrUARTmode.py
 	python3 ../../../MacGyver/Manager/AppUpload/AppUPDImode.py
 	pymcuprog reset -t uart -u $(UPDI_PORT) -d $(MCU)
 	python3 ../../../MacGyver/Manager/AppUpload/AppUARTmode.py
