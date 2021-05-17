@@ -78,7 +78,6 @@ typedef enum TWI_MODE_enum {
 void TWI_MasterInit(uint32_t frequency);
 void TWI_SlaveInit(uint8_t address);
 void TWI_Flush(void);
-void TWI_Disable(void);
 TWI_BUSSTATE_t TWI_MasterState(void);
 uint8_t TWI_MasterReady(void);
 void TWI_MasterSetBaud(uint32_t frequency);
@@ -95,18 +94,9 @@ uint8_t TWI_MasterWriteRead(uint8_t slave_address,
                          uint8_t bytes_to_write,
                          uint8_t bytes_to_read,
                          uint8_t send_stop);
-void TWI_MasterInterruptHandler(void);
-void TWI_MasterArbitrationLostBusErrorHandler(void);
-void TWI_MasterWriteHandler(void);
-void TWI_MasterReadHandler(void);
 void TWI_MasterTransactionFinished(uint8_t result);
 
-void TWI_SlaveInterruptHandler(void);
 void TWI_SlaveAddressMatchHandler(void);
-void TWI_SlaveStopHandler(void);
-void TWI_SlaveDataHandler(void);
-void TWI_SlaveWriteHandler(void);
-void TWI_SlaveReadHandler(void);
 void TWI_attachSlaveRxEvent( void (*function)(int), uint8_t *read_data, uint8_t bytes_to_read );
 void TWI_attachSlaveTxEvent( uint8_t (*function)(void), uint8_t *write_data );
 void TWI_SlaveTransactionFinished(uint8_t result);

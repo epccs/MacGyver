@@ -71,6 +71,7 @@ typedef enum TWI_ERROR_enum {
     TWI_ERROR_ILLEGAL = TW_BUS_ERROR, // illegal start or stop condition
     TWI_ERROR_MT_SLAVE_ADDR_NACK = TW_MT_SLA_NACK, // Master Transmiter SLA+W transmitted, NACK received 
     TWI_ERROR_MT_DATA_NACK = TW_MT_DATA_NACK, // Master Transmiter data transmitted, NACK received
+    TWI_ERROR_MT_DATA_MISSING = 0x32, // NULL pointer passed rather than the data
     TWI_ERROR_ARBITRATION_LOST = TW_MT_ARB_LOST, // Master Transmiter arbitration lost in SLA+W or data
     TWI_ERROR_MS_SLAVE_ADDR_NACK = TW_MR_SLA_NACK, // Master Receiver SLA+W transmitted, NACK received 
     TWI_ERROR_MS_DATA_NACK = TW_MR_DATA_NACK, // Master Receiver data received, NACK returned ()
@@ -202,10 +203,11 @@ ISR(TWI0_TWIM_vect)
     // master write 
     else if (currentStatus & TWI_WIF_bm) 
     {
-        uint8_t bytesToWrite  = master_bytesToWrite;
-        uint8_t bytesToRead   = master_bytesToRead;
+        // Local variables used in if tests to avoid compiler warning.
+        uint8_t local_bytesToWrite  = master_bytesToWrite;
+        uint8_t local_bytesToRead   = master_bytesToRead;
 
-        // If missing acknowledge (NACK) stop
+        // If NOT acknowledged (NACK) by slave cancel the transaction.
         if (TWI0.MSTATUS & TWI_RXACK_bm) 
         {
             if(master_sendStop)
@@ -217,7 +219,7 @@ ISR(TWI0_TWIM_vect)
                 TWI0.MCTRLB = TWI_MCMD_REPSTART_gc;
 
             }
-            if ( (bytesToRead > 0) || (bytesToWrite > 0) ) // address NACK
+            if ( (master_bytesWritten == 0) ) // must be an address NACK
             {
                 twi0_error = TWI_ERROR_MT_SLAVE_ADDR_NACK; 
             }
@@ -228,9 +230,16 @@ ISR(TWI0_TWIM_vect)
             TWI0_MasterTransactionFinished(TWI0M_RESULT_NACK_RECEIVED);
         }
 
-        /* acknowledged (ACK) by slave, If more bytes to write then send next. */
-        else if ( (master_bytesWritten < bytesToWrite) && (master_writeData != NULL) ) 
+        // acknowledged (ACK) by slave, If more bytes to write then send next.
+        else if (master_bytesWritten < local_bytesToWrite) 
         {
+            if (master_writeData == NULL) // array points to null which is not valid
+            {
+                master_bytesToWrite = 0; // nuke the requested byte count.
+                twi0_error = TWI_ERROR_MT_DATA_MISSING;
+                TWI0.MCTRLB = TWI_MCMD_STOP_gc;
+                TWI0_MasterTransactionFinished(TWI0M_RESULT_FAIL);
+            }
             uint8_t data = master_writeData[master_bytesWritten];
             TWI0.MDATA = data;
             master_bytesWritten++;
@@ -238,22 +247,18 @@ ISR(TWI0_TWIM_vect)
 
         // Acknowledged (ACK) by slave without more data to send. Maybe bytes to read?
         // i2c read frame looks like: START condition + (Address + 'R/_W = 1')
-        else if (master_bytesRead < bytesToRead) 
+        else if (master_bytesRead < local_bytesToRead) 
         {
             twim_mode = TWIM_MODE_RECEIVE;
             uint8_t readAddress = ADD_READ_BIT(master_slaveAddress);
             TWI0.MADDR = readAddress;
         }
 
-        // If finished (or master_writeData is NULL), transaction done.
-        else
-        {
-            if(master_sendStop)
-            {
+        // transaction finished, send STOP or REPSTART condition and set RESULT OK.
+        else {
+            if(master_sendStop) {
                 TWI0.MCTRLB = TWI_MCMD_STOP_gc;
-            } 
-            else 
-            {
+            } else {
                 TWI0.MCTRLB = TWI_MCMD_REPSTART_gc;
             }
             TWI0_MasterTransactionFinished(TWI0M_RESULT_OK);
