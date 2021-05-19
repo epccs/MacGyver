@@ -54,7 +54,7 @@ static volatile uint8_t  slave_bytesToWrite;
 static volatile uint8_t  slave_bytesWritten;
 static volatile uint8_t  slave_bytesToRead;
 static volatile uint8_t  slave_bytesRead;
-static volatile uint8_t  slave_trans_status;
+static volatile uint8_t  slave_trans_status; // this is does noting and can be removed
 static volatile uint8_t  slave_result;
 static volatile uint8_t  slave_callUserReceive;
 static volatile uint8_t  slave_callUserRequest;
@@ -99,7 +99,6 @@ void TWI_MasterInit(uint32_t frequency)
         PORTMUX.TWIROUTEA |= PORTMUX_TWI0_DEFAULT_gc; // pins PA2, PA3, (dual PC2, PC3)
 
         twi_mode = TWI_MODE_MASTER;
-
         master_bytesRead = 0;
         master_bytesWritten = 0;
         master_trans_status = TWIM_STATUS_READY;
@@ -124,20 +123,21 @@ void TWI_MasterInit(uint32_t frequency)
 void TWI_SlaveInit(uint8_t address)
 {
     if(twi_mode != TWI_MODE_UNKNOWN) return;
-    
+
     twi_mode = TWI_MODE_SLAVE;
-    
+
     slave_bytesRead = 0;
     slave_bytesWritten = 0;
     slave_trans_status = TWIS_STATUS_READY;
     slave_result = TWIS_RESULT_UNKNOWN;
     slave_callUserRequest = 0;
     slave_callUserReceive = 0;
-    
+
     TWI0.SADDR = address << 1;    
     TWI0.SCTRLA = TWI_DIEN_bm | TWI_APIEN_bm | TWI_PIEN_bm  | TWI_ENABLE_bm;
-    
-    // Dual Control Enable bit mask so the slave will operate simultaneously with master
+
+    // Dual Control Enable bit allows slave to operate simultaneously with master 
+    // however with this setup the slave mode is exclusive, e.g. master is locked out.
     TWI0.MCTRLA = TWI_ENABLE_bm;
 }
 
@@ -411,8 +411,6 @@ void TWI_SlaveAddressMatchHandler(){
         slave_callUserReceive = 1;
         twi_mode = TWI_MODE_SLAVE_RECEIVE;
     }
-    
-    /* Data interrupt to follow... */
 }
 
 /* 
@@ -450,7 +448,7 @@ void TWI_SlaveTransactionFinished(uint8_t result)
     TWI0.SCTRLA |= (TWI_APIEN_bm | TWI_PIEN_bm);
     twi_mode = TWI_MODE_SLAVE;
     slave_result = result;
-    slave_trans_status = TWIM_STATUS_READY;
+    slave_trans_status = TWIS_STATUS_READY;
 }
 
 ISR(TWI0_TWIM_vect) {

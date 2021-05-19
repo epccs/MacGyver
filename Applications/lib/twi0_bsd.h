@@ -38,6 +38,7 @@ typedef enum TWI0_RD_enum
 {
     TWI0_RD_TRANSACTION_STARTED, // Transaction started
     TWI0_RD_TO_MUCH_DATA, // to much data
+    TWI0_RD_WRONG_MODE, // not master or dual
     TWI0_RD_NOT_READY // TWI state machine not ready for use
 } TWI0_RD_t;
 
