@@ -47,9 +47,9 @@ done: removed interleaving buffer twi0_slaveRxBufferA twi0_slaveRxBufferB use tw
 typedef enum TWI_MODE_enum {
     TWI_MODE_UNKNOWN,
     TWI_MODE_MASTER,
-    TWI_MODE_DUAL
-    //TWI_MODE_MASTER_TRANSMIT,
-    //TWI_MODE_MASTER_RECEIVE,
+    TWI_MODE_DUAL,
+    TWI_MODE_MASTER_TRANSMIT,
+    TWI_MODE_MASTER_RECEIVE
     //TWI_MODE_SLAVE_TRANSMIT,
     //TWI_MODE_SLAVE_RECEIVE
 } TWI_MODE_t;
@@ -205,7 +205,7 @@ ISR(TWI0_TWIM_vect)
         master_trans_status = TWIM_STATUS_READY;
     }
 
-    // master write 
+    // master write interrupt
     else if (currentStatus & TWI_WIF_bm) 
     {
         // Local variables used in if tests to avoid compiler warning.
@@ -232,7 +232,7 @@ ISR(TWI0_TWIM_vect)
 
         // acknowledged (ACK) by slave, If more bytes to write then send next.
         else if (master_bytesWritten < local_bytesToWrite) {
-            if (master_writeData == NULL) { // array points to null which is not valid
+            /*if (master_writeData == NULL) { // array points to null which is not valid
                 master_bytesToWrite = 0;
                 twi0_error = TWI_ERROR_MT_DATA_MISSING;
                 TWI0.MCTRLB = TWI_MCMD_STOP_gc;
@@ -242,16 +242,19 @@ ISR(TWI0_TWIM_vect)
                 twim_mode = TWIM_MODE_ENABLE;
                 master_trans_status = TWIM_STATUS_READY;
             } else {
+            */
                 uint8_t data = master_writeData[master_bytesWritten];
                 TWI0.MDATA = data;
                 master_bytesWritten++;
-            }
+            /*}
+            */
         }
 
         // Acknowledged (ACK) by slave without more data to send. Maybe bytes to read?
         // i2c read frame looks like: START condition + (Address + 'R/_W = 1')
         else if (master_bytesRead < local_bytesToRead) 
         {
+            twi_mode = TWI_MODE_MASTER_RECEIVE;
             twim_mode = TWIM_MODE_RECEIVE;
             uint8_t readAddress = ADD_READ_BIT(master_slaveAddress);
             TWI0.MADDR = readAddress;
@@ -259,7 +262,7 @@ ISR(TWI0_TWIM_vect)
 
         // transaction finished, send STOP or REPSTART condition and set RESULT OK.
         else {
-            if(master_sendStop) {
+            if(master_sendStop) { // The receiving unit will ACK or NACK what is writen
                 TWI0.MCTRLB = TWI_MCMD_STOP_gc;
             } else {
                 TWI0.MCTRLB = TWI_MCMD_REPSTART_gc;
@@ -496,7 +499,15 @@ void twi0_init(uint32_t bitrate, TWI0_PINS_t pull_up)
     }
     else
     {
-        if(twim_mode != TWIM_MODE_UNKNOWN) return;
+        if(twim_mode != TWIM_MODE_UNKNOWN) 
+        {
+            // disable twi module befor changing bitrate
+            TWI0.MCTRLA = 0x00;
+            TWI0.MBAUD = 0x00;
+            TWI0.MSTATUS = TWI_BUSSTATE_IDLE_gc;
+            TWI0.SADDR = 0x00;
+            TWI0.SCTRLA = 0x00;
+        }
 
         // initialize state machine
         twim_mode = TWIM_MODE_ENABLE;
@@ -563,19 +574,11 @@ TWI0_WRT_t twi0_masterAsyncWrite(uint8_t slave_address, uint8_t *write_data, uin
         master_sendStop = send_stop;
         master_slaveAddress = slave_address<<1;
 
-        // Write command, send the START condition + Address + 'R/_W = 0'
-        if (master_bytesToWrite > 0) 
-        {
-            twim_mode = TWIM_MODE_TRANSMIT;
-            uint8_t writeAddress = ADD_WRITE_BIT(master_slaveAddress);
-            TWI0.MADDR = writeAddress;
-        }
-        else // ping
-        {
-            twim_mode = TWIM_MODE_TRANSMIT;
-            uint8_t writeAddress = ADD_WRITE_BIT(master_slaveAddress);
-            TWI0.MADDR = writeAddress;
-        }
+        // Write/Ping command, send the START condition + Address + 'R/_W = 0'
+        twi_mode = TWI_MODE_MASTER_TRANSMIT;
+        twim_mode = TWIM_MODE_TRANSMIT;
+        uint8_t writeAddress = ADD_WRITE_BIT(master_slaveAddress);
+        TWI0.MADDR = writeAddress;
 
         twi0_error = TWI_ERROR_NONE;
         return TWI0_WRT_TRANSACTION_STARTED;
@@ -706,12 +709,14 @@ TWI0_RD_t twi0_masterAsyncRead(uint8_t slave_address, uint8_t bytes_to_read, TWI
 
         // Read command, send the START condition + Address + 'R/_W = 1'
         if (master_bytesToRead > 0) {
+            twi_mode = TWI_MODE_MASTER_RECEIVE;
             twim_mode = TWIM_MODE_RECEIVE;
             uint8_t readAddress = ADD_READ_BIT(master_slaveAddress);
             TWI0.MADDR = readAddress;
         }
          else // ping
         {
+            twi_mode = TWI_MODE_MASTER_TRANSMIT;
             twim_mode = TWIM_MODE_TRANSMIT;
             uint8_t writeAddress = ADD_WRITE_BIT(master_slaveAddress);
             TWI0.MADDR = writeAddress;

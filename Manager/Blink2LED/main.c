@@ -23,7 +23,7 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 #include "../lib/uart1_bsd.h"
 #include "../lib/io_enum_bsd.h"
 #include "../lib/timers_bsd.h"
-#include "../lib/twi0_bsd.h"
+#include "../lib/twi0_mc.h"
 
 #define BLINK_DELAY 1000UL
 unsigned long blink_started_at;
@@ -54,7 +54,8 @@ void abort_safe(void)
     ioWrite(MCU_IO_MGR_LED,LOGIC_LEVEL_LOW);
     // flush the UART befor halt
     uart1_flush();
-    twi0_init(0, TWI0_PINS_FLOATING); // disable I2C0
+    //twi0_init(0, TWI0_PINS_FLOATING); // disable I2C0 with twi0_bsd lib
+    TWI_MasterInit(0); // disable I2C0 with twi0_mc lib
     _delay_ms(20); // wait for last byte to send
     uart1_init(0, 0); // disable UART hardware 
     // turn off interrupts and then spin loop a LED toggle 
@@ -66,8 +67,7 @@ void abort_safe(void)
     }
 }
 
-
-static uint8_t slave_addr = 42; // address I have been using for host to connect with the manager on SMBus
+static uint8_t slave_addr = 0x2A; // 42 is address I have been using on manager for host to connect (SMBus)
 
 static uint8_t localBuffer[TWI0_BUFFER_LENGTH];
 static uint8_t localBufferLength;
@@ -82,12 +82,12 @@ static uint8_t twi0_slave_status_cpy;
 void twi0_transmit_callback(void)
 {
     twi0_slave_status_cpy = TWI0.SSTATUS;
-    twi0_fillSlaveTxBuffer(localBuffer, localBufferLength);
+    TWI_fillSlaveTxBuffer(localBuffer, localBufferLength);
     return;
 }
 
 // When the ISR has finished receiving data it will run this callback.
-// The pointer to data is what the ISR's location for twi0_slaveRxBuffer,
+// The pointer to data is what the ISR's location for TWI_slaveRxBuffer,
 // which we need to copy. We also need a copy of the length (or bytes received) 
 // that it has provided.
 // If the monitor is running, and printing is done, as well as UART available
@@ -124,12 +124,12 @@ void setup(void)
     initTimers();
 
     /* Initialize I2C master*/
-    twi0_init(100000UL, TWI0_PINS_PULLUP); // twi0_bsd
+    TWI_MasterInit(100000UL); // twi0_mc
 
     /* Initialize I2C slave*/
-    twi0_registerSlaveRxCallback(twi0_receive_callback);
-    twi0_registerSlaveTxCallback(twi0_transmit_callback);
-    twi0_slaveAddress(slave_addr); // register callbacks first
+    TWI_attachSlaveRxEvent(twi0_receive_callback); // twi0_mc
+    TWI_attachSlaveTxEvent(twi0_transmit_callback); // twi0_mc
+    TWI_SlaveInit(slave_addr); // twi0_mc
 
     sei(); // Enable global interrupts to start TIMER0
     

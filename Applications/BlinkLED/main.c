@@ -63,8 +63,8 @@ void abort_safe(void)
     ioWrite(MCU_IO_TX2,LOGIC_LEVEL_LOW);
     // flush the UART befor halt
     uart0_flush();
-    //TWI_MasterInit(0); // disable
-    twi0_init(0, TWI0_PINS_FLOATING); // disable
+    //TWI_MasterInit(0); // disable I2C0 with twi0_mc lib
+    twi0_init(0, TWI0_PINS_FLOATING); // disable I2C0 with twi0_bsd lib
     _delay_ms(20); // wait for last byte to send
     uart0_init(0, 0); // disable UART hardware
     // turn off interrupts and then spin loop a LED toggle
