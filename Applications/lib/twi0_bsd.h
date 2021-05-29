@@ -5,7 +5,7 @@
 // TWI0 master(dual)/slave on PA2:PA3/PC2:PC3 use PORTMUX.TWIROUTEA |= PORTMUX_TWI0_DEFAULT_gc
 // TWI0 master(dual)/slave on PA2:PA3/PC6:PC7 use PORTMUX.TWIROUTEA |= PORTMUX_TWI0_ALT1_gc
 // TWI0 master(dual)/slave on PC2:PC3/PC6:PC7 use PORTMUX.TWIROUTEA |= PORTMUX_TWI0_ALT2_gc
-#define TWI0_MUX PORTMUX_TWI0_DEFAULT_gc
+#define TWI0_MUX PORTMUX_TWI0_ALT2_gc
 #define TWI0_SDA_PIN MCU_IO_SDA0
 #define TWI0_SCL_PIN MCU_IO_SCL0
 
@@ -120,6 +120,6 @@ uint8_t twi0_masterWriteRead(uint8_t slave_address, uint8_t* write_data, uint8_t
 
 uint8_t twi0_slaveAddress(uint8_t slave);
 uint8_t twi0_fillSlaveTxBuffer(const uint8_t* slave_data, uint8_t bytes_to_send);
-void twi0_registerSlaveRxCallback( void (*function)(uint8_t*, uint8_t) );
+void twi0_registerSlaveRxCallback( void (*function)(uint8_t* data, uint8_t length) );
 void twi0_registerSlaveTxCallback( void (*function)(void) );
 

@@ -52,9 +52,9 @@ static volatile TWI_MODE_t twi_mode;
 typedef enum TWIM_MODE_enum
 {
     TWIM_MODE_UNKNOWN,
-    TWIM_MODE_ENABLE,
-    TWIM_MODE_TRANSMIT,
-    TWIM_MODE_RECEIVE
+    TWIM_MODE_ENABLE, // master ready to start Rx/Tx
+    TWIM_MODE_TRANSMIT, // master is doing Tx
+    TWIM_MODE_RECEIVE // master is doing Rx
 } TWIM_MODE_t;
 
 static volatile TWIM_MODE_t twim_mode;
@@ -63,9 +63,9 @@ static volatile TWIM_MODE_t twim_mode;
 typedef enum TWIS_MODE_enum 
 {
     TWIS_MODE_UNKNOWN,
-    TWIS_MODE_ENABLE,
-    TWIS_MODE_TRANSMIT,
-    TWIS_MODE_RECEIVE
+    TWIS_MODE_ENABLE, // slave ready for Rx/Tx event
+    TWIS_MODE_TRANSMIT, // slave is doing Tx event
+    TWIS_MODE_RECEIVE // slave is doing Rx event
 } TWIS_MODE_t;
 
 static volatile TWIS_MODE_t twis_mode;
@@ -263,7 +263,7 @@ ISR(TWI0_TWIM_vect) {
             } else {
                 TWI0.MCTRLB = TWI_ACKACT_bm | TWI_MCMD_REPSTART_gc;
             }
-            
+
             twi0_MasterTransactionFinished(TWI0M_RESULT_BUFFER_OVERFLOW);
             master_bytesToRead = 0;
             return;
@@ -446,6 +446,7 @@ void twi0_init(uint32_t bitrate, TWI0_PINS_t pull_up)
         ioCntl(TWI0_SCL_PIN, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
         ioCntl(TWI0_SDA_PIN, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
         twim_mode = TWIM_MODE_UNKNOWN;
+        twi_mode = TWI_MODE_UNKNOWN;
     } else {
         if(twim_mode != TWIM_MODE_UNKNOWN) { //disable twi module befor changing frequency
             TWI0.MCTRLA = 0x00;
@@ -473,6 +474,7 @@ void twi0_init(uint32_t bitrate, TWI0_PINS_t pull_up)
         }
 
         twi_mode = TWI_MODE_MASTER;
+        twim_mode = TWIM_MODE_UNKNOWN;
         master_bytesRead = 0;
         master_bytesWritten = 0;
         master_trans_status = TWI0M_STATUS_READY;
@@ -830,9 +832,9 @@ uint8_t twi0_masterWriteRead(uint8_t slave_address, uint8_t* write_data, uint8_t
     
 }
 
-// init slave with a valid address (0x08..0x77), otherwise slave hardware is disabled
-// slave is dual mode, both master and slave should be able to run
-// return address if set
+// Init slave with a valid address (0x08..0x77), otherwise slave hardware is disabled.
+// Must be in master mode first, this will start dual mode where both master and slave run togather.
+// Returns address if dual mode successful.
 uint8_t twi0_slaveAddress(uint8_t slave)
 {
     if( (twi_mode != TWI_MODE_MASTER) || (twi_mode != TWI_MODE_DUAL) )return 0; // I want a multi-master. Starting master first seems like the most straightforward logistical approach.
@@ -854,7 +856,7 @@ uint8_t twi0_slaveAddress(uint8_t slave)
         // allow the Address or Stop Interrupt Flag (APIF) in the Slave Status (TWIn.SSTATUS) register to be set when a Stop condition occurs
         TWI0.SCTRLA = TWI_DIEN_bm | TWI_APIEN_bm | TWI_PIEN_bm  | TWI_ENABLE_bm;
         
-        // Dual Control Enable bit mask which should allow the slave to operate simultaneously with master
+        // Dual Control Enable bit allows the slave to operate simultaneously with master
         TWI0.MCTRLA = TWI_ENABLE_bm;
         return slave;
     } else { // turn off all Slave Control A bits so only master hardware is running
