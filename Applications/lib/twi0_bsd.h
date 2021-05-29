@@ -2,12 +2,20 @@
 
 #define TWI0_BUFFER_LENGTH 32
 
-// Some SMBus devices (Raspberry Pi Zero) can not handle clock stretching.
-// An interleaving receive buffer allwows the callback to save a pointer
-// to the buffer and swap to another buffer in ISR thread.
-// The main thread loop has to notice and process the twi buffer befor 
-// the next transaction is done.  
-//#define TWI0_SLAVE_RX_BUFFER_INTERLEAVING
+// TWI0 master(dual)/slave on PA2:PA3/PC2:PC3 use PORTMUX.TWIROUTEA |= PORTMUX_TWI0_DEFAULT_gc
+// TWI0 master(dual)/slave on PA2:PA3/PC6:PC7 use PORTMUX.TWIROUTEA |= PORTMUX_TWI0_ALT1_gc
+// TWI0 master(dual)/slave on PC2:PC3/PC6:PC7 use PORTMUX.TWIROUTEA |= PORTMUX_TWI0_ALT2_gc
+#define TWI0_MUX PORTMUX_TWI0_DEFAULT_gc
+#define TWI0_SDA_PIN MCU_IO_SDA0
+#define TWI0_SCL_PIN MCU_IO_SCL0
+
+/*! Transaction status defines. */
+#define TWI0M_STATUS_READY              0
+#define TWI0M_STATUS_BUSY               1
+
+/* Transaction status defines.*/
+#define TWI0S_STATUS_READY                0
+#define TWI0S_STATUS_BUSY                 1
 
 typedef enum TWI0_PINS_enum
 {

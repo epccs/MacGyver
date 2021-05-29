@@ -23,8 +23,7 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 #include "../lib/uart0_bsd.h"
 #include "../lib/io_enum_bsd.h"
 #include "../lib/timers_bsd.h"
-#include "../lib/twi0_bsd.h"
-//#include "../lib/twi0_mc.h"
+#include "../lib/twi0_mc.h"
 
 #define BLINK_DELAY 1000UL
 unsigned long blink_started_at;
@@ -46,7 +45,7 @@ void blink(void)
             uint8_t mgr_address = 41; //the address I have been useing for the manager (from the application MCU, the host would use 42)
             uint8_t data[] = {'a'};
             uint8_t length = 1;
-            twi0_masterBlockingWrite(mgr_address, data, length, TWI0_PROTOCALL_STOP);
+            TWI_MasterWrite(mgr_address,data,length,1);
         }
         
         // next toggle 
@@ -62,7 +61,7 @@ void abort_safe(void)
     ioWrite(MCU_IO_TX2,LOGIC_LEVEL_LOW);
     // flush the UART befor halt
     uart0_flush();
-    twi0_init(0, TWI0_PINS_FLOATING); // disable I2C0 with twi0_bsd lib
+    TWI_MasterInit(0); // disable I2C0 with twi0_mc lib
     _delay_ms(20); // wait for last byte to send
     uart0_init(0, 0); // disable UART hardware
     // turn off interrupts and then spin loop a LED toggle
@@ -87,7 +86,7 @@ void setup(void)
     initTimers();
 
     /* Initialize I2C*/
-    twi0_init(100000UL, TWI0_PINS_PULLUP); // twi0_bsd
+    TWI_MasterInit(100000UL); // twi0_mc
 
     sei(); // Enable global interrupts to start TIMER0
     
@@ -100,7 +99,7 @@ void setup(void)
     uint8_t mgr_address = 41;
     uint8_t data[] = {108};
     uint8_t length = 1;
-    twi0_masterBlockingWrite(mgr_address, data, length, TWI0_PROTOCALL_STOP);
+    TWI_MasterWrite(mgr_address,data,length,1);
 }
 
 int main(void)

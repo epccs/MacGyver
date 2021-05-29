@@ -24,8 +24,12 @@
 
 #include "avr/io.h"
 
-// TWI_MASTER on PA3:PA2
-#define TWI_MUX 0
+#define TWI0_BUFFER_LENGTH 32
+
+// TWI0 master(dual)/slave on PA2:PA3/PC2:PC3 use PORTMUX.TWIROUTEA |= PORTMUX_TWI0_DEFAULT_gc
+// TWI0 master(dual)/slave on PA2:PA3/PC6:PC7 use PORTMUX.TWIROUTEA |= PORTMUX_TWI0_ALT1_gc
+// TWI0 master(dual)/slave on PC2:PC3/PC6:PC7 use PORTMUX.TWIROUTEA |= PORTMUX_TWI0_ALT2_gc
+#define TWI0_MUX PORTMUX_TWI0_DEFAULT_gc
 
 // no correction today, needs 32k crystal and a clue
 #define F_CPU_CORRECTED F_CPU
@@ -76,7 +80,6 @@ typedef enum TWI_MODE_enum {
 #define ADD_WRITE_BIT(address)  (address & ~0x01)
 
 void TWI_MasterInit(uint32_t frequency);
-void TWI_SlaveInit(uint8_t address);
 void TWI_Flush(void);
 TWI_BUSSTATE_t TWI_MasterState(void);
 uint8_t TWI_MasterReady(void);
@@ -96,9 +99,12 @@ uint8_t TWI_MasterWriteRead(uint8_t slave_address,
                          uint8_t send_stop);
 void TWI_MasterTransactionFinished(uint8_t result);
 
+uint8_t TWI_SlaveInit(uint8_t address);
 void TWI_SlaveAddressMatchHandler(void);
-void TWI_attachSlaveRxEvent( void (*function)(int), uint8_t *read_data, uint8_t bytes_to_read );
-void TWI_attachSlaveTxEvent( uint8_t (*function)(void), uint8_t *write_data );
 void TWI_SlaveTransactionFinished(uint8_t result);
+uint8_t TWI_fillSlaveTxBuffer(const uint8_t* slave_data, uint8_t bytes_to_send);
+void TWI_attachSlaveRxEvent( void (*function)(uint8_t* data, uint8_t length) );
+void TWI_attachSlaveTxEvent( void (*function)(void) );
+
 
 #endif /* TWI_DRIVER_H */

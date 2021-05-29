@@ -2,11 +2,11 @@
 
 ## To Do
 
-i2c_bsd master locked up, looking for the issue (I will use fprintf to see if it is init or the first write).
+i2c_mc is OK as master but its slave does not work, looking for the issue.
 
 ## Overview
 
-Kick the tires.
+Kick the tires using i2c_mc.
 
 ## Firmware Upload
 

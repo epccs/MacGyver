@@ -29,6 +29,7 @@
  https://www.avrfreaks.net/forum/arduino-twi-module-adapted-mega0-and-as7
  */
 #include <stdbool.h>
+#include <stddef.h>
 #include <avr/interrupt.h>
 #include "twi0_mc.h"
 #include "io_enum_bsd.h"
@@ -46,10 +47,9 @@ static volatile uint8_t  master_trans_status;                       /*!< Status 
 static volatile uint8_t  master_result;                             /*!< Result of transaction */
 
 /* Slave variables */
-static uint8_t (*TWI_onSlaveTransmit)(void) __attribute__((unused));
-static void (*TWI_onSlaveReceive)(int) __attribute__((unused));
+static uint8_t TWI_slaveTxBuffer[TWI0_BUFFER_LENGTH];
+static uint8_t TWI_slaveRxBuffer[TWI0_BUFFER_LENGTH];
 static volatile uint8_t* slave_writeData;
-static volatile uint8_t* slave_readData;
 static volatile uint8_t  slave_bytesToWrite;
 static volatile uint8_t  slave_bytesWritten;
 static volatile uint8_t  slave_bytesToRead;
@@ -97,56 +97,34 @@ void TWI_MasterInit(uint32_t frequency)
             TWI0.SADDR = 0x00;
             TWI0.SCTRLA = 0x00;
         }
-        
+
+        // initialize state machine
+        twi_mode = TWI_MODE_MASTER;
+
+        // TWIn.DUALCTRL register can configure which pins are used for dual or split (master and slave)
+        uint8_t temp_twiroutea = PORTMUX.TWIROUTEA & ~PORTMUX_TWI0_gm;
+        PORTMUX.TWIROUTEA = temp_twiroutea | TWI0_MUX; // PORTMUX_TWI0_ALT2_gc
+
         ioDir(MCU_IO_SDA0, DIRECTION_INPUT);
         ioDir(MCU_IO_SCL0, DIRECTION_INPUT);
+
 #ifdef NO_EXTERNAL_I2C_PULLUP
         ioCntl(MCU_IO_SDA0,PORT_ISC_INTDISABLE_gc,PORT_PULLUP_ENABLE,PORT_INVERT_NORMAL);
         ioCntl(MCU_IO_SCL0,PORT_ISC_INTDISABLE_gc,PORT_PULLUP_ENABLE,PORT_INVERT_NORMAL);
 #endif
-        PORTMUX.TWIROUTEA |= PORTMUX_TWI0_DEFAULT_gc; // pins PA2, PA3, (dual PC2, PC3)
 
-        twi_mode = TWI_MODE_MASTER;
         master_bytesRead = 0;
         master_bytesWritten = 0;
         master_trans_status = TWIM_STATUS_READY;
         master_result = TWIM_RESULT_UNKNOWN;
 
-        /* dual contorl mode "TWI0.DUALCTRL = TWI_ENABLE_bm" can be used to put slave on PC2 and PC3 */
+        /* dual contorl mode is used to split the functions, thus master on PC2 and PC3; slave on PC6,PC7
+           TWI0.DUALCTRL = TWI_ENABLE_bm; // but I want both on PC2 and PC3
+           enable twi module, acks, and twi interrupt */
         TWI0.MCTRLA = TWI_RIEN_bm | TWI_WIEN_bm | TWI_ENABLE_bm;
         TWI_MasterSetBaud(frequency);
         TWI0.MSTATUS = TWI_BUSSTATE_IDLE_gc;
     }
-}
-
-/*! \brief Initialize the TWI module as a slave.
- *
- *  TWI slave initialization function.
- *  Enables slave address/stop and data interrupts.
- *  Assigns slave's own address.
- *  Remember to enable interrupts globally from the main application.
- *
- *  \param address                    The TWI Slave's own address.
- */
-void TWI_SlaveInit(uint8_t address)
-{
-    if(twi_mode != TWI_MODE_UNKNOWN) return;
-
-    twi_mode = TWI_MODE_SLAVE;
-
-    slave_bytesRead = 0;
-    slave_bytesWritten = 0;
-    slave_trans_status = TWIS_STATUS_READY;
-    slave_result = TWIS_RESULT_UNKNOWN;
-    slave_callUserRequest = 0;
-    slave_callUserReceive = 0;
-
-    TWI0.SADDR = address << 1;    
-    TWI0.SCTRLA = TWI_DIEN_bm | TWI_APIEN_bm | TWI_PIEN_bm  | TWI_ENABLE_bm;
-
-    // Dual Control Enable bit allows slave to operate simultaneously with master 
-    // however with this setup the slave mode is exclusive, e.g. master is locked out.
-    TWI0.MCTRLA = TWI_ENABLE_bm;
 }
 
 void TWI_Flush(void){
@@ -193,7 +171,7 @@ uint8_t TWI_MasterReady(void)
  *
  *  Sets the SCL clock rate used by TWI Master.
  *
- *  \param f_scl                    The SCL clock rate.
+ *  \param f_scl   The SCL clock rate.
  */
 void TWI_MasterSetBaud(uint32_t f_scl){
 
@@ -393,6 +371,83 @@ void TWI_MasterTransactionFinished(uint8_t result)
     twi_mode = TWI_MODE_MASTER;
 }
 
+// used to initalize the slave Transmit function in case it is not used.
+void TWI_transmit_default(void)
+{
+    // In a real callback, the data to send needs to be copied from a local buffer.
+    // uint8_t return_code = TWI_fillSlaveTxBuffer(localBuffer, localBufferLength);
+
+    // this default puts a NUL byte in the buffer and bypasses the provided function
+    slave_bytesToWrite = 1;
+    TWI_slaveTxBuffer[0] = 0x00;
+    return;
+}
+
+// used to initalize the slave Receive function in case is not used.
+void TWI_receive_default(uint8_t *data, uint8_t length)
+{
+    // In a real callback, the data to send needs to be copied to a local buffer.
+    // 
+    // for(int i = 0; i < length; ++i)
+    // {
+    //     localBuffer[i] = data[i];
+    // }
+    //
+    // the receive event happens once after the I2C stop or repeated-start
+    //
+    // repeated-start is usd for atomic bus operation e.g. prevents others from using bus
+    return;
+}
+
+typedef void (*PointerToTransmit)(void);
+typedef void (*PointerToReceive)(uint8_t*, uint8_t);
+static PointerToTransmit TWI_onSlaveTransmit = TWI_transmit_default;
+static PointerToReceive TWI_onSlaveReceive = TWI_receive_default;
+
+/*! \brief Initialize the TWI module as a slave.
+ *
+ *  TWI slave initialization function.
+ *  Enables slave address/stop and data interrupts.
+ *  Assigns slave's own address.
+ *  Remember to enable interrupts globally from the main application.
+ *
+ *  \param address   The address (range: 0x8..0x77) TWI Slave will use.
+ */
+uint8_t TWI_SlaveInit(uint8_t address)
+{
+    if(twi_mode != TWI_MODE_UNKNOWN) return 0;
+    if( (address>=0x8) && (address<=0x77))
+    {
+        twi_mode = TWI_MODE_SLAVE;
+
+        slave_bytesRead = 0;
+        slave_bytesWritten = 0;
+        slave_trans_status = TWIS_STATUS_READY;
+        slave_result = TWIS_RESULT_UNKNOWN;
+        slave_callUserRequest = 0;
+        slave_callUserReceive = 0;
+
+        TWI0.SADDR = address << 1;
+        // enable an interrupt on the Data Interrupt Flag (DIF) from the Slave Status (TWIn.SSTATUS) register
+        // enable an interrupt on the Address or Stop Interrupt Flag (APIF) from the Slave Status (TWIn.SSTATUS) register
+        // allow the Address or Stop Interrupt Flag (APIF) in the Slave Status (TWIn.SSTATUS) register to be set when a Stop condition occurs
+        TWI0.SCTRLA = TWI_DIEN_bm | TWI_APIEN_bm | TWI_PIEN_bm  | TWI_ENABLE_bm;
+
+        // Dual Control Enable bit mask which should allow the slave to operate simultaneously with master
+        TWI0.MCTRLA = TWI_ENABLE_bm;
+        return address;
+    }
+    else
+    {
+        // turn off all Slave Control A bits so only master hardware is running
+        TWI0.SCTRLA = 0;
+        twi_mode = TWI_MODE_UNKNOWN;
+        TWI_onSlaveTransmit = TWI_transmit_default;
+        TWI_onSlaveReceive = TWI_receive_default;
+        return 0;
+    }
+}
+
 /*! \brief TWI slave address interrupt handler.
  *
  *  This is the slave address match handler that takes care of responding to
@@ -410,7 +465,7 @@ void TWI_SlaveAddressMatchHandler(){
     if(TWI0.SSTATUS & TWI_DIR_bm){
         slave_bytesWritten = 0;
         /* Call user function  */
-        slave_bytesToWrite = TWI_onSlaveTransmit();    
+        TWI_onSlaveTransmit(); // slave_bytesToWrite is saved durring TWI_fillSlaveTxBuffer
         twi_mode = TWI_MODE_SLAVE_TRANSMIT;
     } 
     /* If Master Write/Slave Read */
@@ -421,35 +476,11 @@ void TWI_SlaveAddressMatchHandler(){
     }
 }
 
-/* 
- * Function twi_attachSlaveRxEvent
- * Desc     sets function called before a slave read operation
- * Input    function: callback function to use
- * Output   none
- */
-void TWI_attachSlaveRxEvent( void (*function)(int), uint8_t *read_data, uint8_t bytes_to_read ){
-  TWI_onSlaveReceive = function;
-  slave_readData = read_data;
-  slave_bytesToRead = bytes_to_read;
-}
-
-/* 
- * Function twi_attachSlaveTxEvent
- * Desc     sets function called before a slave write operation
- * Input    function: callback function to use
- * Output   none
- */
-void TWI_attachSlaveTxEvent( uint8_t (*function)(void), uint8_t* write_data ){
-  TWI_onSlaveTransmit = function;
-  slave_writeData = write_data;
-}
-
-
 /*! \brief TWI slave transaction finished handler.
  *
  *  Prepares module for new transaction.
  *
- *  \param result  The result of the operation.
+ *  \param result  Save the result of the operation.
  */
 void TWI_SlaveTransactionFinished(uint8_t result)
 {
@@ -459,27 +490,79 @@ void TWI_SlaveTransactionFinished(uint8_t result)
     slave_trans_status = TWIS_STATUS_READY;
 }
 
+/* \brief TWI slave transmit transaction helper.
+ * Desc     fill TWI_slaveTxBuffer, normaly need done durring transmit event.
+ * Input    data location and length.
+ * Output   0: OK, 1: bytes_to_send is to much for buffer, 2: TWI state machine is not in slave mode
+ */
+uint8_t TWI_fillSlaveTxBuffer(const uint8_t* slave_data, uint8_t bytes_to_send)
+{
+    if(TWI0_BUFFER_LENGTH < bytes_to_send)
+    {
+        return 1;
+    }
+
+    for(uint8_t i = 0; i < bytes_to_send; ++i)
+    {
+        TWI_slaveTxBuffer[i] = slave_data[i];
+    }
+    slave_bytesToWrite = bytes_to_send;
+
+    return 0;
+}
+
+
+/* 
+ * Function twi_attachSlaveRxEvent
+ * Desc     sets (or registers callback) function used when a slave read operation occurs.
+ * Input    record callback to use durring a slave read operation
+ * Output   none
+ */
+void TWI_attachSlaveRxEvent( void (*function)(uint8_t* data, uint8_t length) ) {
+    if (function == NULL )
+    {
+        TWI_onSlaveReceive = TWI_receive_default;
+    }
+    else
+    {
+        TWI_onSlaveReceive = function;;
+    }
+}
+
+/* 
+ * Function twi_attachSlaveTxEvent
+ * Desc     record callback to use before a slave write operation
+ * Input    callback function, a NULL pointer will use the default callback.
+ * Output   none
+ */
+void TWI_attachSlaveTxEvent( void (*function)(void) ) {
+    if (function == NULL )
+    {
+        TWI_onSlaveTransmit = TWI_transmit_default;
+    }
+    else
+    {
+        TWI_onSlaveTransmit = function;
+    }
+}
+
 ISR(TWI0_TWIM_vect) {
     uint8_t currentStatus = TWI0.MSTATUS;
 
     /* If arbitration lost or bus error. */
     if ((currentStatus & TWI_ARBLOST_bm) || (currentStatus & TWI_BUSERR_bm)) {
-
         uint8_t currentStatus = TWI0.MSTATUS;
 
-        /* If bus error. */
-        if (currentStatus & TWI_BUSERR_bm) {
+        if (currentStatus & TWI_BUSERR_bm) { /* bus error */
             master_result = TWIM_RESULT_BUS_ERROR;
-        }
-        /* If arbitration lost. */
-        else {
+        } else { /* arbitration lost */
             master_result = TWIM_RESULT_ARBITRATION_LOST;
         }
 
         /* Clear all flags, abort operation */
         TWI0.MSTATUS = currentStatus;
 
-        /* Wait for a new operation */    
+        /* Wait for a new operation */
         twi_mode = TWI_MODE_MASTER;
         master_trans_status = TWIM_STATUS_READY;
     }
@@ -593,7 +676,7 @@ ISR(TWI0_TWIS_vect){
          * This should be hit when there is a STOP or REPSTART 
          */
         if(slave_callUserReceive == 1){
-            TWI_onSlaveReceive(slave_bytesRead);
+            TWI_onSlaveReceive(TWI_slaveRxBuffer, slave_bytesRead);
             slave_callUserReceive = 0;
         }
         
@@ -661,7 +744,7 @@ ISR(TWI0_TWIS_vect){
                 /* If free space in buffer */
                 if(slave_bytesRead < slave_bytesToRead) {
                     uint8_t data = TWI0.SDATA; /* Fetch data */
-                    slave_readData[slave_bytesRead] = data;
+                    TWI_slaveRxBuffer[slave_bytesRead] = data;
                     slave_bytesRead++;
                     /* Send ACK and wait for data interrupt */
                     TWI0.SCTRLB = TWI_SCMD_RESPONSE_gc;
@@ -678,3 +761,4 @@ ISR(TWI0_TWIS_vect){
         TWI_SlaveTransactionFinished(TWIS_RESULT_FAIL);
     }
 }
+
