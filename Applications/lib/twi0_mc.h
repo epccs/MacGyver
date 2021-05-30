@@ -30,6 +30,8 @@
 // TWI0 master(dual)/slave on PA2:PA3/PC6:PC7 use PORTMUX.TWIROUTEA |= PORTMUX_TWI0_ALT1_gc
 // TWI0 master(dual)/slave on PC2:PC3/PC6:PC7 use PORTMUX.TWIROUTEA |= PORTMUX_TWI0_ALT2_gc
 #define TWI0_MUX PORTMUX_TWI0_DEFAULT_gc
+#define TWI0_SDA_PIN MCU_IO_SDA0
+#define TWI0_SCL_PIN MCU_IO_SCL0
 
 // no correction today, needs 32k crystal and a clue
 #define F_CPU_CORRECTED F_CPU

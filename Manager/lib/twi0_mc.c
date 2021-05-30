@@ -36,8 +36,8 @@
 
 /* Master variables */
 static volatile uint8_t  master_slaveAddress;                       /*!< Slave address */
-static volatile uint8_t* master_writeData;                          /*!< Data to write */
-static volatile uint8_t* master_readData;                           /*!< Read data */
+static volatile uint8_t *master_writeData;                          /*!< Data to write */
+static volatile uint8_t *master_readData;                           /*!< Read data */
 static volatile uint8_t  master_bytesToWrite;                       /*!< Number of bytes to write */
 static volatile uint8_t  master_bytesToRead;                        /*!< Number of bytes to read */
 static volatile uint8_t  master_bytesWritten;                       /*!< Number of bytes written */
@@ -49,7 +49,7 @@ static volatile uint8_t  master_result;                             /*!< Result 
 /* Slave variables */
 static uint8_t TWI_slaveTxBuffer[TWI0_BUFFER_LENGTH];
 static uint8_t TWI_slaveRxBuffer[TWI0_BUFFER_LENGTH];
-static volatile uint8_t* slave_writeData;
+static volatile uint8_t *slave_writeData;
 static volatile uint8_t  slave_bytesToWrite;
 static volatile uint8_t  slave_bytesWritten;
 static volatile uint8_t  slave_bytesToRead;
@@ -83,8 +83,8 @@ void TWI_MasterInit(uint32_t frequency)
         TWI0.SCTRLA = 0x00;
   
         // deactivate internal pullups for twi.
-        ioCntl(MCU_IO_MVIO_SCL0, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
-        ioCntl(MCU_IO_MVIO_SDA0, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
+        ioCntl(TWI0_SCL_PIN, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
+        ioCntl(TWI0_SDA_PIN, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
         twi_mode = TWI_MODE_UNKNOWN;
     }
     else
@@ -105,12 +105,12 @@ void TWI_MasterInit(uint32_t frequency)
         uint8_t temp_twiroutea = PORTMUX.TWIROUTEA & ~PORTMUX_TWI0_gm;
         PORTMUX.TWIROUTEA = temp_twiroutea | TWI0_MUX; // PORTMUX_TWI0_ALT2_gc
 
-        ioDir(MCU_IO_MVIO_SDA0, DIRECTION_INPUT);
-        ioDir(MCU_IO_MVIO_SCL0, DIRECTION_INPUT);
+        ioDir(TWI0_SDA_PIN, DIRECTION_INPUT);
+        ioDir(TWI0_SCL_PIN, DIRECTION_INPUT);
 
 #ifdef NO_EXTERNAL_I2C_PULLUP
-        ioCntl(MCU_IO_MVIO_SDA0,PORT_ISC_INTDISABLE_gc,PORT_PULLUP_ENABLE,PORT_INVERT_NORMAL);
-        ioCntl(MCU_IO_MVIO_SCL0,PORT_ISC_INTDISABLE_gc,PORT_PULLUP_ENABLE,PORT_INVERT_NORMAL);
+        ioCntl(TWI0_SDA_PIN,PORT_ISC_INTDISABLE_gc,PORT_PULLUP_ENABLE,PORT_INVERT_NORMAL);
+        ioCntl(TWI0_SCL_PIN,PORT_ISC_INTDISABLE_gc,PORT_PULLUP_ENABLE,PORT_INVERT_NORMAL);
 #endif
 
         master_bytesRead = 0;
@@ -173,8 +173,70 @@ uint8_t TWI_MasterReady(void)
  *
  *  \param f_scl   The SCL clock rate.
  */
-void TWI_MasterSetBaud(uint32_t f_scl){
+void TWI_MasterSetBaud(uint32_t frequency){
+    uint8_t restore = TWI0.MCTRLA;
+    if (restore & TWI_ENABLE_bm) {
+        TWI0.MCTRLA = 0; // The TWI master should be disabled while changing the baud rate
+    }
 
+    // Use (F_CPU/(2*frequency)) - (5 + (((F_CPU / 1000000) * t_rise) / 2000)) to calculate the baud rate with t_rise (max) in ns and the frequencies in Hz
+    uint16_t t_rise;
+    int16_t baud;
+
+    // The nonlinearity of the frequency coupled with the processor frequency a general offset has been calculated and tested for different frequency bands
+    #if F_CPU > 16000000
+    if (frequency <= 100000) {
+        TWI0.CTRLA &= ~TWI_FMPEN_bm; // Disable fast mode plus
+        t_rise = 1000;
+        baud = (F_CPU / (2 * frequency)) - (5 + (((F_CPU / 1000000) * t_rise) / 2000)) + 6; // Offset +6
+    } else if (frequency <= 400000) {
+        TWI0.CTRLA &= ~TWI_FMPEN_bm; // Disable fast mode plus
+        t_rise = 300;
+        baud = (F_CPU / (2 * frequency)) - (5 + (((F_CPU / 1000000) * t_rise) / 2000)) + 1; // Offset +1
+    } else if (frequency <= 800000) {
+        TWI0.CTRLA &= ~TWI_FMPEN_bm; // Disable fast mode plus
+        t_rise = 120;
+        baud = (F_CPU / (2 * frequency)) - (5 + (((F_CPU / 1000000) * t_rise) / 2000));
+    } else {
+        TWI0.CTRLA |= TWI_FMPEN_bm; // Enable fast mode plus
+        t_rise = 120;
+        baud = (F_CPU / (2 * frequency)) - (5 + (((F_CPU / 1000000) * t_rise) / 2000)) - 1; // Offset -1
+    }
+    #else
+    if (frequency <= 100000) {
+        TWI0.CTRLA &= ~TWI_FMPEN_bm; // Disable fast mode plus
+        t_rise = 1000;
+        baud = (F_CPU / (2 * frequency)) - (5 + (((F_CPU / 1000000) * t_rise) / 2000)) + 8; // Offset +8
+    } else if (frequency <= 400000) {
+        TWI0.CTRLA &= ~TWI_FMPEN_bm; // Disable fast mode plus
+        t_rise = 300;
+        baud = (F_CPU / (2 * frequency)) - (5 + (((F_CPU / 1000000) * t_rise) / 2000)) + 1; // Offset +1
+    } else if (frequency <= 800000) {
+        TWI0.CTRLA &= ~TWI_FMPEN_bm; // Disable fast mode plus
+        t_rise = 120;
+        baud = (F_CPU / (2 * frequency)) - (5 + (((F_CPU / 1000000) * t_rise) / 2000));
+    } else {
+        TWI0.CTRLA |= TWI_FMPEN_bm; // Enable fast mode plus
+        t_rise = 120;
+        baud = (F_CPU / (2 * frequency)) - (5 + (((F_CPU / 1000000) * t_rise) / 2000)) - 1; // Offset -1
+    }
+    #endif
+
+    if (baud < 1) {
+        baud = 1;
+    } else if (baud > 255) {
+        baud = 255;
+    }
+
+    TWI0.MBAUD = (uint8_t)baud;
+    if (restore & TWI_ENABLE_bm) {
+        TWI0.MCTRLA  = restore;
+        TWI0.MSTATUS = TWI_BUSSTATE_IDLE_gc;
+    }
+
+
+    
+    /* the old way: f_scl is now frequency
     uint16_t t_rise; // is determined by the bus impedance and pull-up, this is only a ball-park.
     
     if(f_scl < 200000)
@@ -199,8 +261,9 @@ void TWI_MasterSetBaud(uint32_t f_scl){
     }
     
     // from equation 2 DS40002183B-page 401
-    uint32_t baud = (F_CPU/(2*f_scl)) - ( (5 + (((F_CPU/1000)/1000)*t_rise)/1000 )/2 );
+    uint32_t baud = (F_CPU/(2*f_scl)) - ( (5 + ((F_CPU/1000000)*t_rise)/2000 )/2 );
     TWI0.MBAUD = (uint8_t)baud;
+    */
 }
 
 /*! \brief TWI write transaction.
@@ -240,7 +303,7 @@ uint8_t TWI_MasterWrite(uint8_t slave_address,
  *  \retval false If transaction could not be started.
  */
 uint8_t TWI_MasterRead(uint8_t slave_address,
-                    uint8_t* read_data,
+                    uint8_t *read_data,
                     uint8_t bytes_to_read,
                     uint8_t send_stop)
 {
@@ -279,9 +342,11 @@ uint8_t TWI_MasterWriteRead(uint8_t slave_address,
                          uint8_t bytes_to_read,
                          uint8_t send_stop)
 {
-    if(twi_mode != TWI_MODE_MASTER) return false;
+    if(twi_mode != TWI_MODE_MASTER) {
+        return false;
+    }
 
-    /*Initiate transaction if bus is ready. */
+    /* Initiate transaction if bus is ready. */
     if (master_trans_status == TWIM_STATUS_READY) {
         
         master_trans_status = TWIM_STATUS_BUSY;
@@ -294,12 +359,12 @@ uint8_t TWI_MasterWriteRead(uint8_t slave_address,
         master_bytesWritten = 0;
         master_bytesRead = 0;
         master_sendStop = send_stop;
-        master_slaveAddress = slave_address<<1;
+        master_slaveAddress = slave_address << 1;
 
 trigger_action:
 
         /* If write command, send the START condition + Address +
-         * 'R/_W = 0'
+           'R/_W = 0'
          */
         if (master_bytesToWrite > 0) {
             twi_mode = TWI_MODE_MASTER_TRANSMIT;
@@ -308,7 +373,7 @@ trigger_action:
         }
 
         /* If read command, send the START condition + Address +
-         * 'R/_W = 1'
+           'R/_W = 1'
          */
         else if (master_bytesToRead > 0) {
             twi_mode = TWI_MODE_MASTER_RECEIVE;
@@ -327,7 +392,7 @@ trigger_action:
 
         // in case of arbitration lost, retry sending
         if (master_result == TWIM_RESULT_ARBITRATION_LOST) {
-            goto trigger_action;
+            goto trigger_action; // return 4;
         }
 
         uint8_t ret = 0;
@@ -400,7 +465,7 @@ void TWI_receive_default(uint8_t *data, uint8_t length)
 }
 
 typedef void (*PointerToTransmit)(void);
-typedef void (*PointerToReceive)(uint8_t*, uint8_t);
+typedef void (*PointerToReceive)(uint8_t *, uint8_t);
 static PointerToTransmit TWI_onSlaveTransmit = TWI_transmit_default;
 static PointerToReceive TWI_onSlaveReceive = TWI_receive_default;
 
@@ -495,7 +560,7 @@ void TWI_SlaveTransactionFinished(uint8_t result)
  * Input    data location and length.
  * Output   0: OK, 1: bytes_to_send is to much for buffer, 2: TWI state machine is not in slave mode
  */
-uint8_t TWI_fillSlaveTxBuffer(const uint8_t* slave_data, uint8_t bytes_to_send)
+uint8_t TWI_fillSlaveTxBuffer(const uint8_t *slave_data, uint8_t bytes_to_send)
 {
     if(TWI0_BUFFER_LENGTH < bytes_to_send)
     {
@@ -518,7 +583,7 @@ uint8_t TWI_fillSlaveTxBuffer(const uint8_t* slave_data, uint8_t bytes_to_send)
  * Input    record callback to use durring a slave read operation
  * Output   none
  */
-void TWI_attachSlaveRxEvent( void (*function)(uint8_t* data, uint8_t length) ) {
+void TWI_attachSlaveRxEvent( void (*function)(uint8_t *data, uint8_t length) ) {
     if (function == NULL )
     {
         TWI_onSlaveReceive = TWI_receive_default;
