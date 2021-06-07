@@ -20,6 +20,9 @@
 // error codes UART_FRAME_ERROR, UART_OVERRUN_ERROR, UART_BUFFER_OVERFLOW, UART_NO_DATA
 extern volatile uint8_t UART0_error;
 
+// a FILE stream object, its address (&uartstream0_f) is returned by uart0_init
+extern FILE uartstream0_f;
+
 extern void uart0_flush(void);
 extern void uart0_empty(void);
 extern int uart0_available(void);

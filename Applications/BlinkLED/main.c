@@ -46,9 +46,15 @@ void blink(void)
             uint8_t mgr_address = 41; //the address I have been useing for the manager (from the application MCU, the host would use 42)
             uint8_t data[] = {'a'};
             uint8_t length = 1;
-            twi0_masterBlockingWrite(mgr_address, data, length, TWI0_PROTOCALL_STOP);
+            TWI0_WRT_t async_wrt = twi0_masterAsyncWrite(mgr_address, data, length, TWI0_PROTOCALL_STOP);
+            while (!uart0_availableForWrite());
+            if (async_wrt == 0) fprintf(uart0,"twi0 transaction started\r\n");
+            //if (async_wrt == 1) fprintf(uart0,"twi0 to much data\r\n");
+            //if (async_wrt == 2) fprintf(uart0,"twi0 wrong mode\r\n");
+            //if (async_wrt == 3) fprintf(uart0,"twi0 status is busy\r\n");
+            //if (async_wrt == 4) fprintf(uart0,"twi0 not ready\r\n");
         }
-        
+
         // next toggle 
         blink_started_at += blink_delay; 
     }
@@ -90,7 +96,7 @@ void setup(void)
     twi0_init(100000UL, TWI0_PINS_PULLUP); // twi0_bsd
 
     sei(); // Enable global interrupts to start TIMER0
-    
+
     // tick count is not milliseconds use cnvrt_milli() to convert time into ticks, thus tickAtomic()/cnvrt_milli(1000) gives seconds
     blink_started_at = tickAtomic();
     blink_delay = cnvrt_milli(BLINK_DELAY);
@@ -100,7 +106,13 @@ void setup(void)
     uint8_t mgr_address = 41;
     uint8_t data[] = {108};
     uint8_t length = 1;
-    twi0_masterBlockingWrite(mgr_address, data, length, TWI0_PROTOCALL_STOP);
+    TWI0_WRT_t async_wrt = twi0_masterAsyncWrite(mgr_address, data, length, TWI0_PROTOCALL_STOP);
+    while (!uart0_availableForWrite());
+    if (async_wrt == 0) fprintf(uart0,"twi0 transaction started\r\n");
+    if (async_wrt == 1) fprintf(uart0,"twi0 to much data\r\n");
+    if (async_wrt == 2) fprintf(uart0,"twi0 wrong mode\r\n");
+    if (async_wrt == 3) fprintf(uart0,"twi0 status is busy\r\n");
+    if (async_wrt == 4) fprintf(uart0,"twi0 not ready\r\n");
 }
 
 int main(void)

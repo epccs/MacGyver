@@ -28,6 +28,8 @@ typedef enum TWI0_WRT_enum
 {
     TWI0_WRT_TRANSACTION_STARTED, // Transaction started
     TWI0_WRT_TO_MUCH_DATA, // to much data
+    TWI0_WRT_WRONG_MODE, // not master or dual
+    TWI0_WRT_STATUS, // status is busy
     TWI0_WRT_NOT_READY // TWI state machine not ready for use
 } TWI0_WRT_t;
 
@@ -47,7 +49,9 @@ typedef enum TWI0_RD_enum
     TWI0_RD_TRANSACTION_STARTED, // Transaction started
     TWI0_RD_TO_MUCH_DATA, // to much data
     TWI0_RD_WRONG_MODE, // not master or dual
-    TWI0_RD_NOT_READY // TWI state machine not ready for use
+    TWI0_RD_STATUS, // status is busy
+    TWI0_RD_NOT_READY, // TWI state machine not ready for use
+    TWI0_RD_USE_WRT_TO_PING // TWI use write to ping
 } TWI0_RD_t;
 
 // TWI master read transaction status.

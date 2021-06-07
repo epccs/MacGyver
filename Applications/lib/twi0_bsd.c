@@ -28,6 +28,9 @@ done: removed interleaving buffer twi0_slaveRxBufferA twi0_slaveRxBufferB use tw
 #include <stddef.h>
 #include <avr/interrupt.h>
 #include <util/twi.h>
+// uart0_bsd is for debuging
+#include "uart0_bsd.h"
+#include "../lib/timers_bsd.h"
 #include "io_enum_bsd.h"
 #include "twi0_bsd.h"
 
@@ -457,7 +460,10 @@ void twi0_init(uint32_t bitrate, TWI0_PINS_t pull_up)
         }
 
         // initialize state machine
+        twi_mode = TWI_MODE_MASTER;
         twim_mode = TWIM_MODE_ENABLE;
+        master_trans_status = TWI0M_STATUS_READY;
+        master_result = TWI0M_RESULT_OK;
         twi0_protocall = TWI0_PROTOCALL_STOP & ~TWI0_PROTOCALL_REPEATEDSTART;
 
         // TWIn.DUALCTRL register can configure which pins are used for dual or split (master and slave)
@@ -473,12 +479,9 @@ void twi0_init(uint32_t bitrate, TWI0_PINS_t pull_up)
             ioCntl(TWI0_SDA_PIN, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_ENABLE, PORT_INVERT_NORMAL);
         }
 
-        twi_mode = TWI_MODE_MASTER;
-        twim_mode = TWIM_MODE_ENABLE;
+        // initialize buffers
         master_bytesRead = 0;
         master_bytesWritten = 0;
-        master_trans_status = TWI0M_STATUS_READY;
-        master_result = TWI0M_RESULT_OK;
 
         // dual contorl mode is used to split the functions, thus master on PC2 and PC3; slave on PC6,PC7
         // TWI0.DUALCTRL = TWI_ENABLE_bm; // but I want both on PC2 and PC3
@@ -492,43 +495,48 @@ void twi0_init(uint32_t bitrate, TWI0_PINS_t pull_up)
 // TWI Asynchronous Write Transaction, returns
 // 0 .. Transaction started, check status for success
 // 1 .. to much data, it did not fit in buffer
-// 2 .. TWI state machine not ready for use
+// 2 .. TWI wrong mode prob needs init
+// 3 .. TWI status is busy
+// 4 .. TWI not ready to start Rx/Tx
 TWI0_WRT_t twi0_masterAsyncWrite(uint8_t slave_address, uint8_t *write_data, uint8_t bytes_to_write, TWI0_PROTOCALL_t send_stop)
 {
-    if(twim_mode != TWIM_MODE_ENABLE) return TWI0_WRT_NOT_READY; // may be receving, writing or unknown
+    if (uart0_availableForWrite()) {
+        fprintf(&uartstream0_f,"TWI=%d TWIM=%d status=%d\r\n", twi_mode, twim_mode, master_trans_status);
+    }
+    if (!( (twi_mode == TWI_MODE_MASTER) || (twi_mode == TWI_MODE_DUAL)) ) return TWI0_WRT_WRONG_MODE;
 
-    if(master_trans_status == TWI0M_STATUS_READY) return TWI0_WRT_NOT_READY;
+    if ((twim_mode != TWIM_MODE_ENABLE)) return TWI0_WRT_NOT_READY;
 
-    if(bytes_to_write > TWI0_BUFFER_LENGTH) return TWI0_WRT_TO_MUCH_DATA;
+    if (master_trans_status != TWI0M_STATUS_READY) return TWI0_WRT_STATUS;
+
+    if (bytes_to_write > TWI0_BUFFER_LENGTH) return TWI0_WRT_TO_MUCH_DATA;
 
     // Initiate the new transaction if bus is ready
-    if (master_result == TWI0M_RESULT_UNKNOWN) { 
-        return TWI0_WRT_NOT_READY;
-    } else {
-        master_result = TWI0M_RESULT_UNKNOWN;
+    master_trans_status = TWI0M_STATUS_BUSY;
+    master_result = TWI0M_RESULT_UNKNOWN;
+    master_readData = NULL;
 
-        // buffer data so wright can return without blocking. NOT_READY until buffer is sent.
-        for(uint8_t i = 0; i < bytes_to_write; ++i) {
-            twi0_masterBuffer[i] = write_data[i];
-        }
-        master_writeData = twi0_masterBuffer;
-
-        master_bytesToWrite = bytes_to_write;
-        master_bytesToRead = 0;
-        master_bytesWritten = 0;
-        master_bytesRead = 0;
-        master_sendStop = send_stop;
-        master_slaveAddress = slave_address<<1;
-
-        // Write or Ping command, send the START condition + Address + 'R/_W = 0'
-        twi_mode = TWI_MODE_MASTER_TRANSMIT;
-        twim_mode = TWIM_MODE_TRANSMIT;
-        uint8_t writeAddress = ADD_WRITE_BIT(master_slaveAddress);
-        TWI0.MADDR = writeAddress;
-
-        twi0_error = TWI_ERROR_NONE;
-        return TWI0_WRT_TRANSACTION_STARTED;
+    // buffer data so wright can return without blocking. 
+    // twim_mode is TWIM_MODE_TRANSMIT (e.g. !TWIM_MODE_ENABLE) until done.
+    for(uint8_t i = 0; i < bytes_to_write; ++i) {
+        twi0_masterBuffer[i] = write_data[i];
     }
+    master_writeData = twi0_masterBuffer;
+    master_bytesToWrite = bytes_to_write;
+    master_bytesToRead = 0;
+    master_bytesWritten = 0;
+    master_bytesRead = 0;
+    master_sendStop = send_stop;
+    master_slaveAddress = slave_address<<1;
+
+    // Write or Ping will send the START condition + Address + 'R/_W = 0'
+    twi_mode = TWI_MODE_MASTER_TRANSMIT;
+    twim_mode = TWIM_MODE_TRANSMIT;
+    uint8_t writeAddress = ADD_WRITE_BIT(master_slaveAddress);
+    TWI0.MADDR = writeAddress;
+
+    twi0_error = TWI_ERROR_NONE;
+    return TWI0_WRT_TRANSACTION_STARTED;
 }
 
 // TWI master write transaction status.
@@ -603,19 +611,25 @@ uint8_t twi0_masterWrite(uint8_t slave_address, uint8_t* write_data, uint8_t byt
     return status; // note that TWI1_WRT_STAT_BUSY (1) is reported when TWI1_WRT_TO_MUCH_DATA occures
 }
 
-// TWI write busy-wait transaction, do not use with multi-master.
+// TWI write busy-wait transaction with time to live in ticks (max 2**16), a tick is 64*256 clocks
 // 0 .. success
 // 1 .. length to long for buffer
 // 2 .. address send, NACK received
 // 3 .. data send, NACK received
 // 4 .. illegal start or stop condition
-uint8_t twi0_masterBlockingWrite(uint8_t slave_address, uint8_t* write_data, uint8_t bytes_to_write, TWI0_PROTOCALL_t send_stop)
+// 5 .. twi out of time
+uint8_t twi0_masterBlockingWrite(uint8_t slave_address, uint8_t* write_data, uint8_t bytes_to_write, TWI0_PROTOCALL_t send_stop/*, int ttl*/)
 {
     uint8_t twi_wrt_code = 0;
+    int ttl = 1024;
+    unsigned long twi0_wrt_started_at = tickAtomic();
     TWI0_LOOP_STATE_t loop_state = TWI0_LOOP_STATE_ASYNC_WRT; // loop state is in this blocking function rather than in the main loop
-    while (loop_state != TWI0_LOOP_STATE_DONE)
-    {
+    while (loop_state != TWI0_LOOP_STATE_DONE) {
         twi_wrt_code = twi0_masterWrite(slave_address, write_data, bytes_to_write, send_stop, &loop_state);
+        unsigned long kRuntime = elapsed(&twi0_wrt_started_at);
+        if (kRuntime > ttl) {
+            return 5;
+        }
     }
     return twi_wrt_code;
 }
@@ -623,50 +637,45 @@ uint8_t twi0_masterBlockingWrite(uint8_t slave_address, uint8_t* write_data, uin
 // TWI Asynchronous Read Transaction.
 // 0 .. data fit in buffer, check twi0_masterAsyncRead_bytesRead for when it is done
 // 1 .. data will not fit in the buffer, request ignored
-// 2 .. TWI needs init
-// 3 .. TWI not ready
+// 2 .. TWI wrong mode prob needs init
+// 3 .. TWI status is busy
+// 4 .. TWI not ready to start Rx/Tx
+// 5 .. TWI use write to ping
 TWI0_RD_t twi0_masterAsyncRead(uint8_t slave_address, uint8_t bytes_to_read, TWI0_PROTOCALL_t send_stop)
 {
-    if ((twi_mode != TWI_MODE_MASTER) || (twi_mode != TWI_MODE_DUAL)) return TWI0_RD_WRONG_MODE;
-    
-    if ((twim_mode != TWIM_MODE_ENABLE) || (twis_mode != TWIS_MODE_ENABLE)) return TWI0_RD_NOT_READY;
+    if (!( (twi_mode == TWI_MODE_MASTER) || (twi_mode == TWI_MODE_DUAL)) ) return TWI0_WRT_WRONG_MODE;
 
-    if(bytes_to_read > TWI0_BUFFER_LENGTH) return TWI0_RD_TO_MUCH_DATA;
+    if ((twim_mode != TWIM_MODE_ENABLE)) return TWI0_RD_NOT_READY;
 
-    // Initiate the new transaction if bus is ready
-    if (master_result == TWI0M_RESULT_UNKNOWN) { 
-        return TWI0_WRT_NOT_READY;
-    } else {
-        master_result = TWI0M_RESULT_UNKNOWN;
+    if (master_trans_status != TWI0M_STATUS_READY) return TWI0_RD_STATUS;
 
-        master_writeData = NULL;
+    if (bytes_to_read > TWI0_BUFFER_LENGTH) return TWI0_RD_TO_MUCH_DATA;
 
-        // use buffer to hold data so read can return without blocking. NOT_READY until done.
-        master_readData = twi0_masterBuffer;
+    if (bytes_to_read == 0) return TWI0_RD_USE_WRT_TO_PING;
 
-        master_bytesToWrite = 0;
-        master_bytesToRead = bytes_to_read;
-        master_bytesWritten = 0;
-        master_bytesRead = 0;
-        master_sendStop = send_stop;
-        master_slaveAddress = slave_address<<1;
+    // Initiate the transaction
+    master_trans_status = TWI0M_STATUS_BUSY;
+    master_result = TWI0M_RESULT_UNKNOWN;
+    master_writeData = NULL;
 
-        // Read command, send the START condition + Address + 'R/_W = 1'
-        if (master_bytesToRead > 0) {
-            twi_mode = TWI_MODE_MASTER_RECEIVE;
-            twim_mode = TWIM_MODE_RECEIVE;
-            uint8_t readAddress = ADD_READ_BIT(master_slaveAddress);
-            TWI0.MADDR = readAddress;
-        } else { // ping
-            twi_mode = TWI_MODE_MASTER_TRANSMIT;
-            twim_mode = TWIM_MODE_TRANSMIT;
-            uint8_t writeAddress = ADD_WRITE_BIT(master_slaveAddress);
-            TWI0.MADDR = writeAddress;
-        }
+    // use the buffer to hold the data so read can return without blocking. 
+    // twim_mode is TWIM_MODE_RECEIVE (e.g. !TWIM_MODE_ENABLE) until done.
+    master_readData = twi0_masterBuffer;
+    master_bytesToWrite = 0;
+    master_bytesToRead = bytes_to_read;
+    master_bytesWritten = 0;
+    master_bytesRead = 0;
+    master_sendStop = send_stop;
+    master_slaveAddress = slave_address << 1;
 
-        twi0_error = TWI_ERROR_NONE;
-        return TWI0_RD_TRANSACTION_STARTED;
-    }
+    // Read will send the START condition + Address + 'R/_W = 1'
+    twi_mode = TWI_MODE_MASTER_RECEIVE;
+    twim_mode = TWIM_MODE_RECEIVE;
+    uint8_t readAddress = ADD_READ_BIT(master_slaveAddress);
+    TWI0.MADDR = readAddress;
+
+    twi0_error = TWI_ERROR_NONE;
+    return TWI0_RD_TRANSACTION_STARTED;
 }
 
 // TWI master Asynchronous Read Transaction status 

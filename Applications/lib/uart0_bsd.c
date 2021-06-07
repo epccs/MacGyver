@@ -139,7 +139,7 @@ int uart0_putchar(char c, FILE *stream);
 int uart0_getchar(FILE *stream);
 
 // Stream declaration for stdio
-static FILE uartstream0_f = FDEV_SETUP_STREAM(uart0_putchar, uart0_getchar, _FDEV_SETUP_RW);
+FILE uartstream0_f = FDEV_SETUP_STREAM(uart0_putchar, uart0_getchar, _FDEV_SETUP_RW);
 
 // Initialize USART0 and return file handle
 // disable UART if baudrate (a.k.a., bitrate) is zero
