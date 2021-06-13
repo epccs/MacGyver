@@ -84,14 +84,15 @@ i2c-debug at addr 48: commands include
 {"scan":[{"addr":"0x2A"}]}
 /0/iaddr 42
 {"master_address":"0x2A"}
-/0/ibuff 2
-{"txBuffer[1]":[{"data":"0x2"}]}
-/0/iread? 1
-{"txBuffer":"wrt_success","rxBuffer":"rd_success","rxBuffer":[{"data":"0x2"}]}
-/0/ibuff 127,15
-{"txBuffer[2]":[{"data":"0x7F"},{"data":"0xF"}]}
+/0/ibuff 1
+{"txBuffer[1]":[{"data":"0x1"}]}
+/0/iwrite
+{"txBuffer":"wrt_success"}
+/0/ibuff 1,2
+{"txBuffer[2]":[{"data":"0x1"},{"data":"0x2"}]}
+# this does a write, then repeated start befor reading the rxBuffer, but that is not working. The first byte may be from the previous write.
 /0/iread? 2
-{"txBuffer":"wrt_success","rxBuffer":"rd_success","rxBuffer":[{"data":"0x7F"},{"data":"0xF"}]}
+{"txBuffer":"wrt_success","rxBuffer":"rd_success","rxBuffer":[{"data":"0x1"},{"data":"0xFF"}]}
 # send "a" on manager debug to stop blink
 # send "$" on manarer debug to abort
 /0/iscan?
@@ -99,21 +100,18 @@ i2c-debug at addr 48: commands include
 # scan finished because abort turned off I2C.
 ```
 
-At the same time a USBuart board is connected to the manager debug port /dev/ttyUSB2. The scan has to write a byte to each address. Send an 'a' to toggle the blinking on and off; send an '$' to abort, other keys echo.
+At the same time a USBuart board is connected to the manager debug port /dev/ttyUSB2. The scan does not show on monitor at this time. Send an 'a' to toggle the blinking on and off; send an '$' to abort, other keys echo.
 
 ```bash
 picocom -b 38400 /dev/ttyUSB2
 ...
 Terminal ready
-{"monitor_0x2A":[{"status":"0"},{"len":"0"}]}
-{"monitor_0x2A":[{"status":"3"},{"len":"1"},{"dat":"0x2"}]}
-{"monitor_0x2A":[{"status":"19"},{"len":"2"},{"dat":"0x7F"},{"dat":"0xF"}]}
+{"monitor_0x2A":[{"status":"0x61"},{"len":"1"},{"dat":"0x1"}]}
+# monitor did not print durring the read+write, issue is tbd
 a
 {"abort":"'$' found"}
 ```
 
-The status bits are: Data ISR Flag[7], AP ISR Flag, Clock Hold, Received Ack, Collision, Bus Error, R/W Direction, AP[0]
-
-TWI0.SSTATUS is saved in transmit_callback and reported as status. It shows a range of flags set at the time of the callback.
+The status bits are from TWI0.SSTATUS at the time of the ISR event that isAddress() is true (and sets TWIS_ADDRESSED state).
 
 The AVR128DB28 starts running at 24MHz/6 (4MHz) from the factory. To run at another frequency change, the F_CPU define in the Makefile. The timers_bsd.c will select the correct option based on the F_CPU value passed to the compiler during the build. That is unusual for AVR but works on these new devices; it is also worth noting that if the clock fails (perhaps due to supply voltage), it will switch back to 4MHz, which operates at all valid voltages.

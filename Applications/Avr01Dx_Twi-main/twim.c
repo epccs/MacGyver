@@ -8,14 +8,10 @@
 #include <util/delay.h>
 
 #include "twim.h"
-#include "twiPins.h"
 
     //==========
     // private:
     //==========
-
-typedef uint8_t  uint8_t;
-typedef uint16_t uint16_t;
 
 static twim_callbackT   isrFuncCallback_;
 static const uint8_t*        txbuf_;
@@ -40,7 +36,7 @@ enum { READOK = RIF|CLKHOLD|OWNER, WRITEOK = WIF|CLKHOLD|OWNER };
 enum { ENABLE = 1 }; //on/off
 
 static void on              () { TWI0.MCTRLA |= ENABLE; }
-static void off             () { TWI0.MCTRLA = 0; } // hmm... for bus errors to be detected by slave ENABLE bit must be on in ether TWI0.DUALCTRL or TWI0.MCTRLA
+static void off             () { TWI0.MCTRLA = 0; }
 static void irqAllOn        () { TWI0.MCTRLA |=  RWIEN; }
 static void irqAllOff       () { TWI0.MCTRLA &= ~RWIEN; }
 static void toStateIdle     () { TWI0.MSTATUS = ALLFLAGS|IDLE; } //clear flags, set to IDLE

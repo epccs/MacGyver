@@ -23,8 +23,7 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 #include "../lib/uart0_bsd.h"
 #include "../lib/io_enum_bsd.h"
 #include "../lib/timers_bsd.h"
-#include "../lib/twi0_bsd.h"
-//#include "../lib/twi0_mc.h"
+#include "../lib/twi.h"
 
 #define BLINK_DELAY 1000UL
 unsigned long blink_started_at;
@@ -43,16 +42,12 @@ void blink(void)
         ioToggle(MCU_IO_TX2);
         if(ioRead(MCU_IO_TX2)) // ping i2c every other toggle
         {
-            uint8_t mgr_address = 41; //the address I have been useing for the manager (from the application MCU, the host would use 42)
-            uint8_t data[] = {'a'};
-            uint8_t length = 1;
-            TWI0_WRT_t async_wrt = twi0_masterAsyncWrite(mgr_address, data, length, TWI0_PROTOCALL_STOP);
+              uint8_t data[] = {'a'}; 
+            twim_write( data, sizeof(data) ); // same address 41
+            bool lastTwimResult = twim_waitUS( 3000 ); // wait for complettion or timeout (3ms)
             while (!uart0_availableForWrite());
-            if (async_wrt == 0) fprintf(uart0,"twi0 transaction started\r\n");
-            //if (async_wrt == 1) fprintf(uart0,"twi0 to much data\r\n");
-            //if (async_wrt == 2) fprintf(uart0,"twi0 wrong mode\r\n");
-            //if (async_wrt == 3) fprintf(uart0,"twi0 status is busy\r\n");
-            //if (async_wrt == 4) fprintf(uart0,"twi0 not ready\r\n");
+            if (lastTwimResult == false) fprintf(uart0,"%lu:twi0 transaction good\r\n", blink_delay);
+            if (lastTwimResult == true) fprintf(uart0,"%lu:twi0 transaction failed\r\n", blink_delay);
         }
 
         // next toggle 
@@ -68,7 +63,9 @@ void abort_safe(void)
     ioWrite(MCU_IO_TX2,LOGIC_LEVEL_LOW);
     // flush the UART befor halt
     uart0_flush();
-    twi0_init(0, TWI0_PINS_FLOATING); // disable I2C0 with twi0_bsd lib
+    twim_off(); // need to clear the pins
+    ioCntl(MCU_IO_SCL0, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
+    ioCntl(MCU_IO_SDA0, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
     _delay_ms(20); // wait for last byte to send
     uart0_init(0, 0); // disable UART hardware
     // turn off interrupts and then spin loop a LED toggle
@@ -93,7 +90,8 @@ void setup(void)
     initTimers();
 
     /* Initialize I2C*/
-    twi0_init(100000UL, TWI0_PINS_PULLUP); // twi0_bsd
+    twim_defaultPins();             //master pins (same as slave)
+    twim_baud( F_CPU, 100000ul );   //100kHz
 
     sei(); // Enable global interrupts to start TIMER0
 
@@ -103,16 +101,13 @@ void setup(void)
 
     got_a = 0;
 
-    uint8_t mgr_address = 41;
+    twim_on(41);                // turn on master and set slave address 41
     uint8_t data[] = {108};
-    uint8_t length = 1;
-    TWI0_WRT_t async_wrt = twi0_masterAsyncWrite(mgr_address, data, length, TWI0_PROTOCALL_STOP);
+    twim_write( data, sizeof(data) );
+    bool lastTwimResult = twim_waitUS( 3000 ); // wait for complettion or timeout (3ms)
     while (!uart0_availableForWrite());
-    if (async_wrt == 0) fprintf(uart0,"twi0 transaction started\r\n");
-    if (async_wrt == 1) fprintf(uart0,"twi0 to much data\r\n");
-    if (async_wrt == 2) fprintf(uart0,"twi0 wrong mode\r\n");
-    if (async_wrt == 3) fprintf(uart0,"twi0 status is busy\r\n");
-    if (async_wrt == 4) fprintf(uart0,"twi0 not ready\r\n");
+    if (lastTwimResult == false) fprintf(uart0,"twi0 transaction good\r\n");
+    if (lastTwimResult == true) fprintf(uart0,"twi0 transaction failed\r\n");
 }
 
 int main(void)
