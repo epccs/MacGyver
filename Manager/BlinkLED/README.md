@@ -1,12 +1,8 @@
 # BlinkLED
 
-## ToDo
-
-The UPDImode.py script needs some attention, the output is out of sync.
-
 ## Overview
 
-UART1 is on PORTC, which I plan to use for debugging. I copied timers_bsd.h from the application (AVR128DA) in which I had routed the TCA0 PWMs to PORTC. That caused a lot of confusion since enabling the TX1 pin as an output caused a PWM output.
+UART1 is on PORTC, which I plan to use for debug. This monitors TWI0 with slave address 42, which is connected to the 40 pin header for an R-Pi (i2c/SMbus).
 
 ## Firmware Upload
 
@@ -15,11 +11,7 @@ Uses a UPDI upload tool. Run 'make' to compile and 'make updi' to upload.
 ```bash
 sudo apt-get install make git gcc-avr binutils-avr gdb-avr avr-libc python3-pip
 pip3 install pymcuprog
-# I was using pyupdi, but it does not seem to support AVR128DB's so I will start using pymcuprog
-# pip3 install pyserial intelhex pylint https://github.com/mraardvark/pyupdi/archive/master.zip
 git clone https://github.com/epccs/MacGyver/
-# RPUusb has some programs to control UPDI and UART modes
-git clone https://github.com/epccs/RPUusb
 cd /MacGyver/Manager/BlinkLED
 make all
 ...
@@ -29,14 +21,16 @@ which python3 2>/dev/null || false
 /usr/bin/python3
 which pymcuprog 2>/dev/null || false
 /home/rsutherland/.local/bin/pymcuprog
-ls ../../../RPUusb/UPDImode/UPDImode.py 2>/dev/null || false
-../../../RPUusb/UPDImode/UPDImode.py
-ls ../../../RPUusb/UPDImode/UARTmode.py 2>/dev/null || false
-../../../RPUusb/UPDImode/UARTmode.py
-python3 ../../../RPUusb/UPDImode/UPDImode.py
-junk: ds include
-cmd echo: /0/id?
-response: /0/updi
+ls ../../../MacGyver/Manager/AppUpload/MgrUPDImode.py 2>/dev/null || false
+../../../MacGyver/Manager/AppUpload/MgrUPDImode.py
+ls ../../../MacGyver/Manager/AppUpload/MgrUARTmode.py 2>/dev/null || false
+../../../MacGyver/Manager/AppUpload/MgrUARTmode.py
+python3 ../../../MacGyver/Manager/AppUpload/MgrUPDImode.py
+bootmsg: i2c-debug at addr 48: commands include
+bootmsg: /0/id?
+bootmsg: 
+cmd echo: /0/updi
+response: {"PiUPDI":"UPDI"}
 pymcuprog erase -t uart -u /dev/ttyUSB0 -d avr128db32
 Chip/Bulk erase,
 Memory type eeprom is conditionally erased (depending upon EESAVE fuse setting)
@@ -52,7 +46,7 @@ Writing flash...
 Verifying flash...
 OK
 Done.
-python3 ../../../RPUusb/UPDImode/UARTmode.py
+python3 ../../../MacGyver/Manager/AppUpload/MgrUARTmode.py
 ```
 
 [https://github.com/microchip-pic-avr-tools/pymcuprog]
@@ -90,9 +84,9 @@ i2c-debug at addr 48: commands include
 {"txBuffer":"wrt_success"}
 /0/ibuff 1,2
 {"txBuffer[2]":[{"data":"0x1"},{"data":"0x2"}]}
-# this does a write, then repeated start befor reading the rxBuffer, but that is not working. The first byte may be from the previous write.
 /0/iread? 2
-{"txBuffer":"wrt_success","rxBuffer":"rd_success","rxBuffer":[{"data":"0x1"},{"data":"0xFF"}]}
+{"txBuffer":"wrt_success","rxBuffer":"rd_success","rxBuffer":[{"data":"0x1"},{"data":"0x2"}]}
+
 # send "a" on manager debug to stop blink
 # send "$" on manarer debug to abort
 /0/iscan?
@@ -106,8 +100,9 @@ At the same time a USBuart board is connected to the manager debug port /dev/tty
 picocom -b 38400 /dev/ttyUSB2
 ...
 Terminal ready
-{"monitor_0x2A":[{"status":"0x61"},{"len":"1"},{"dat":"0x1"}]}
-# monitor did not print durring the read+write, issue is tbd
+{"ping":"0x2A"}
+{"monitor_0x2A":[{"status":"0x61"},{"len":"1"},{"W1":"0x1"}]}
+{"monitor_0x2A":[{"status":"0x63"},{"len":"2"},{"W1":"0x1"},{"W1":"0x2"},{"R2":"0x1"},{"R2":"0x2"}]}
 a
 {"abort":"'$' found"}
 ```

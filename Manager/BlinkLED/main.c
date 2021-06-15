@@ -82,13 +82,77 @@ static uint8_t *twiTxBuffer = BufferB;
 static uint8_t twiTxBufferLength;
 static uint8_t twiTxBufferIndex;
 
-static uint8_t printBuffer[BUFF_SIZE];
-static uint8_t printBufferLength;
-static uint8_t printBufferIndex;
+static uint8_t printOp1Buffer[BUFF_SIZE];
+static uint8_t printOp1BufferLength;
+static uint8_t printOp1BufferIndex;
+static uint8_t printOp1rw; // r = 0, w = 1
+static uint8_t printOp2Buffer[BUFF_SIZE];
+static uint8_t printOp2BufferLength;
+static uint8_t printOp2BufferIndex;
+static uint8_t printOp2rw; // r = 0, w = 1
 
 static uint8_t twi0_slave_status_cpy;
+#define LAST_OP_A 0
+#define LAST_OP_R 1
+#define LAST_OP_W 2
+static uint8_t twi0_last_op; // last operation e.g., read, write, address
+static uint8_t printing;
 
-bool twisCallback(twis_irqstate_t state, uint8_t statusReg){
+// fill print buffer op1 from receive buffer 
+bool print_Op1_buf_if_possible(uint8_t rw) {
+
+    // e.g., printing done and debug uart is free
+    bool ret = printing;
+
+    if (ret) {
+        printOp1BufferLength = twiRxBufferLength;
+        printOp1BufferIndex = 0;
+        for(int i = 0; i < twiRxBufferLength; ++i)
+        {
+            printOp1Buffer[i] = twiRxBuffer[i];
+        }
+        printOp1rw = rw;
+    }
+    return ret;
+}
+
+// fill print buffer op2 from receive buffer (e.g. write+write/write+read on i2c)
+bool print_Op2_buf_if_possible(uint8_t rw) {
+
+    // e.g., printing done and debug uart free
+    bool ret = printing;
+
+    if (ret) {
+        if (twiRxBufferLength) { // write+write
+            printOp2BufferLength = twiRxBufferLength;
+            printOp2BufferIndex = 0;
+            for(int i = 0; i < twiRxBufferLength; ++i) {
+                printOp2Buffer[i] = twiRxBuffer[i];
+            }
+        } else { // write+read
+            printOp2BufferLength = twiTxBufferLength;
+            printOp2BufferIndex = 0;
+            for(int i = 0; i < twiTxBufferLength; ++i) {
+                printOp2Buffer[i] = twiTxBuffer[i];
+            }
+        }
+        printOp2rw = rw;
+    }
+    return ret;
+}
+
+bool move_buffer_Rx2Tx(void) {
+    bool ret = true;
+    for(int i = 0; i < twiRxBufferLength; ++i) {
+        twiTxBuffer[i] = twiRxBuffer[i];
+    }
+    twiTxBufferLength = twiRxBufferLength;
+    twiRxBufferLength = 0;
+    twiTxBufferIndex = 0; // used for read to index
+    return ret;
+}
+
+bool twisCallback(twis_irqstate_t state, uint8_t statusReg) {
     bool ret = true;
 
     switch( state ) {
@@ -96,43 +160,43 @@ bool twisCallback(twis_irqstate_t state, uint8_t statusReg){
             // at this point, the callback has visibility to all bus addressing, which is interesting.
             ret = (twis_lastAddress() == slave_addr); // test address true to proceed with read or write
             twi0_slave_status_cpy = statusReg;
-            twiRxBufferLength = 0; // make sure buffer is reset after being addressed
+            if (twiRxBufferLength) {
+                printing = (printOp1BufferIndex >= printOp1BufferLength) && (printOp2BufferIndex >= printOp2BufferLength) && uart1_availableForWrite();
+                print_Op1_buf_if_possible(twi0_last_op); // print reciece buffer as first operation
+                move_buffer_Rx2Tx(); // copy receive buffer into transmit in case next operation is read (so it can echo)
+            }
+            twi0_last_op = LAST_OP_A;
             break;
         case TWIS_MREAD:
             if (twiTxBufferIndex < twiTxBufferLength) {
                 twis_write( twiTxBuffer[twiTxBufferIndex++] );
                 ret = true; // more data is in the Tx buffer
-            } else {
-                twis_write(0); // what can the server do when client reads again?
-                twiTxBufferLength = 0; // reset the TX buffer
-                ret = false; // done, but slave NACK is meaningless I guess the master will ACK its read (that seems like a flaw)
             }
+            // note if master ignores the NACK and keeps reading 
+            // it will get 0xFF since the slave will not pull down on SDA,
+            twi0_last_op = LAST_OP_R;
             break;
         case TWIS_MWRITE:
             twiRxBuffer[twiRxBufferLength] = twis_read();
             ret = (++twiRxBufferLength < BUFF_SIZE); //true to proceed
+            twi0_last_op = LAST_OP_W;
             break;
         case TWIS_STOPPED: 
-            if (twiRxBufferLength) {
-                // copy the Rx buffer to Tx buffer
-                for(int i = 0; i < twiRxBufferLength; ++i)
-                {
-                    twiTxBuffer[i] = twiRxBuffer[i];
-                }
-                twiTxBufferLength = twiRxBufferLength;
-                twiRxBufferLength = 0;
-
-                // print to debug if possible
-                if ((printBufferIndex >= printBufferLength) && uart1_availableForWrite()) // e.g., printing done and debug uart is free
-                {
-                    printBufferLength = twiTxBufferLength;
-                    printBufferIndex = 0;
-                    for(int i = 0; i < twiTxBufferLength; ++i)
-                    {
-                        printBuffer[i] = twiTxBuffer[i];
-                    }
+            if (twiTxBufferLength) { // stop after write+read or write+write
+                print_Op2_buf_if_possible(twi0_last_op);
+            } else if (twiRxBufferLength) { // stop after write or read
+                printing = (printOp1BufferIndex >= printOp1BufferLength) && (printOp2BufferIndex >= printOp2BufferLength) && uart1_availableForWrite();
+                print_Op1_buf_if_possible(twi0_last_op);
+            } else if (twi0_last_op == LAST_OP_A) { // we got a ping
+                printing = (printOp1BufferIndex >= printOp1BufferLength) && (printOp2BufferIndex >= printOp2BufferLength) && uart1_availableForWrite();
+                if (printing) { // just print it now,  monitor should do this but...
+                    fprintf_P(uart1,PSTR("{\"ping\":\"0x%X\"}\r\n"),slave_addr);
                 }
             }
+
+            // transaction is done so reset the buffers
+            twiTxBufferLength = 0;
+            twiRxBufferLength = 0;
             ret = true;
             break;
         case TWIS_ERROR:
@@ -179,7 +243,7 @@ void I2c0_monitor(void)
 {
     if ( (debug_print_done == 0) )
     {
-        if (printBufferIndex < printBufferLength)
+        if (printOp1BufferIndex < printOp1BufferLength)
         {
             fprintf_P(uart1,PSTR("{\"monitor_0x%X\":["),slave_addr); // start of JSON for monitor
             debug_print_done = 1;
@@ -198,26 +262,38 @@ void I2c0_monitor(void)
 
     else if ( (debug_print_done == 2) )
     {
-        fprintf_P(uart1,PSTR(",{\"len\":\"%d\"}"),printBufferLength); 
+        fprintf_P(uart1,PSTR(",{\"len\":\"%d\"}"),printOp1BufferLength); 
         debug_print_done = 3;
     }
 
-    else if ( (debug_print_done == 3) )
-    {
-        if (printBufferIndex >= printBufferLength) 
-        {
+    else if ( (debug_print_done == 3) ) {
+        if (printOp1BufferIndex >= printOp1BufferLength) {
             debug_print_done = 4; // done printing 
-        }
-        else
-        {
-            fprintf_P(uart1,PSTR(",{\"dat\":\"0x%X\"}"),printBuffer[printBufferIndex++]);
+        } else {
+            if (printOp1rw == LAST_OP_W) {
+                fprintf_P(uart1,PSTR(",{\"W1\":\"0x%X\"}"),printOp1Buffer[printOp1BufferIndex++]);
+            } else if (printOp1rw == LAST_OP_R) {
+                fprintf_P(uart1,PSTR(",{\"R1\":\"0x%X\"}"),printOp1Buffer[printOp1BufferIndex++]);
+            }
         }
     }
-    
-    if ( (debug_print_done == 4) )
+
+    else if ( (debug_print_done == 4) ) {
+        if (printOp2BufferIndex >= printOp2BufferLength) {
+            debug_print_done = 5; // done printing 
+        } else {
+            if (printOp2rw == LAST_OP_W) {
+                fprintf_P(uart1,PSTR(",{\"W2\":\"0x%X\"}"),printOp2Buffer[printOp2BufferIndex++]);
+            } else if (printOp2rw == LAST_OP_R) {
+                fprintf_P(uart1,PSTR(",{\"R2\":\"0x%X\"}"),printOp2Buffer[printOp2BufferIndex++]);
+            }
+        }
+    }
+
+    if ( (debug_print_done == 5) )
     {
         fprintf_P(uart1,PSTR("]}\r\n"));
-        debug_print_done = 0; // wait for next slave receive event to fill printBuffer
+        debug_print_done = 0; // wait for next slave receive event to fill printBuffer(s)
     }
 }
 

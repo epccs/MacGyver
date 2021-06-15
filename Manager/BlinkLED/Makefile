@@ -63,32 +63,29 @@ $(TARGET): $(TARGET).hex
 $(TARGET).hex: $(TARGET).elf
 	$(OBJCOPY) -j .text -j .data -O ihex $< $@
 
-# # This part has a built in UART based uploader (UPDI), so no bootloader is needed.
+# # This part has a built in UART based uploader (UPDI), so no bootloader is needed. Unfortunalty avrdude is not set up for this interface so...
 # sudo apt install python3-pip
 # pip3 install pymcuprog
-# pip3 install https://github.com/mraardvark/pyupdi/archive/master.zip
-# # place RPUusb next to this project since the BCM24 pin needs controled
-# git clone https://github.com/epccs/RPUusb
 updi: ## Upload with pymcuprog.
 	@echo testing for prerequesetits a false will stop make
 	which python3 2>/dev/null || false
 	which pymcuprog 2>/dev/null || false
-	ls ../../../RPUusb/UPDImode/UPDImode.py 2>/dev/null || false
-	ls ../../../RPUusb/UPDImode/UARTmode.py 2>/dev/null || false
-	python3 ../../../RPUusb/UPDImode/UPDImode.py
+	ls ../../../MacGyver/Manager/AppUpload/MgrUPDImode.py 2>/dev/null || false
+	ls ../../../MacGyver/Manager/AppUpload/MgrUARTmode.py 2>/dev/null || false
+	python3 ../../../MacGyver/Manager/AppUpload/MgrUPDImode.py
 	pymcuprog erase -t uart -u $(UPDI_PORT) -d $(MCU)
 	pymcuprog write -t uart -u $(UPDI_PORT) -d $(MCU) --verify -f $(TARGET).hex
-	python3 ../../../RPUusb/UPDImode/UARTmode.py
+	python3 ../../../MacGyver/Manager/AppUpload/MgrUARTmode.py
 
 reset: ## Reset AVR with pyupid.
 	@echo testing for prerequesetits a false will stop make
 	which python3 2>/dev/null || false
 	which pymcuprog 2>/dev/null || false
-	ls ../../../RPUusb/UPDImode/UPDImode.py 2>/dev/null || false
-	ls ../../../RPUusb/UPDImode/UARTmode.py 2>/dev/null || false
-	python3 ../../../RPUusb/UPDImode/UPDImode.py
+	ls ../../../MacGyver/Manager/AppUpload/MgrUPDImode.py 2>/dev/null || false
+	ls ../../../MacGyver/Manager/AppUpload/MgrUARTmode.py 2>/dev/null || false
+	python3 ../../../MacGyver/Manager/AppUpload/MgrUPDImode.py
 	pymcuprog reset -t uart -u $(UPDI_PORT) -d $(MCU)
-	python3 ../../../RPUusb/UPDImode/UARTmode.py
+	python3 ../../../MacGyver/Manager/AppUpload/MgrUARTmode.py
 
 hdrcode: ## Copy header for VSCode to find. Run with sudo.
 	@echo VSCode will not look outside or cross-origin for an include,  

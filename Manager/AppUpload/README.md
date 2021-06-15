@@ -15,7 +15,6 @@ Uses a UPDI upload tool. Run 'make' to compile and 'make updi' to upload.
 ```bash
 sudo apt-get install make git gcc-avr binutils-avr gdb-avr avr-libc python3-pip
 pip3 install pymcuprog
-# pip3 install pyserial intelhex pylint https://github.com/mraardvark/pyupdi/archive/master.zip
 git clone https://github.com/epccs/MacGyver/
 cd /MacGyver/Manager/BlinkLED
 make all
