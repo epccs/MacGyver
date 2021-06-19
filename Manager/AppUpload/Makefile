@@ -2,8 +2,7 @@
 TARGET = AppUpload
 LIBDIR = ../lib
 OBJECTS = main.o \
-	$(LIBDIR)/twi0_bsd.o \
-	$(LIBDIR)/twi1_bsd.o \
+	$(LIBDIR)/twi.o \
 	$(LIBDIR)/uart1_bsd.o \
 	$(LIBDIR)/timers_bsd.o
 

@@ -2,11 +2,11 @@
 
 ## ToDo
 
-Add TWI1, then monitor (to debug UART) at address 41 much like TWI0 that is at address 42
+Address 42 on manager TWI0 (between manager and R-Pi) takes an i2c write byte, so an SMBus command may not work \\_(:-/)_/.
 
 ## Overview
 
-This firmware will allow the manager (AVR128DB32) to enable the transceivers to pass the host serial to the application (AVR128DA), also connect the application side of the multi-drop serial to its UPDI pin. The Out Of Band channel is disabled.
+This firmware will allow the manager (AVR128DB32) to enable the transceivers to pass the host serial to the application (AVR128DA), or connect the application side of the multi-drop serial to its UPDI pin. The Out Of Band channel is disabled. Only a write+read on i2c from the host can change the UPDI mode for Application programing, a write alone is ignored, the read is an echo of the write.
 
 ## Firmware Upload
 
@@ -16,46 +16,29 @@ Uses a UPDI upload tool. Run 'make' to compile and 'make updi' to upload.
 sudo apt-get install make git gcc-avr binutils-avr gdb-avr avr-libc python3-pip
 pip3 install pymcuprog
 git clone https://github.com/epccs/MacGyver/
-cd /MacGyver/Manager/BlinkLED
+cd /MacGyver/Manager/AppUpload
 make all
 ...
 make updi
-testing for prerequesetits a false will stop make
-which python3 2>/dev/null || false
-/usr/bin/python3
-which pymcuprog 2>/dev/null || false
-/home/rsutherland/.local/bin/pymcuprog
-ls ../../../RPUusb/UPDImode/UPDImode.py 2>/dev/null || false
-../../../RPUusb/UPDImode/UPDImode.py
-ls ../../../RPUusb/UPDImode/UARTmode.py 2>/dev/null || false
-../../../RPUusb/UPDImode/UARTmode.py
-python3 ../../../RPUusb/UPDImode/UPDImode.py
-junk: ds include
-cmd echo: /0/id?
-response: /0/updi
-pymcuprog erase -t uart -u /dev/ttyUSB0 -d avr128db32
-Chip/Bulk erase,
-Memory type eeprom is conditionally erased (depending upon EESAVE fuse setting)
-Memory type flash is always erased
-Memory type internal_sram is always erased
-Memory type lockbits is always erased
 ...
 Erased.
 Done.
-pymcuprog write -t uart -u /dev/ttyUSB0 -d avr128db32 --verify -f BlinkLED.hex
+pymcuprog write -t uart -u /dev/ttyUSB0 -d avr128db32 --verify -f AppUpload.hex
 Writing from hex file...
 Writing flash...
 Verifying flash...
 OK
 Done.
-python3 ../../../RPUusb/UPDImode/UARTmode.py
+...
 ```
 
 [https://github.com/microchip-pic-avr-tools/pymcuprog]
 
 ## How To Use
 
-Kicking more of the tires. The ttyUSB0 is connected to the multi-drop, while in UART mode the application controler will do nil when unprogramed, but may provide a response if programed to do so.
+Kicking more of the tires. The ttyUSB0 is connected to the multi-drop, while in UART mode the application controler will do nil if unprogramed, but may provide a response if programed to do so (see [Applications] )
+
+[Applications]:../../Applications
 
 ```bash
 picocom -b 38400 /dev/ttyUSB0

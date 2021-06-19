@@ -23,6 +23,7 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 #include "../lib/uart1_bsd.h"
 #include "../lib/io_enum_bsd.h"
 #include "../lib/timers_bsd.h"
+#include "../lib/twi.h"
 #include "../lib/twi0_bsd.h"
 #include "../lib/twi1_bsd.h"
 
@@ -60,8 +61,12 @@ void abort_safe(void)
     ioWrite(MCU_IO_MGR_LED,LOGIC_LEVEL_LOW);
     // flush the UART befor halt
     uart1_flush();
-    twi0_init(0, TWI0_PINS_FLOATING); // disable I2C0
-    twi1_init(0, TWI1_PINS_FLOATING); // disable I2C0
+    twim_off(); // disable TWI0, need to clear the pins
+    ioCntl(MCU_IO_MVIO_SCL0, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
+    ioCntl(MCU_IO_MVIO_SDA0, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
+    twi1m_off(); // disable TWI1, need to clear the pins
+    ioCntl(MCU_IO_MGR_SCL1, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
+    ioCntl(MCU_IO_MGR_SDA1, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
     _delay_ms(20); // wait for last byte to send
     uart1_init(0, 0); // disable UART hardware 
     // turn off interrupts and then spin loop a LED toggle 
@@ -73,92 +78,231 @@ void abort_safe(void)
     }
 }
 
-static uint8_t twi0_slave_addr = 42; // address I have been using for host to connect with the manager on SMBus
+#define BUFF_SIZE 32
 
-static uint8_t twi0_localBuffer[TWI0_BUFFER_LENGTH];
-static uint8_t twi0_localBufferLength;
-static uint8_t twi0_cpy_of_txstatus;
+static uint8_t fromHost_addr = 42; // address I have been using for host to connect with the manager on SMBus
 
-static uint8_t printBuffer[TWI0_BUFFER_LENGTH];
-static uint8_t printBufferLength;
-static uint8_t printBufferIndex;
+static uint8_t BufferA[BUFF_SIZE];
+static uint8_t BufferB[BUFF_SIZE];
+static uint8_t BufferE[BUFF_SIZE];
+
+static uint8_t *twi0RxBuffer = BufferA;
+static uint8_t twi0RxBufferLength;
+
+static uint8_t *twi0TxBuffer = BufferB;
+static uint8_t twi0TxBufferLength;
+static uint8_t twi0TxBufferIndex;
+
+static uint8_t printOp1Buffer[BUFF_SIZE];
+static uint8_t printOp1BufferLength;
+static uint8_t printOp1BufferIndex;
+static uint8_t printOp1rw; // r = 0, w = 1
+static uint8_t printOp2Buffer[BUFF_SIZE];
+static uint8_t printOp2BufferLength;
+static uint8_t printOp2BufferIndex;
+static uint8_t printOp2rw; // r = 0, w = 1
 static uint8_t print_slave_addr;
-static uint8_t print_slave_status;
 
+static uint8_t twi0_slave_status_cpy;
+#define LAST_OP_A 0
+#define LAST_OP_R 1
+#define LAST_OP_W 2
+static uint8_t twi0_last_op; // last operation e.g., read, write, address
+static uint8_t printing;
 static uint8_t got_twi0;
 
-// echo what was received
-void twi0_transmit_callback(void)
-{
-    twi0_cpy_of_txstatus = TWI0.SSTATUS;
-    twi0_fillSlaveTxBuffer(twi0_localBuffer, twi0_localBufferLength);
-    return;
+static uint8_t *got_twi0_buf = BufferE;
+static uint8_t got_twi0BufferLength;
+static uint8_t got_twi0BufferIndex;
+
+// fill print op1 buffer 
+bool print_Op1_buf_if_possible(uint8_t rw, uint8_t buf[], uint8_t bufsize , uint8_t lastAddress) {
+
+    // e.g., printing done and debug uart is free
+    bool ret = printing;
+
+    if (ret) {
+        printOp1BufferLength = bufsize;
+        printOp1BufferIndex = 0;
+        for(int i = 0; i < bufsize; ++i)
+        {
+            printOp1Buffer[i] = buf[i];
+        }
+        printOp1rw = rw;
+        print_slave_addr = lastAddress;
+    }
+    return ret;
 }
 
-// Place the received data in local buffer so it can echo back.
-// If monitor is running, printing done, and UART is available 
-// fill the print buffer and reset the index for printing
-void twi0_receive_callback(uint8_t *data, uint8_t length)
-{
-    twi0_localBufferLength = length;
-    for(int i = 0; i < length; ++i)
-    {
-        twi0_localBuffer[i] = data[i];
-    }
-    got_twi0 = 1;
-    if ((printBufferLength == printBufferIndex) && uart1_availableForWrite())
-    {
-        printBufferLength = length;
-        printBufferIndex = 0;
-        print_slave_addr = twi0_slave_addr;
-        print_slave_status = twi0_cpy_of_txstatus;
-        for(int i = 0; i < length; ++i)
+// fill print op2 buffer (e.g. write+write/write+read on i2c)
+bool print_Op2_buf_if_possible(uint8_t rw, uint8_t buf[], uint8_t bufsize , uint8_t lastAddress) {
+
+    // e.g., printing done and debug uart is free
+    bool ret = printing;
+
+    if (ret) {
+        printOp2BufferLength = bufsize;
+        printOp2BufferIndex = 0;
+        for(int i = 0; i < bufsize; ++i)
         {
-            printBuffer[i] = data[i];
+            printOp2Buffer[i] = buf[i];
+        }
+        printOp2rw = rw;
+        if (print_slave_addr != lastAddress) { // Welp crap, don't print this we have got data for different addresses
+            printOp2BufferLength = 0;
+            printOp1BufferLength = 0;
+            printing = false;
+            ret = false;
         }
     }
-    return;
+    return ret;
 }
 
-static uint8_t twi1_slave_addr = 41; // address I have been using for application to connect with the manager
+bool move_buffer(uint8_t from_buf[], uint8_t *from_bufsize, uint8_t to_buf[], uint8_t *to_bufsize, uint8_t *to_bufindex) {
+    bool ret = true;
+    for(int i = 0; i < *from_bufsize; ++i) {
+        to_buf[i] = from_buf[i];
+    }
+    *to_bufsize = *from_bufsize;
+    *from_bufsize = 0;
+    *to_bufindex = 0; // used for read to index
+    return ret;
+}
 
-static uint8_t twi1_localBuffer[TWI1_BUFFER_LENGTH];
-static uint8_t twi1_localBufferLength;
-static uint8_t twi1_cpy_of_txstatus;
+bool twisCallback(twis_irqstate_t state, uint8_t statusReg) {
+    bool ret = true;
 
+    switch( state ) {
+        case TWIS_ADDRESSED:
+            // at this point, the callback has visibility to all bus addressing, which is interesting.
+            ret = (twis_lastAddress() == fromHost_addr); // test address true to proceed with read or write
+            twi0_slave_status_cpy = statusReg;
+            if (twi0RxBufferLength) {
+                printing = (printOp1BufferIndex >= printOp1BufferLength) && (printOp2BufferIndex >= printOp2BufferLength) && uart1_availableForWrite();
+                print_Op1_buf_if_possible(twi0_last_op, twi0RxBuffer, twi0RxBufferLength, twis_lastAddress()); // print reciece buffer as first operation
+                move_buffer(twi0RxBuffer, &twi0RxBufferLength, twi0TxBuffer, &twi0TxBufferLength, &twi0TxBufferIndex); // copy receive buffer into transmit in case next operation is read (so it can echo)
+            }
+            twi0_last_op = LAST_OP_A;
+            break;
+        case TWIS_MREAD:
+            if (twi0TxBufferIndex < twi0TxBufferLength) {
+                twis_write( twi0TxBuffer[twi0TxBufferIndex++] );
+                ret = true; // more data is in the Tx buffer
+            }
+            // note if master ignores the NACK and keeps reading 
+            // it will get 0xFF since the slave will not pull down on SDA,
+            twi0_last_op = LAST_OP_R;
+            break;
+        case TWIS_MWRITE:
+            twi0RxBuffer[twi0RxBufferLength] = twis_read();
+            ret = (++twi0RxBufferLength < BUFF_SIZE); //true to proceed
+            twi0_last_op = LAST_OP_W;
+            break;
+        case TWIS_STOPPED: 
+            if (twi0TxBufferLength) { // stop after
+                if (twi0RxBufferLength) { // write+write
+                    print_Op2_buf_if_possible(twi0_last_op, twi0RxBuffer, twi0RxBufferLength, twis_lastAddress());
+                }
+                else { // write+read
+                    print_Op2_buf_if_possible(twi0_last_op, twi0TxBuffer, twi0TxBufferLength, twis_lastAddress());
+                    move_buffer(twi0TxBuffer, &twi0TxBufferLength, got_twi0_buf, &got_twi0BufferLength, &got_twi0BufferIndex); // copy receive buffer into got_twi0_buf for use in application
+                    got_twi0 = 1;
+                }
+            } else if (twi0RxBufferLength) { // stop after write (read has no data, the slave is ignoring in fact the ACK is not from the slave, the master reads 0xFF and ACKs it, FUBAR)
+                printing = (printOp1BufferIndex >= printOp1BufferLength) && (printOp2BufferIndex >= printOp2BufferLength) && uart1_availableForWrite();
+                print_Op1_buf_if_possible(twi0_last_op, twi0RxBuffer, twi0RxBufferLength, twis_lastAddress());
+            } else if (twi0_last_op == LAST_OP_A) { // we got a ping
+                printing = (printOp1BufferIndex >= printOp1BufferLength) && (printOp2BufferIndex >= printOp2BufferLength) && uart1_availableForWrite();
+                if (printing) { // just print it now, monitor should do this but...
+                    fprintf_P(uart1,PSTR("{\"ping\":\"0x%X\"}\r\n"),fromHost_addr);
+                }
+            }
+
+            // transaction is done.
+            twi0TxBufferLength = 0;
+            twi0RxBufferLength = 0;
+            ret = true;
+            break;
+        case TWIS_ERROR:
+            ret = false;
+            break;
+        }
+    return ret;
+}
+
+static uint8_t fromApp_addr = 41; // address I have been using for application to connect with the manager
+
+static uint8_t BufferC[BUFF_SIZE];
+static uint8_t BufferD[BUFF_SIZE];
+
+static uint8_t *twi1RxBuffer = BufferC;
+static uint8_t twi1RxBufferLength;
+
+static uint8_t *twi1TxBuffer = BufferD;
+static uint8_t twi1TxBufferLength;
+static uint8_t twi1TxBufferIndex;
+
+static uint8_t twi1_slave_status_cpy;
+static uint8_t twi1_last_op; // last operation e.g., read, write, address
 static uint8_t got_twi1;
 
-// echo what was received
-void twi1_transmit_callback(void)
-{
-    twi1_cpy_of_txstatus =  TWI1.SSTATUS;
-    twi1_fillSlaveTxBuffer(twi1_localBuffer, twi1_localBufferLength);
-    return;
-}
+bool twi1sCallback(twis_irqstate_t state, uint8_t statusReg) {
+    bool ret = true;
 
-// Place the received data in local buffer so it can echo back.
-// If monitor is running, printing done, and UART is available 
-// fill the print buffer and reset the index for printing
-void twi1_receive_callback(uint8_t *data, uint8_t length)
-{
-    twi1_localBufferLength = length;
-    for(int i = 0; i < length; ++i)
-    {
-        twi1_localBuffer[i] = data[i];
-    }
-    got_twi1 = 1;
-    if ((printBufferLength == printBufferIndex) && uart1_availableForWrite())
-    {
-        printBufferLength = length;
-        printBufferIndex = 0;
-        print_slave_addr = twi1_slave_addr;
-        print_slave_status = twi1_cpy_of_txstatus;
-        for(int i = 0; i < length; ++i)
-        {
-            printBuffer[i] = data[i];
+    switch( state ) {
+        case TWIS_ADDRESSED:
+            // at this point, the callback has visibility to all bus addressing, which is interesting.
+            ret = (twi1s_lastAddress() == fromApp_addr); // test address true to proceed with read or write
+            twi1_slave_status_cpy = statusReg;
+            if (twi1RxBufferLength) {
+                printing = (printOp1BufferIndex >= printOp1BufferLength) && (printOp2BufferIndex >= printOp2BufferLength) && uart1_availableForWrite();
+                print_Op1_buf_if_possible(twi1_last_op, twi1RxBuffer, twi1RxBufferLength, twi1s_lastAddress()); // print reciece buffer as first operation
+                move_buffer(twi1RxBuffer, &twi1RxBufferLength, twi1TxBuffer, &twi1TxBufferLength, &twi1TxBufferIndex); // copy receive buffer into transmit in case next operation is read (so it can echo)
+            }
+            twi1_last_op = LAST_OP_A;
+            break;
+        case TWIS_MREAD:
+            if (twi1TxBufferIndex < twi1TxBufferLength) {
+                twis_write( twi1TxBuffer[twi1TxBufferIndex++] );
+                ret = true; // more data is in the Tx buffer
+            }
+            // note if master ignores the NACK and keeps reading 
+            // it will get 0xFF since the slave will not pull down on SDA,
+            twi1_last_op = LAST_OP_R;
+            break;
+        case TWIS_MWRITE:
+            twi1RxBuffer[twi1RxBufferLength] = twis_read();
+            ret = (++twi1RxBufferLength < BUFF_SIZE); //true to proceed
+            twi1_last_op = LAST_OP_W;
+            break;
+        case TWIS_STOPPED: 
+            if (twi1TxBufferLength) { // stop after
+                if (twi1RxBufferLength) { // write+write
+                    print_Op2_buf_if_possible(twi1_last_op, twi1RxBuffer, twi1RxBufferLength, twis_lastAddress());
+                }
+                else { // write+read
+                    print_Op2_buf_if_possible(twi1_last_op, twi1TxBuffer, twi1TxBufferLength, twis_lastAddress());
+                }
+            } else if (twi1RxBufferLength) { // stop after write or read
+                printing = (printOp1BufferIndex >= printOp1BufferLength) && (printOp2BufferIndex >= printOp2BufferLength) && uart1_availableForWrite();
+                print_Op1_buf_if_possible(twi1_last_op, twi1RxBuffer, twi1RxBufferLength, twis_lastAddress());
+            } else if (twi1_last_op == LAST_OP_A) { // we got a ping
+                printing = (printOp1BufferIndex >= printOp1BufferLength) && (printOp2BufferIndex >= printOp2BufferLength) && uart1_availableForWrite();
+                if (printing) { // just print it now,  monitor should do this but...
+                    fprintf_P(uart1,PSTR("{\"ping\":\"0x%X\"}\r\n"),fromHost_addr);
+                }
+            }
+
+            // transaction is done so reset the buffers
+            twi1TxBufferLength = 0;
+            twi1RxBufferLength = 0;
+            ret = true;
+            break;
+        case TWIS_ERROR:
+            ret = false;
+            break;
         }
-    }
-    return;
+    return ret;
 }
 
 void setup(void)
@@ -204,16 +348,10 @@ void setup(void)
     initTimers();
 
     /* Initialize I2C*/
-    twi0_init(100000UL, TWI0_PINS_PULLUP); // twi0_bsd
-    twi1_init(100000UL, TWI0_PINS_PULLUP); // twi1_bsd
-
-    /* Initialize I2C client*/
-    twi0_registerSlaveRxCallback(twi0_receive_callback);
-    twi0_registerSlaveTxCallback(twi0_transmit_callback);
-    twi0_slaveAddress(twi0_slave_addr); // ISR is enabled so register callback first
-    //twi1_registerSlaveRxCallback(twi1_receive_callback);
-    //twi1_registerSlaveTxCallback(twi1_transmit_callback);
-    //twi1_slaveAddress(twi1_slave_addr);
+    twim_altPins();             // master (and slave) pins are PC2, PC3 with MVIO and go to the R-Pi host
+    twis_init(fromHost_addr, twisCallback );// gencall enabled, so check address in callback
+    twi1m_defaultPins();             // master (and slave) pins are PF2, PF3 and go to the Appliction MCU (e.g., the AVR128DA28)
+    twi1s_init(fromHost_addr, twi1sCallback );// gencall enabled, so check address in callback
 
     sei(); // Enable global interrupts to start TIMER0
     
@@ -228,12 +366,12 @@ void setup(void)
 
 uint8_t debug_print_done = 0;
 
-// Monitor for the I2C clients, output to the debug UART
+// Monitor the I2C slave address with the debug UART
 void i2c_monitor(void)
 {
     if ( (debug_print_done == 0) )
     {
-        if (printBufferIndex < printBufferLength)
+        if (printOp1BufferIndex < printOp1BufferLength)
         {
             fprintf_P(uart1,PSTR("{\"monitor_0x%X\":["),print_slave_addr); // start of JSON for monitor
             debug_print_done = 1;
@@ -246,33 +384,45 @@ void i2c_monitor(void)
 
     else if ( (debug_print_done == 1) ) // twi slave status when transmit_callback is done
     {
-        fprintf_P(uart1,PSTR("{\"status\":\"0x%X\"}"),print_slave_status);
+        fprintf_P(uart1,PSTR("{\"status\":\"0x%X\"}"),twi0_slave_status_cpy);
         debug_print_done = 2;
     }
 
     else if ( (debug_print_done == 2) )
     {
-        fprintf_P(uart1,PSTR(",{\"len\":\"%d\"}"),printBufferLength - 1); 
+        fprintf_P(uart1,PSTR(",{\"len\":\"%d\"}"),printOp1BufferLength); 
         debug_print_done = 3;
     }
 
-    else if ( (debug_print_done == 3) )
-    {
-        printBufferIndex += 1;
-        if (printBufferIndex >= printBufferLength) 
-        {
+    else if ( (debug_print_done == 3) ) {
+        if (printOp1BufferIndex >= printOp1BufferLength) {
             debug_print_done = 4; // done printing 
-        }
-        else
-        {
-            fprintf_P(uart1,PSTR(",{\"dat\":\"0x%X\"}"),printBuffer[printBufferIndex-1]);
+        } else {
+            if (printOp1rw == LAST_OP_W) {
+                fprintf_P(uart1,PSTR(",{\"W1\":\"0x%X\"}"),printOp1Buffer[printOp1BufferIndex++]);
+            } else if (printOp1rw == LAST_OP_R) {
+                fprintf_P(uart1,PSTR(",{\"R1\":\"0x%X\"}"),printOp1Buffer[printOp1BufferIndex++]);
+            }
         }
     }
-    
-    if ( (debug_print_done == 4) )
+
+    // if the second operation clock stretch is long, this may not print
+    else if ( (debug_print_done == 4) ) {
+        if (printOp2BufferIndex >= printOp2BufferLength) {
+            debug_print_done = 5; // done printing 
+        } else {
+            if (printOp2rw == LAST_OP_W) {
+                fprintf_P(uart1,PSTR(",{\"W2\":\"0x%X\"}"),printOp2Buffer[printOp2BufferIndex++]);
+            } else if (printOp2rw == LAST_OP_R) {
+                fprintf_P(uart1,PSTR(",{\"R2\":\"0x%X\"}"),printOp2Buffer[printOp2BufferIndex++]);
+            }
+        }
+    }
+
+    if ( (debug_print_done == 5) )
     {
         fprintf_P(uart1,PSTR("]}\r\n"));
-        debug_print_done = 0; // wait for next slave receive event to fill printBuffer
+        debug_print_done = 0; // wait for next slave receive event to fill printBuffer(s)
     }
 }
 
@@ -316,10 +466,10 @@ int main(void)
         if(uart1_availableForWrite())
         {
             i2c_monitor();
-            if (got_twi1) got_twi1 = 0;
-            if (got_twi0)
+            if (got_twi1) got_twi1 = 0; // no action taken at this time
+            if (got_twi0) // only if write+read is done can the host change UPDI mode for Application programing
             {
-                if (twi0_localBuffer[0] == 7) // if command byte is 7 on SMBus from host
+                if (got_twi0_buf[0] == 7) // if command byte is 7 on SMBus from host
                 {
                     // UPDI mode, application uploaded over multi-drop serial
                     ioWrite(MCU_IO_MGR_SETAPP4_UART,LOGIC_LEVEL_LOW); // disconnect to UART

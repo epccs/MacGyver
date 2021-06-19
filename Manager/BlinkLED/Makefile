@@ -1,5 +1,5 @@
 # used to kick the tires
-TARGET = BlinkLED
+TARGET = AppUpload
 LIBDIR = ../lib
 OBJECTS = main.o \
 	$(LIBDIR)/twi.o \
