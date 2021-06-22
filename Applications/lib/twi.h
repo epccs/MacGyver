@@ -46,25 +46,25 @@
 
 typedef void (*twim_callbackT)(void);
 
-void twim_off           ();
-void twim_on            (uint8_t address);
-bool twim_isBusy        ();
-bool twim_lastResultOK  ();
-void twim_callback      (twim_callbackT callbackFunction);
-void twim_writeRead     (const uint8_t* writeBuffer, uint16_t writeLength, uint8_t* readBuffer, uint16_t readLength);
-void twim_writeWrite    (const uint8_t* writeBuffer, uint16_t writeLength, const uint8_t* writeBuffer2, uint16_t writeLength2);
-void twim_write         (const uint8_t* writeBuffer, uint16_t writeLength);
-void twim_read          (uint8_t* readBuffer, uint16_t readLength);
-bool twim_waitUS        (uint16_t microseconds);
-void twim_defaultPins   ();
-void twim_altPins       ();
+void twim_off               ();
+void twim_on                (uint8_t address);
+bool twim_isBusy            ();
+bool twim_lastResultOK      ();
+void twim_callback          (twim_callbackT callbackFunction);
+void twim_writeRead         (const uint8_t* writeBuffer, uint16_t writeLength, uint8_t* readBuffer, uint16_t readLength);
+void twim_writeWrite        (const uint8_t* writeBuffer, uint16_t writeLength, const uint8_t* writeBuffer2, uint16_t writeLength2);
+void twim_write             (const uint8_t* writeBuffer, uint16_t writeLength);
+void twim_read              (uint8_t* readBuffer, uint16_t readLength);
+bool twim_waitUS            (uint16_t microseconds);
+void twim_defaultPins       ();
+void twim_altPins           ();
 
-                        __attribute((always_inline)) inline static
-void twim_baud          (uint32_t cpuHz, uint32_t twiHz)
-                        {
-                        int32_t v = cpuHz/twiHz/2 - 5;
-                        TWI0.MBAUD = v >= 0 ? v : 0;
-                        }
+                            __attribute((always_inline)) inline static
+void twim_baud              (uint32_t cpuHz, uint32_t twiHz)
+                            {
+                            int32_t v = cpuHz/twiHz/2 - 5;
+                            TWI0.MBAUD = v >= 0 ? v : 0;
+                            }
 
 /*------------------------------------------------------------------------------
     twis - Twi slave
@@ -104,12 +104,44 @@ typedef enum { TWIS_ADDRESSED, TWIS_MREAD, TWIS_MWRITE, TWIS_STOPPED,
                TWIS_ERROR } twis_irqstate_t;
 typedef bool(*twis_callback_t)(twis_irqstate_t state, uint8_t statusReg);
 
-void twis_off           ();
-void twis_write         (uint8_t value);
-uint8_t   twis_read          ();
-uint8_t   twis_lastAddress   ();
-void twis_address2      (uint8_t SlaveAddress2);
-void twis_addressMask   (uint8_t SlaveAddressMask); //no 2nd address
-void twis_init          (uint8_t SlaveAddress, twis_callback_t callbackFunction);
-void twis_defaultPins   ();
-void twis_altPins       ();
+void twis_off               ();
+void twis_write             (uint8_t value);
+uint8_t twis_read           ();
+uint8_t twis_lastAddress    ();
+void twis_address2          (uint8_t SlaveAddress2);
+void twis_addressMask       (uint8_t SlaveAddressMask); //no 2nd address
+void twis_init              (uint8_t SlaveAddress, twis_callback_t callbackFunction);
+void twis_defaultPins       ();
+void twis_altPins           ();
+
+
+#if defined(TWI1)
+void twi1m_off              ();
+void twi1m_on               (uint8_t address);
+bool twi1m_isBusy           ();
+bool twi1m_lastResultOK     ();
+void twi1m_callback         (twim_callbackT callbackFunction);
+void twi1m_writeRead        (const uint8_t* writeBuffer, uint16_t writeLength, uint8_t* readBuffer, uint16_t readLength);
+void twi1m_writeWrite       (const uint8_t* writeBuffer, uint16_t writeLength, const uint8_t* writeBuffer2, uint16_t writeLength2);
+void twi1m_write            (const uint8_t* writeBuffer, uint16_t writeLength);
+void twi1m_read             (uint8_t* readBuffer, uint16_t readLength);
+bool twi1m_waitUS           (uint16_t microseconds);
+void twi1m_defaultPins      ();
+void twi1m_altPins          ();
+
+                            __attribute((always_inline)) inline static
+void twi1m_baud             (uint32_t cpuHz, uint32_t twiHz)
+                            {
+                            int32_t v = cpuHz/twiHz/2 - 5;
+                            TWI0.MBAUD = v >= 0 ? v : 0;
+                            }
+void twi1s_off              ();
+void twi1s_write            (uint8_t value);
+uint8_t twi1s_read          ();
+uint8_t twi1s_lastAddress   ();
+void twi1s_address2         (uint8_t SlaveAddress2);
+void twi1s_addressMask      (uint8_t SlaveAddressMask); //no 2nd address
+void twi1s_init             (uint8_t SlaveAddress, twis_callback_t callbackFunction);
+void twi1s_defaultPins      ();
+void twi1s_altPins          ();
+#endif

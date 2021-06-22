@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <stdint.h>
+#include <avr/pgmspace.h>
 #include <avr/interrupt.h>
 #include <avr/io.h>
 #include <util/delay.h>
@@ -92,12 +93,118 @@ bool twisCallback(twis_irqstate_t state, uint8_t statusReg){
     return ret;
 }
 
+#define TWI_TTL 3000UL
+#define TWI_DELAY 5UL
+unsigned long twi_started_at;
+unsigned long twi_ttl;
+unsigned long twi_delay;
+
+uint16_t twim_cb_timout_count; // how many times did the twim_cb timeout hit
+uint16_t twim_cb_good_count;
+uint16_t twim_cb_bad_count;
+unsigned long twim_cb_last_elapsed;
+uint16_t twim_cb_elapsed_lessthan_delay;
+volatile bool twim_cb_wip;
+uint8_t rdbuf[5];
+
+uint16_t cp_twim_cb_timout_count; // a copy for printing
+uint16_t cp_twim_cb_good_count;
+uint16_t cp_twim_cb_bad_count;
+unsigned long cp_twim_cb_last_elapsed;
+uint16_t cp_twim_cb_elapsed_lessthan_delay;
+uint8_t print_part; // print the data in parts so uart does not block
+
+/*
+void abort_safe(void)
+{
+    // flush the UART befor halt
+    uart0_flush();
+    twim_off(); // need to clear the pins
+    _delay_ms(20); // wait for last byte to send
+    uart0_init(0, 0); // disable UART hardware
+    // turn off interrupts and then spin loop
+    cli();
+    while(1)
+    {
+        _delay_ms(100);
+    }
+}
+*/
+
+// finish a twi transaction that was started but is now done
+void twimCallback(void) {
+    if (twim_lastResultOK()) {
+        ++twim_cb_good_count;
+    } else {
+        ++twim_cb_bad_count;
+    }
+    twim_cb_last_elapsed = elapsed(&twi_started_at);
+    if (twim_cb_last_elapsed < twi_delay) {
+        ++twim_cb_elapsed_lessthan_delay; // counts when interlock is done wrong
+    } else { // timing will break if twi_started_at gets ahead of tickAtomic()
+        twi_started_at += twi_delay;
+    }
+    twim_cb_wip = false;
+    twim_callback(NULL); // remove the callback, the ISR checks for NULL and this will cause it to be ignored.
+}
+
 //send command to slave
 void testSlave() {
-    twim_on( 0x51 );                //on, slave address 0x51
-    uint8_t rdbuf[5];                    //read 5 bytes
-    twim_read( rdbuf, sizeof(rdbuf) );//do transaction, read n bytes
-    twim_waitUS( 3000 );            //wait for complettion or timeout (3ms)
+    // the callback is run in ISR context and will update the four bytes of 
+    // twi_started_at (while the main thread is in the middle of using them).
+    if (!twim_cb_wip) { // this interlock makes sure twi_started_at is not used while callback is active
+        unsigned long kRuntime = elapsed(&twi_started_at); // update the time now that interlock checked
+        if ( kRuntime > twi_ttl) 
+        {
+            // timed out
+            ++twim_cb_timout_count;
+            twim_cb_wip = false;
+            twim_off();
+            //twim_callback(NULL);
+            //fprintf_P(uart0,PSTR("timed FUBAR: twi_started_at %lu, now %lu, elapsed %lu\r\n"), twi_started_at, tickAtomic(), kRuntime);
+            fprintf_P(uart0,PSTR("twi0 timed out\r\n"), twim_cb_timout_count, kRuntime, twi_ttl); // this can block I guess
+            while(!uart0_availableForWrite());
+            twi_started_at = tickAtomic(); // restart the timer.
+            // note I am seeing a few timeouts, a 3mSec delay is converted into 2 clock ticks.
+            // there is also another device on the bus.
+        }
+        if (!twim_isBusy()) { // twi not busy
+            if ((kRuntime > twi_delay)) { // the delay for next transaction has passed
+                twim_callback(twimCallback); // register what to do after transaction has finished
+                twim_on( 0x51 ); //on, slave address 0x51
+                twim_read( rdbuf, sizeof(rdbuf) ); //do transaction, read n bytes
+                twim_cb_wip = true;
+            }
+        }
+    }
+    if (uart0_availableForWrite()) { // if UART is done then print latest twi stats (but don't block).
+        if (print_part == 0) {
+            cli(); // get a copy that will not change
+            cp_twim_cb_last_elapsed = twim_cb_last_elapsed;
+            cp_twim_cb_timout_count = twim_cb_timout_count;
+            cp_twim_cb_good_count = twim_cb_good_count;
+            cp_twim_cb_bad_count = twim_cb_bad_count;
+            cp_twim_cb_elapsed_lessthan_delay = twim_cb_elapsed_lessthan_delay;
+            sei();
+            fprintf_P(uart0,PSTR("ticks %lu, "), cp_twim_cb_last_elapsed);
+            print_part = 1;
+        } else if (print_part == 1) {
+            fprintf_P(uart0,PSTR("tmo %u, "),  cp_twim_cb_timout_count);
+            print_part = 2;
+        } else if (print_part == 2) {
+            fprintf_P(uart0,PSTR("short %u, "),  cp_twim_cb_elapsed_lessthan_delay);
+            print_part = 3;
+        } else if (print_part == 3) {
+            fprintf_P(uart0,PSTR("good %u, "), cp_twim_cb_good_count);
+            print_part = 4;
+        } else if (print_part == 4) {
+            fprintf_P(uart0,PSTR("bad %u\r\n"), cp_twim_cb_bad_count);
+            print_part = 0;
+        } else { // this should not happen
+            print_part = 0;
+        }
+        
+    }
 }
 
 
@@ -116,13 +223,14 @@ int main() {
     twis_defaultPins();             //slave pins
     twis_init( 0x51, twisCallback );//0x51, callback function above
 
+    twi_delay = cnvrt_milli(TWI_DELAY);
+    twi_ttl = cnvrt_milli(TWI_TTL);
+
     sei();
 
     // loop
     while(1) {
         testSlave();
-        while (!uart0_availableForWrite());
-        _delay_ms(1000);
     }
 
 }

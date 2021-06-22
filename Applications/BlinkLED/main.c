@@ -30,24 +30,32 @@ unsigned long blink_started_at;
 unsigned long blink_delay;
 
 static int got_a;
+static bool wipTwim;
+static bool lastTwimResult;
 
 FILE *uart0;
 
-// don't block (e.g. _delay_ms(1000) ), ckeck if time has elapsed to toggle 
+// don't block (e.g. _delay_ms(1000) or twim_waitUS() ), ckeck if time has elapsed to toggle
 void blink(void)
 {
+    if (twim_isBusy()) return; // skip if TWI is in use
+    if (wipTwim) { // only set if write was started
+        if (uart0_availableForWrite()) {
+            lastTwimResult = twim_lastResultOK();
+            if (lastTwimResult == false) fprintf(uart0,"%lu:twi0 good\r\n", blink_started_at);
+            if (lastTwimResult == true) fprintf(uart0,"%lu:twi0 failed\r\n", blink_started_at);
+        }
+        wipTwim = false; // if UART is doing stuff skip printing.
+    }
     unsigned long kRuntime = elapsed(&blink_started_at);
     if ( kRuntime > blink_delay)
     {
         ioToggle(MCU_IO_TX2);
-        if(ioRead(MCU_IO_TX2)) // ping i2c every other toggle
+        if(ioRead(MCU_IO_TX2)) // write i2c every other toggle
         {
               uint8_t data[] = {'a'}; 
             twim_write( data, sizeof(data) ); // same address 41
-            bool lastTwimResult = twim_waitUS( 3000 ); // wait for complettion or timeout (3ms)
-            while (!uart0_availableForWrite());
-            if (lastTwimResult == false) fprintf(uart0,"%lu:twi0 transaction good\r\n", blink_delay);
-            if (lastTwimResult == true) fprintf(uart0,"%lu:twi0 transaction failed\r\n", blink_delay);
+            wipTwim = true;
         }
 
         // next toggle 

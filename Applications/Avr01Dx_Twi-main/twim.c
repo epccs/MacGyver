@@ -8,6 +8,7 @@
 #include <util/delay.h>
 
 #include "twim.h"
+#include "twiPins.h"
 
     //==========
     // private:
