@@ -2,7 +2,7 @@
 
 ## To Do
 
-i2c_bsd master locked up, looking for the issue (I will use fprintf to see if it is init or the first write).
+Changed TWI libraries and got it to write to self (application MCU), but not yet to manager.
 
 ## Overview
 

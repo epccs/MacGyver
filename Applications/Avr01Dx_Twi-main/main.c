@@ -96,6 +96,7 @@ bool twisCallback(twis_irqstate_t state, uint8_t statusReg){
 #define TWI_TTL 3000UL
 #define TWI_DELAY 5UL
 unsigned long twi_started_at;
+unsigned long twi_started_at_safe;
 unsigned long twi_ttl;
 unsigned long twi_delay;
 
@@ -104,7 +105,7 @@ uint16_t twim_cb_good_count;
 uint16_t twim_cb_bad_count;
 unsigned long twim_cb_last_elapsed;
 uint16_t twim_cb_elapsed_lessthan_delay;
-volatile bool twim_cb_wip;
+volatile bool twim_cb_interlock;
 uint8_t rdbuf[5];
 
 uint16_t cp_twim_cb_timout_count; // a copy for printing
@@ -144,7 +145,7 @@ void twimCallback(void) {
     } else { // timing will break if twi_started_at gets ahead of tickAtomic()
         twi_started_at += twi_delay;
     }
-    twim_cb_wip = false;
+    twim_cb_interlock = false;
     twim_callback(NULL); // remove the callback, the ISR checks for NULL and this will cause it to be ignored.
 }
 
@@ -152,28 +153,28 @@ void twimCallback(void) {
 void testSlave() {
     // the callback is run in ISR context and will update the four bytes of 
     // twi_started_at (while the main thread is in the middle of using them).
-    if (!twim_cb_wip) { // this interlock makes sure twi_started_at is not used while callback is active
-        unsigned long kRuntime = elapsed(&twi_started_at); // update the time now that interlock checked
+    if (twim_cb_interlock) { // this interlock tells if twi_started_at is safe to use
+        unsigned long kRuntime = elapsed(&twi_started_at_safe); // this time is safe when isr is active
         if ( kRuntime > twi_ttl) 
         {
             // timed out
             ++twim_cb_timout_count;
-            twim_cb_wip = false;
+            twim_cb_interlock = false;
             twim_off();
-            //twim_callback(NULL);
-            //fprintf_P(uart0,PSTR("timed FUBAR: twi_started_at %lu, now %lu, elapsed %lu\r\n"), twi_started_at, tickAtomic(), kRuntime);
-            fprintf_P(uart0,PSTR("twi0 timed out\r\n"), twim_cb_timout_count, kRuntime, twi_ttl); // this can block I guess
-            while(!uart0_availableForWrite());
+            twim_callback(NULL);
+            fprintf_P(uart0,PSTR("twi0 timed out\r\n"));
+            while(!uart0_availableForWrite()); // block until uart is done
             twi_started_at = tickAtomic(); // restart the timer.
-            // note I am seeing a few timeouts, a 3mSec delay is converted into 2 clock ticks.
-            // there is also another device on the bus.
-        }
+         }
+    } else {
+        unsigned long kRuntime = elapsed(&twi_started_at); // time is safe since interlock shows ISR will not run
         if (!twim_isBusy()) { // twi not busy
             if ((kRuntime > twi_delay)) { // the delay for next transaction has passed
                 twim_callback(twimCallback); // register what to do after transaction has finished
                 twim_on( 0x51 ); //on, slave address 0x51
                 twim_read( rdbuf, sizeof(rdbuf) ); //do transaction, read n bytes
-                twim_cb_wip = true;
+                twim_cb_interlock = true;
+                twi_started_at_safe = twi_started_at; // used for ttl timing, the ISR will not change it
             }
         }
     }
