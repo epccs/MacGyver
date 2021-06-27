@@ -2,6 +2,7 @@
 TARGET = AppUpload
 LIBDIR = ../lib
 OBJECTS = main.o \
+	i2c_monitor.o \
 	$(LIBDIR)/twi.o \
 	$(LIBDIR)/uart1_bsd.o \
 	$(LIBDIR)/timers_bsd.o

@@ -406,7 +406,7 @@ ISR                         (TWI1_TWIS_vect)
                             bool done = false;
 
                             if( state == TWIS_ADDRESSED ) {
-                                s_lastAddress_ = s1_read()>>1;
+                                s1_lastAddress_ = s1_read()>>1;
                                 is1st = true;
                                 }
                             else if( state == TWIS_MREAD ) {
@@ -414,7 +414,7 @@ ISR                         (TWI1_TWIS_vect)
                                 }
                             else if( state != TWIS_MWRITE ) done = true;
 
-                            if( false == twis_isrCallback_(state, s) ) done = true;
+                            if( false == twi1s_isrCallback_(state, s) ) done = true;
                             if( done ) s1_nackComplete(); else s1_ack();
                             }
 void twi1s_defaultPins      () { TWI1_PULL_DEFAULT(); TWI1_PORTMUX_DEFAULT(); }
