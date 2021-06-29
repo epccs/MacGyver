@@ -1,16 +1,17 @@
 # used to kick the tires
-TARGET = AppUpload
+TARGET = Twi01Dx
 LIBDIR = ../lib
 OBJECTS = main.o \
-	$(LIBDIR)/twi.o \
-	$(LIBDIR)/uart1_bsd.o \
-	$(LIBDIR)/timers_bsd.o
+	ds3231.o \
+	twi1m.o \
+	twi1s.o \
+	$(LIBDIR)/timers_bsd.o \
+	$(LIBDIR)/uart1_bsd.o
 
 # Chip and project-specific global definitions
 MCU = avr128db32
 # 1,2,4*,8,16. * is default: Internal High-Frequency Oscillator Control A (OSCHFCTRLA) bitfield FRQSEL[3:0]
 F_CPU = 16000000UL
-#BAUD  =  38400UL
 CPPFLAGS = -DF_CPU=$(F_CPU) -I. 
 
 # Cross-compilation
@@ -98,11 +99,11 @@ $(TARGET).elf: $(OBJECTS)
 	$(SIZE) $@
 	rm -f $(TARGET).o $(OBJECTS)
 
-clean: ## Remove the image and its related files.
+clean: ## remove the image and its related files
 	rm -f $(TARGET).hex $(TARGET).map $(TARGET).elf $(TARGET).lst
  
 %.lst: %.elf
 	$(OBJDUMP) -h -S $< > $@
 
-builtin: ## Show list of builtin (hidden) defines, some may need to be added to VScode c_cpp_properties.json.
+builtin: ## show list of builtin (hidden) defines, some may need to be added to VScode c_cpp_properties.json
 	$(CC) $(LDFLAGS) $(TARGET_ARCH) -E -dM - < /dev/null

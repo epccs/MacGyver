@@ -2,6 +2,7 @@
 TARGET = BlinkLED
 LIBDIR = ../lib
 OBJECTS = main.o \
+	i2c_monitor.o \
 	$(LIBDIR)/twi.o \
 	$(LIBDIR)/uart0_bsd.o \
 	$(LIBDIR)/timers_bsd.o

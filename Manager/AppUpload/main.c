@@ -16,6 +16,7 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 #include <avr/pgmspace.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
@@ -30,20 +31,58 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 unsigned long blink_started_at;
 unsigned long blink_delay;
 
-static int got_a;
+#define TWI_TTL 3000UL
+#define TWI_DELAY 5UL
+unsigned long twi1_started_at_safe; // ISR does not modify
+unsigned long twi1_ttl;
+unsigned long twi1_delay;
+volatile bool twi1m_cb_interlock;
+uint8_t wrbuf[5];
 
+static int got_a;
 FILE *uart1;
 
-// don't block (e.g. _delay_ms(1000) ), ckeck if time has elapsed to toggle 
+static uint8_t toApp_addr = 40; // app only has one twi port
+//static uint8_t toMgr_fromApp_addr = 41; // manager-twi1 to application-twi0 
+//static uint8_t fromHost_addr = 42; // R-Pi-twi0 to manager-twi0 (mgr has MVIO on the alt twi0 port used)
+
+// finish a twi transaction that was started but is now done
+void twi1mCallback(void) {
+    twi1m_cb_interlock = false;
+    twi1m_callback(NULL); // remove the callback, the ISR checks for NULL and this will cause it to be ignored.
+}
+
+// don't block (e.g. _delay_ms(1000) or twim_waitUS() ), ckeck if time has elapsed to toggle
 void blink(void)
 {
-    unsigned long kRuntime = elapsed(&blink_started_at);
-    if ( kRuntime > blink_delay)
-    {
-        ioToggle(MCU_IO_MGR_LED);
-        
-        // next toggle 
-        blink_started_at += blink_delay; 
+    if (twi1m_cb_interlock) {
+        unsigned long kRuntime = elapsed(&twi1_started_at_safe);
+        if ( kRuntime > twi1_ttl) {
+            // timed out
+            twi1m_cb_interlock = false;
+            twi1m_off();
+            twi1m_callback(NULL);
+        }
+    } else {
+        unsigned long kRuntime = elapsed(&blink_started_at);
+        if ( kRuntime > blink_delay) {
+            ioToggle(MCU_IO_MGR_LED);
+            if(ioRead(MCU_IO_MGR_LED)) // write i2c every other toggle
+            {
+                if (!twi1m_isBusy()) { // not needed with interlock but whatever
+                    twi1m_callback(twi1mCallback); // register what to do after transaction has finished
+                    twi1m_on(toApp_addr); //set address, but do not START
+                    uint8_t data[] = {'M', '2', 'A', 'p', '\0'};
+                    memcpy(wrbuf, data, sizeof(data)); // data will go out of scope (e.g. it lives on the stack)
+                    twi1m_write( wrbuf, sizeof(wrbuf) ); // to address used in twi1m_on
+                    twi1m_cb_interlock = true;
+                    twi1_started_at_safe = tickAtomic(); // used for ttl timing, the ISR must not change it
+                }
+            }
+
+            // next toggle 
+            blink_started_at += blink_delay; 
+        }
     }
 }
 
@@ -121,6 +160,10 @@ void setup(void)
 
     /* Initialize I2C monitor (includes the twis callback's) */
     i2c_monitor_init(uart1, uart1_availableForWrite);
+    twi1m_baud( F_CPU, 100000ul ); // setup the master
+
+    twi1_delay = cnvrt_milli(TWI_DELAY);
+    twi1_ttl = cnvrt_milli(TWI_TTL);
 
     sei(); // Enable global interrupts to start TIMER0
     
@@ -165,7 +208,7 @@ int main(void)
         }
         if (!got_a)
         {
-            blink(); // also ping_i2c() at the toggle time
+            blink(); // also ping_i2c1() at the toggle event
         }
         i2c_monitor();
         uint8_t *buf = got_twi0();

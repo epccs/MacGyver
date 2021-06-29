@@ -267,7 +267,7 @@ ISR                         (TWI0_TWIS_vect)
     // public:
     //============
 
-void twis_defaultPins       () { TWI_PULL_DEFAULT(); TWI_PORTMUX_DEFAULT(); }
+void twis_defaultPins       () { /*TWI_PULL_DEFAULT();*/ TWI_PORTMUX_DEFAULT(); }
 void twis_altPins           () { TWI_PULL_ALT(); TWI_PORTMUX_ALT(); }
 void twis_off               () { s_irqAllOff(); s_off(); s_clearFlags(); }
 void twis_write             (uint8_t v) { s_write(v); }
@@ -353,7 +353,7 @@ void    twi1m_off            () { m1_off(); }
 void    twi1m_on             (uint8_t addr) { m1_address(addr); m1_toStateIdle(); m1_on(); }
 bool    twi1m_isBusy         () { return m1_isBusy(); }
 bool    twi1m_lastResultOK   () { return twi1_lastResult_; }
-void    twi1m_defaultPins    () { TWI1_PULL_DEFAULT(); TWI1_PORTMUX_DEFAULT(); }
+void    twi1m_defaultPins    () { /*TWI1_PULL_DEFAULT(); */ TWI1_PORTMUX_DEFAULT(); }
 #if defined(PORTB)
    void    twi1m_altPins        () { TWI1_PULL_ALT(); TWI1_PORTMUX_ALT(); }
 #endif

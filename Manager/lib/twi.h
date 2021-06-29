@@ -133,7 +133,7 @@ void twi1m_altPins          ();
 void twi1m_baud             (uint32_t cpuHz, uint32_t twiHz)
                             {
                             int32_t v = cpuHz/twiHz/2 - 5;
-                            TWI0.MBAUD = v >= 0 ? v : 0;
+                            TWI1.MBAUD = v >= 0 ? v : 0;
                             }
 void twi1s_off              ();
 void twi1s_write            (uint8_t value);

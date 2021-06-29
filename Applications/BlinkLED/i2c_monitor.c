@@ -21,12 +21,11 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 #include <avr/pgmspace.h>
 #include <avr/io.h>
 #include "../lib/twi.h"
-#include "../lib/io_enum_bsd.h"
 #include "i2c_monitor.h"
 
 #define BUFF_SIZE 32
 
-static uint8_t fromHost_addr = 42; // address I have been using for host to connect with the manager on SMBus
+static uint8_t toApp_addr = 40; // app only has one twi port
 static bool twi0_addr_verified;
 
 static uint8_t BufferA[BUFF_SIZE];
@@ -126,7 +125,7 @@ bool twisCallback(twis_irqstate_t state, uint8_t statusReg) {
     switch( state ) {
         case TWIS_ADDRESSED:
             // at this point, the callback has visibility to all bus addressing, which is interesting.
-            ret = twi0_addr_verified = (twis_lastAddress() == fromHost_addr); // test address true to proceed with read or write
+            ret = twi0_addr_verified = (twis_lastAddress() == toApp_addr); // test address true to proceed with read or write
             twi0_slave_status_cpy = statusReg;
             if (twi0RxBufferLength) {
                 printing = (printOp1BufferIndex >= printOp1BufferLength) && (printOp2BufferIndex >= printOp2BufferLength) && available_();
@@ -165,7 +164,7 @@ bool twisCallback(twis_irqstate_t state, uint8_t statusReg) {
             } else if (twi0_last_op == LAST_OP_A) { // we got a ping
                 printing = (printOp1BufferIndex >= printOp1BufferLength) && (printOp2BufferIndex >= printOp2BufferLength) && available_();
                 if (printing && twi0_addr_verified) { // just print it now, monitor should do this but...
-                    fprintf_P(debug_port,PSTR("{\"ping\":\"0x%X\"}\r\n"),fromHost_addr);
+                    fprintf_P(debug_port,PSTR("{\"ping\":\"0x%X\"}\r\n"),toApp_addr);
                 }
             }
 
@@ -181,6 +180,7 @@ bool twisCallback(twis_irqstate_t state, uint8_t statusReg) {
     return ret;
 }
 
+#if defined(TWI1)
 static uint8_t fromApp_addr = 41; // address I have been using for application to connect with the manager
 static bool twi1_addr_verified;
 
@@ -263,6 +263,7 @@ bool twi1sCallback(twis_irqstate_t state, uint8_t statusReg) {
         }
     return ret;
 }
+#endif
 
 //==========
 // public:
@@ -271,17 +272,16 @@ bool twi1sCallback(twis_irqstate_t state, uint8_t statusReg) {
 // init TWI0 (PC2,PC3) and TW1 (PF2,PF3) and get a link to the debug iostream and the test for its Tx buffer availability
 void i2c_monitor_init(FILE *debug_uart_to_use, streamTx_available cb) {
     available_ = cb;
-    ioCntl(MCU_IO_MVIO_SCL0, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_ENABLE, PORT_INVERT_NORMAL);
-    ioCntl(MCU_IO_MVIO_SDA0, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_ENABLE, PORT_INVERT_NORMAL);
-    twim_altPins(); // tell twi0 hardware to use pins PC2, PC3 with MVIO. They go to the R-Pi host
-    twis_init(fromHost_addr, twisCallback );// gencall enabled, so check address in callback
-    ioCntl(MCU_IO_MGR_SCL1, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
-    ioCntl(MCU_IO_MGR_SDA1, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
-    twi1m_defaultPins(); // tell twi1 hardware to use pins PF2, PF3. They go to the Appliction MCU (e.g., the AVR128DA28)
+    //twim_altPins();             // DB master (and slave) pins are PC2, PC3 with MVIO and go to the R-Pi host
+    twim_defaultPins();           // DA master (and slave) pins are PA2, PA3 and go to the DB (PF2, PF3)
+    twis_init(toApp_addr, twisCallback );// gencall enabled, so check address in callback
+#if defined(TWI1)
+    twi1m_defaultPins();             // DB master (and slave) pins are PF2, PF3 and go to the Appliction MCU (e.g., the AVR128DA28)
     twi1s_init(fromApp_addr, twi1sCallback );// gencall enabled, so check address in callback
+    got_twi1_ = false;
+#endif
     debug_port = debug_uart_to_use;
     got_twi0_ = false;
-    got_twi1_ = false;
 }
 
 // got TWI, this will give a pointer to buffer and reset flag
@@ -294,6 +294,7 @@ uint8_t *got_twi0(void) {
     return ret;
 }
 
+#if defined(TWI1)
 uint8_t * got_twi1(void) {
     uint8_t *ret = NULL;
     if (got_twi1_) {
@@ -302,6 +303,7 @@ uint8_t * got_twi1(void) {
     }
     return ret;
 }
+#endif
 
 // Monitor the I2C slave address with the debug UART
 void i2c_monitor(void)
