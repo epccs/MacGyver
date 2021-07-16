@@ -83,7 +83,7 @@ CALIBRATE_LOADED_t LoadAdcConfig()
         adcConfMap[ch].calibration = 1.0/4096;
         adcConfMap[ch].ref = &ref_extern_vdd;
         adcConfMap[ch].adc0ref = VREF_REFSEL_VDD_gc;
-        adcConfMap[ch].muxpos = ADC_MUXPOS_AIN0_gc;
+        adcConfMap[ch].muxpos = ADC_MUXPOS_AIN1_gc;
         adcConfMap[ch].muxneg = ADC_MUXNEG_GND_gc;
         adcConfMap[ch].sampctrl = 0;
         if (i2c_success) cal_loaded = CALIBRATE_LOADED_CH1;

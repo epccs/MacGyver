@@ -28,9 +28,6 @@ extern uint8_t adc_auto_conversion; // don't do single conversions when auto_con
 extern void init_ADC_single_conversion(void);
 extern int adcAtomic(ADC_CH_t channel);
 extern int adcSingle(ADC_CH_t channel);
-
-#define FREE_RUNNING 1
-#define BURST_MODE 0
-extern void enable_ADC_auto_conversion(uint8_t free_run);
+extern void adc_burst(unsigned long *adc_started_at, unsigned long *adc_delay_milsec);
 
 #endif // AdcISR_h

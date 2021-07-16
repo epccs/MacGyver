@@ -29,6 +29,7 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 
 #define ADC_DELAY_MILSEC 200UL
 static unsigned long adc_started_at;
+static unsigned long adc_delay_milsec;
 
 #define BLINK_DELAY 1000UL
 static unsigned long blink_started_at;
@@ -79,9 +80,11 @@ void setup(void)
     // initialize ADC but do not start it.
     init_ADC_single_conversion();
 
-    // put ADC in Auto Trigger mode and fetch an array of channels
-    enable_ADC_auto_conversion(BURST_MODE);
+    // use adc_burst() to read all of the ADC channels with time delays (non-blocking).
     adc_started_at = milliseconds();
+    //adc_burst(&adc_started_at, &adc_delay_milsec); // delay is zero at power up so this will start a reading of the adc channels
+    adc_delay_milsec = cnvrt_milli(ADC_DELAY_MILSEC);
+    // also in the spin loop place adc_burst(&adc_started_at, &adc_delay_milsec);
 
     /* Initialize UART to 38.4kbps, it returns a pointer to FILE so redirect of stdin and stdout works*/
     uart1 = uart1_init(38400UL, UART1_RX_REPLACE_CR_WITH_NL);
@@ -109,16 +112,6 @@ void blink(void)
         // next toggle 
         blink_started_at += blink_delay; 
     }
-}
-
-void adc_burst(void)
-{
-    unsigned long kRuntime= elapsed(&adc_started_at);
-    if ((kRuntime) > ((unsigned long)ADC_DELAY_MILSEC))
-    {
-        enable_ADC_auto_conversion(BURST_MODE);
-        adc_started_at += ADC_DELAY_MILSEC; 
-    } 
 }
 
 // abort++. 
@@ -188,7 +181,7 @@ int main(void)
         }
 
         // delay between ADC burst
-        adc_burst();
+        // adc_burst(&adc_started_at, &adc_delay_milsec);
           
         // print adc json if stram is available for write
         if ( uart1_availableForWrite() ) {

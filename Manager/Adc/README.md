@@ -80,3 +80,17 @@ values look like
 {"ADC1":"1432","ADC2":"3","ADC3":"33","ADC4":"1432"}
 {"ADC1":"1431","ADC2":"3","ADC3":"32","ADC4":"1431"}
 ```
+
+But first reading is wrong. ADC1 is ALT_I and should be near zero. ADC2 is ALT_V and should also be near 0, so that checks. ADC3 is PWR_I and has .043V so 34*5.0/2**12 checks. ADC4 is PWR_V and has 1.746V so 1432*5.0/2**12 checks.
+
+Welp, I had the mux set to read from AIN0 when channel one got set up; these values are reasonable. Note that ADC2 is connected to a 1uF capacitor, and some charge from AIN1 is coupled when the channel is switched (that may need to be considered).
+
+```json
+{"ADC1":"3","ADC2":"0","ADC3":"36","ADC4":"1431"}
+{"ADC1":"4","ADC2":"0","ADC3":"32","ADC4":"1431"}
+{"ADC1":"4","ADC2":"0","ADC3":"32","ADC4":"1431"}
+{"ADC1":"3","ADC2":"0","ADC3":"35","ADC4":"1431"}
+{"ADC1":"3","ADC2":"0","ADC3":"35","ADC4":"1431"}
+```
+
+LOL now I can't get the burst working, what did I do... need timeout.
