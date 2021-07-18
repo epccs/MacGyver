@@ -6,11 +6,13 @@ OBJECTS = main.o \
 	../Uart/id.o \
 	$(LIBDIR)/timers_bsd.o \
 	$(LIBDIR)/uart0_bsd.o \
-	$(LIBDIR)/twi0_bsd.o \
-	$(LIBDIR)/rpu_mgr.o \
+	$(LIBDIR)/twi.o \
 	$(LIBDIR)/adc_bsd.o \
 	$(LIBDIR)/references.o \
 	$(LIBDIR)/parse.o
+
+# needs updates to use the new twi.c
+#	$(LIBDIR)/rpu_mgr.o \
 
 # Chip and project-specific global definitions
 MCU = avr128da28

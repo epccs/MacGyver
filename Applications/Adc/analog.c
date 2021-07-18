@@ -27,8 +27,8 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 #include <ctype.h>
 #include "../lib/parse.h"
 #include "../lib/adc_bsd.h"
-#include "../lib/rpu_mgr.h"
-#include "../lib/twi0_bsd.h"
+//#include "../lib/rpu_mgr.h" // ADC_CH_MGR_MAX_NOT_A_CH is commented out
+#include "../lib/twi.h"
 #include "../lib/timers_bsd.h"
 #include "../lib/uart0_bsd.h"
 #include "../lib/references.h"
@@ -46,7 +46,7 @@ void Analogf(unsigned long serial_print_delay_ticks)
         // check that arguments are digit in the range 0..7
         for (adc_arg_index=0; adc_arg_index < arg_count; adc_arg_index++) 
         {
-            if ( ( !( isdigit(arg[adc_arg_index][0]) ) ) || (atoi(arg[adc_arg_index]) < ADC_CH_ADC0) || (atoi(arg[adc_arg_index]) > (ADC_CHANNELS+ADC_CH_MGR_MAX_NOT_A_CH)) )
+            if ( ( !( isdigit(arg[adc_arg_index][0]) ) ) || (atoi(arg[adc_arg_index]) < ADC_CH_ADC0) || (atoi(arg[adc_arg_index]) > (ADC_CHANNELS /*+ ADC_CH_MGR_MAX_NOT_A_CH*/)) )
             {
                 printf_P(PSTR("{\"err\":\"AdcChOutOfRng\"}\r\n"));
                 initCommandBuffer();
@@ -145,7 +145,7 @@ void Analogd(unsigned long serial_print_delay_ticks)
         // check that arguments are digit in the range 0..7
         for (adc_arg_index=0; adc_arg_index < arg_count; adc_arg_index++) 
         {
-            if ( ( !( isdigit(arg[adc_arg_index][0]) ) ) || (atoi(arg[adc_arg_index]) < ADC_CH_ADC0) || (atoi(arg[adc_arg_index]) > (ADC_CHANNELS+ADC_CH_MGR_MAX_NOT_A_CH)) )
+            if ( ( !( isdigit(arg[adc_arg_index][0]) ) ) || (atoi(arg[adc_arg_index]) < ADC_CH_ADC0) || (atoi(arg[adc_arg_index]) > (ADC_CHANNELS /*+ ADC_CH_MGR_MAX_NOT_A_CH*/)) )
             {
                 printf_P(PSTR("{\"err\":\"AdcChOutOfRng\"}\r\n"));
                 initCommandBuffer();

@@ -62,20 +62,24 @@ void channel_setup(ADC_CH_t ch)
 }
 
 // Start ADC conversion
-void start_adc_conversion(void)
-{
-    ADC0.COMMAND = ADC_STCONV_bm;                 // Start ADC conversion
-}
+void start_adc_conversion(void) { ADC0.COMMAND = ADC_STCONV_bm; }
+
+// Enable ADC interrupt
+void enable_adc_interrupt(void) { ADC0.INTCTRL = ADC_RESRDY_bm; }
+
+// Disable ADC interrupt
+void disable_adc_interrupt(void) { ADC0.INTCTRL = 0 & ADC_RESRDY_bm; }
 
 // The conversion result is available in ADC0.RES.
 ISR(ADC0_RESRDY_vect) 
 {
-    adc[adc_channel] = ADC0.RES;        // Clear the interrupt flag by reading the result
+    adc[adc_channel] = ADC0.RES;        // Clear the ADC interrupt flag by reading the result
 
     if (adc_channel >= ADC_CH_ADC4)
     {
         adc_isr_status = ISR_ADCBURST_DONE; // mark to notify that burst is done
         adc_auto_conversion = 0;
+        disable_adc_interrupt(); // might be OK to do adcSingle() between burst, but I did not test
     }
     else // start next channel
     {
@@ -96,8 +100,7 @@ void init_ADC_single_conversion(void)
 
     // load references or set error
     ref_loaded = VREF_LOADED_NO;
-    while(ref_loaded < VREF_LOADED_DONE)
-    {
+    while(ref_loaded < VREF_LOADED_DONE) {
         LoadAnalogRef();
     }
 
@@ -113,8 +116,7 @@ void init_ADC_single_conversion(void)
 int adcAtomic(ADC_CH_t channel)
 {
     int ret = -1;
-    if (channel < ADC_CHANNELS) 
-    {
+    if (channel < ADC_CHANNELS) {
         // an stomic transaction is done by turning off interrupts
         uint8_t oldSREG = SREG;
         cli();           // turn off interupts if they are on.
@@ -128,12 +130,9 @@ int adcAtomic(ADC_CH_t channel)
 // single channel conversion (blocking)
 int adcSingle(ADC_CH_t channel)
 {
-    if ( (adc_auto_conversion) || (channel >= ADC_CHANNELS))
-    {
+    if ( (adc_auto_conversion) || (channel >= ADC_CHANNELS)) {
         return -1; // skip conversion and report error when ISR is running since it will corrupt the values
-    }
-    else
-    {
+    } else {
         channel_setup(channel);
         start_adc_conversion();
         while ( !(ADC0.INTFLAGS & ADC_RESRDY_bm) );   // Check if the conversion is done
@@ -144,20 +143,22 @@ int adcSingle(ADC_CH_t channel)
 
 // Before burst do init_ADC_single_conversion 
 // This call will start taking readings on each channel.
-// The ISR will iterate through the channels and save the results in a buffer.
+// The ISR will iterate through the channels and save the results in a buffer then disable.
 void adc_burst(unsigned long *adc_started_at, unsigned long *adc_delay_milsec)
 {
-    unsigned long kRuntime= elapsed(adc_started_at);
-    if ((kRuntime) > (*adc_delay_milsec))
-    {
-        adc_isr_status = ISR_ADCBURST_START; // mark so we know new readings are wip
-        adc_auto_conversion = 1;
+    if (adc_isr_status != ISR_ADCBURST_START) {
+        unsigned long prior_burst = elapsed(adc_started_at);
+        if ((prior_burst) > (*adc_delay_milsec)) {
+            adc_isr_status = ISR_ADCBURST_START; // mark so we know new readings are wip
+            adc_auto_conversion = 1;
 
-        // setup first channel and start conversion
-        channel_setup(ADC_CH_ADC1);
-        start_adc_conversion();
+            // setup first channel and start conversion
+            channel_setup(ADC_CH_ADC1);
+            start_adc_conversion();
+            enable_adc_interrupt();
 
-        // save time for next burst
-        *adc_started_at += *adc_delay_milsec; 
-    } 
+            // save time for next burst
+            *adc_started_at += *adc_delay_milsec; 
+        }
+    }
 }

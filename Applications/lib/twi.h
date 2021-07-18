@@ -1,5 +1,7 @@
 #pragma once
 
+#include <avr/io.h>
+
 /*------------------------------------------------------------------------------
     twim - Twi0, master - avr mega0, tiny0/1, da
 

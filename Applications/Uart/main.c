@@ -24,7 +24,7 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 #include "../lib/timers_bsd.h"
 #include "../lib/uart0_bsd.h"
 #include "../lib/parse.h"
-#include "../lib/twi0_bsd.h"
+#include "../lib/twi.h"
 #include "../lib/rpu_mgr.h"
 #include "../lib/io_enum_bsd.h"
 #include "id.h"
@@ -55,7 +55,8 @@ void setup(void)
     stderr = stdout = stdin = uart0_init(38400UL, UART0_RX_REPLACE_CR_WITH_NL);
     
     /* Initialize I2C to manager*/
-    twi0_init(100000UL, TWI0_PINS_PULLUP);
+    twim_defaultPins();           // DA master (and slave) pins are PA2, PA3 and go to the DB (PF2, PF3)
+    twim_baud( F_CPU, 100000ul ); // setup the master
 
     /* Clear and setup the command buffer, (probably not needed at this point) */
     initCommandBuffer();

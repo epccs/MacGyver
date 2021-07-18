@@ -17,9 +17,10 @@ source and copyright or distribute as you see fit (it is Zero Clause BSD).
 
 https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%22)
 */
-#include <avr/pgmspace.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h> 
+#include <avr/pgmspace.h>
 #include "../lib/parse.h"
 #include "../lib/rpu_mgr.h"
 #include "id.h"

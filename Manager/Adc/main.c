@@ -82,9 +82,8 @@ void setup(void)
 
     // use adc_burst() to read all of the ADC channels with time delays (non-blocking).
     adc_started_at = milliseconds();
-    //adc_burst(&adc_started_at, &adc_delay_milsec); // delay is zero at power up so this will start a reading of the adc channels
     adc_delay_milsec = cnvrt_milli(ADC_DELAY_MILSEC);
-    // also in the spin loop place adc_burst(&adc_started_at, &adc_delay_milsec);
+    // in the spin loop place adc_burst(&adc_started_at, &adc_delay_milsec);
 
     /* Initialize UART to 38.4kbps, it returns a pointer to FILE so redirect of stdin and stdout works*/
     uart1 = uart1_init(38400UL, UART1_RX_REPLACE_CR_WITH_NL);
@@ -180,14 +179,12 @@ int main(void)
             blink(); // also ping_i2c1() at the toggle event
         }
 
-        // delay between ADC burst
-        // adc_burst(&adc_started_at, &adc_delay_milsec);
-          
+        // read all of the ADC channels with time delays (non-blocking)
+        adc_burst(&adc_started_at, &adc_delay_milsec);
+
         // print adc json if stram is available for write
-        if ( uart1_availableForWrite() ) {
-            if (!adc_to_json(uart1, 20000UL)) {
-                abort_safe();
-            }
+        if (!adc_to_json(uart1, 20000UL)) {
+            abort_safe();
         }
     }
     return 0;

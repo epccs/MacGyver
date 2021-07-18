@@ -1,7 +1,9 @@
 #ifndef Rpu_Mgr_h
 #define Rpu_Mgr_h
 
-#include "../lib/twi0_bsd.h"
+#include "twi.h"
+
+#define I2C_ADDR_OF_BUS_MGR 0x29
 
 // enumeraiton names for ADC from manager
 typedef enum ADC_CH_MGR_enum {
@@ -14,10 +16,11 @@ typedef enum ADC_CH_MGR_enum {
 
 extern uint8_t mgr_twiErrorCode;
 
-extern void i2c_ping(void);
-extern uint8_t i2c_set_Rpu_shutdown(void);
-extern uint8_t i2c_detect_Rpu_shutdown(void);
+extern bool i2c_ping(uint8_t address);
 extern char i2c_get_Rpu_address(void);
+//extern uint8_t i2c_set_Rpu_shutdown(void);
+//extern uint8_t i2c_detect_Rpu_shutdown(void);
+/*
 extern int i2c_get_adc_from_manager(uint8_t channel, TWI0_LOOP_STATE_t *loop_state);
 extern uint8_t i2c_read_status(void);
 extern void i2c_daynight_cmd(uint8_t dn_callback_addr, uint8_t dn_callback_route, uint8_t d_callback_route, uint8_t n_callback_route);
@@ -27,6 +30,7 @@ extern unsigned long i2c_ul_rwoff_access_cmd(uint8_t command, uint8_t rw_offset,
 extern int i2c_int_access_cmd(uint8_t command, int update_with, TWI0_LOOP_STATE_t *loop_state);
 extern int i2c_int_rwoff_access_cmd(uint8_t command, uint8_t rw_offset, int update_with, TWI0_LOOP_STATE_t *loop_state);
 float i2c_float_access_cmd(uint8_t command, uint8_t select, float *update_with, TWI0_LOOP_STATE_t *loop_state);
+*/
 
 // values used for i2c_*_rwoff_access_cmd
 #define RW_READ_BIT 0x00

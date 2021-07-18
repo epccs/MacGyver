@@ -15,10 +15,20 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%22)
 */
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include "twi0_bsd.h"
+#include "twi.h"
 #include "rpu_mgr.h"
+
+#define TWI_TTL 3000UL
+#define TWI_DELAY 5UL
+unsigned long twi_started_at_safe; // ISR does not modify
+unsigned long twi_ttl;
+unsigned long twi_delay;
+volatile bool twim_cb_interlock;
+uint8_t wrbuf[10];
+uint8_t rdbuf[10];
 
 // 1 .. length to long for buffer 
 // 2 .. address send, NACK received 
@@ -30,13 +40,13 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 uint8_t mgr_twiErrorCode;
 
 // largest I2C transaction with manager so far is six bytes.
-#define MAX_CMD_SIZE 8
+//#define MAX_CMD_SIZE 8
 
-uint8_t txBuffer_[MAX_CMD_SIZE];
-uint8_t bytes_to_write_; // master wrties bytes to slave (you may want to zero the last byte txBuffer array)
-uint8_t rxBuffer_[MAX_CMD_SIZE];
-uint8_t bytes_to_read_; // master reads bytes from slave (you may want to zero the rxBuffer array)
-uint8_t i2c_address_; // master address this slave
+//uint8_t txBuffer_[MAX_CMD_SIZE];
+//uint8_t bytes_to_write_; // master wrties bytes to slave (you may want to zero the last byte txBuffer array)
+//uint8_t rxBuffer_[MAX_CMD_SIZE];
+//uint8_t bytes_to_read_; // master reads bytes from slave (you may want to zero the rxBuffer array)
+//uint8_t i2c_address_; // master address this slave
 
 // command 0 is used to read the address from manager
 #define ADDRESS_CMD {0x00,0x00}
@@ -100,24 +110,61 @@ uint8_t i2c_address_; // master address this slave
 #define FLOAT_CMD_SLCT {0x26,0x00,0x00,0x00,0x00,0x00}
 #define FLOAT_CMD_SLCT_SIZE 6
 
-#define RPU_BUS_MSTR_CMD_SZ 2
-#define I2C_ADDR_OF_BUS_MGR 0x29
-
-// cycle the twi state machine on both the master and slave(s)
-void i2c_ping(void)
-{ 
-    // ping I2C for an RPU bus manager 
-    uint8_t i2c_address = I2C_ADDR_OF_BUS_MGR;
-    uint8_t data = 0;
-    uint8_t length = 0;
-    for (uint8_t i =0;1; i++) // try a few times, it is slower starting after power up.
-    {
-        mgr_twiErrorCode = twi0_masterBlockingWrite(i2c_address, &data, length, TWI0_PROTOCALL_STOP); 
-        if (mgr_twiErrorCode == 0) break; // error free code
-        if (i>5) return; // give up after 5 trys
-    }
-    return; 
+// finish a twi transaction that was started but is now done
+void twimCallback(void) {
+    twim_cb_interlock = false;
+    twim_callback(NULL); // remove the callback, the ISR checks for NULL and this will cause it to be ignored.
 }
+
+// ping the address a few times
+// for example to check if it has finished power up.
+bool i2c_ping(uint8_t address)
+{
+    uint8_t data[] = {'\0'};
+    memcpy(wrbuf, data, sizeof(data));
+    for (uint8_t i =0;1; i++) // try a few times, it may take longer starting after power up.
+    {
+        twim_callback(twimCallback);
+        twim_on(address);
+        twim_write( wrbuf, sizeof(wrbuf) ); 
+        twim_cb_interlock = true;
+        while (twim_cb_interlock) {}; // blocking
+        if (twim_lastResultOK()) return true;
+        if (i>5) return false; // give up after 5 trys
+    }
+    return false; 
+}
+
+// The manager has the mulitdorp serial address. When I read it 
+// over I2C the manage will boradcast a command on its out of band
+// channel that places all devices in normal mode (e.g., not p2p or bootload) 
+char i2c_get_Rpu_address(void)
+{
+    if (!i2c_ping(I2C_ADDR_OF_BUS_MGR)) {
+        return 0; // failed
+    }
+    uint8_t wrdata[] = ADDRESS_CMD;
+    memcpy(wrbuf, wrdata, sizeof(wrdata));
+    twim_callback(twimCallback);
+    twim_on(I2C_ADDR_OF_BUS_MGR);
+    twim_write( wrbuf, sizeof(wrbuf) ); 
+    twim_cb_interlock = true;
+    while (twim_cb_interlock) {}; // blocking
+    if (!twim_lastResultOK()) return 0; // failed
+
+    twim_read(rdbuf, sizeof(wrdata)); // mgr will give back data after the command byte echo
+    if (!twim_lastResultOK()) 
+    {
+        return 0; // failed
+    }
+    else
+    {
+        return (char)(rdbuf[1]);
+    }
+}
+
+/* ToDo
+
 
 // The manager can pull down the shutdown pin (just like the manual switch) 
 // that the Raspberry Pi monitors for halting its operating system.
@@ -184,35 +231,6 @@ uint8_t i2c_detect_Rpu_shutdown(void)
     else
     {
         return rxBuffer[1];
-    }
-}
-
-// The manager has the mulitdorp serial address. When I read it 
-// over I2C the manage will boradcast a command on its out of band
-// channel that places all devices in normal mode (e.g., not p2p or bootload) 
-char i2c_get_Rpu_address(void)
-{ 
-    i2c_ping();
-    if ( mgr_twiErrorCode ) return 0;
-    uint8_t i2c_address = I2C_ADDR_OF_BUS_MGR;    
-    uint8_t txBuffer[ADDRESS_CMD_SIZE] = ADDRESS_CMD;
-    uint8_t length = ADDRESS_CMD_SIZE;
-    mgr_twiErrorCode = twi0_masterBlockingWrite(i2c_address, txBuffer, length, TWI0_PROTOCALL_REPEATEDSTART); 
-    if (mgr_twiErrorCode)
-    {
-        return 0; // failed
-    }
-
-    uint8_t rxBuffer[ADDRESS_CMD_SIZE];
-    uint8_t bytes_read = twi0_masterBlockingRead(i2c_address, rxBuffer, length, TWI0_PROTOCALL_STOP);
-    if ( bytes_read != length )
-    {
-        mgr_twiErrorCode = 5;
-        return 0;
-    }
-    else
-    {
-        return (char)(rxBuffer[1]);
     }
 }
 
@@ -585,3 +603,6 @@ float i2c_float_access_cmd(uint8_t command, uint8_t select, float *update_with, 
     }
     return value;
 }
+
+
+ToDo */

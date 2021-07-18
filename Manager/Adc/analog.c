@@ -40,6 +40,7 @@ static uint8_t debug_print_step = 0;
 /* print adc intiger values to stram, return false (zero) if an issuse occures*/
 uint8_t adc_to_json(FILE *__stream, unsigned long serial_print_delay_ticks)
 {
+    if ( !uart1_availableForWrite() ) { return 1; } // skip, no error, uart is just buzy.
     if ( (debug_print_step == 0) )
     {
         // print in steps otherwise the serial buffer will fill and block the program from running
@@ -67,7 +68,7 @@ uint8_t adc_to_json(FILE *__stream, unsigned long serial_print_delay_ticks)
     }
     else if ( (debug_print_step == 2) )
     {
-        int temp_adc = adcSingle((ADC_CH_t) adc_ch);
+        int temp_adc = adcAtomic((ADC_CH_t) adc_ch);
 
         // There are values from 0 to 4095 for 4096 slots where each reperesents 1/4096 of the reference.
         // Slot 4095 also includes higher values e.g., VREF*(4095/4096) and up.
