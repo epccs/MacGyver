@@ -147,7 +147,7 @@ char i2c_get_Rpu_address(void)
     memcpy(wrbuf, wrdata, sizeof(wrdata));
     twim_callback(twimCallback);
     twim_on(I2C_ADDR_OF_BUS_MGR);
-    twim_write( wrbuf, sizeof(wrbuf) ); 
+    twim_write( wrbuf, sizeof(wrbuf) );
     twim_cb_interlock = true;
     while (twim_cb_interlock) {}; // blocking
     if (!twim_lastResultOK()) return 0; // failed

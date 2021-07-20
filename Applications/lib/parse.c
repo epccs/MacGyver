@@ -20,6 +20,7 @@ https://onebyezero.blogspot.com/2018/12/string-tokenization-in-c.html
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <avr/pgmspace.h>
 #include "parse.h"
 #include "uart0_bsd.h"
@@ -57,27 +58,28 @@ void initCommandBuffer(void)
 }
 
 
-void StartEchoWhenAddressed(char address)
+void StartEchoWhenAddressed(FILE *uart, char address)
 {
     if ( (!echo_on) && (command_buf[0] == '/') && (command_buf[1] == address) )
     {
         echo_on = 1;
-        printf_P(PSTR("%c%c"),command_buf[0], command_buf[1]);
+        fprintf_P(uart, PSTR("%c%c"),command_buf[0], command_buf[1]);
     }
 }
 
 // assemble command line from incoming char's 
-void AssembleCommand(int input) 
+void AssembleCommand(FILE *uart) 
 {
+    int input = fgetc(uart);
     // a return or new-line finishes the line (or starts a new command line)
     if ( (input == '\r') || (input == '\n') ) // pressing enter in picocom sends a \r
     {
         //echo both carrage return and newline.
-        if (echo_on) printf("\r\n");
-        
+        if (echo_on) fprintf_P(uart, PSTR("\r\n"));
+
         // finish command line as a null terminated string
         command_buf[command_head] = '\0';
-        
+
         // do not go past the buffer
         if (command_head < (COMMAND_BUFFER_SIZE - 1) )
         {
@@ -85,10 +87,10 @@ void AssembleCommand(int input)
         }
         else // command is to big 
         {
-            if (echo_on) printf_P(PSTR("Ignore_Input\r\n"));
+            if (echo_on) fprintf_P(uart, PSTR("Ignore_Input\r\n"));
             initCommandBuffer();
         }
-        command_done = 1;                     
+        command_done = 1;
     }
     else
     { 
@@ -100,16 +102,16 @@ void AssembleCommand(int input)
                 command_buf[command_head] = '\0'; // invalidate
                 if (echo_on)
                 {
-                    putchar ('\b'); // backspace
-                    putchar (' '); // space to clear what was
-                    putchar ('\b'); // backspace again to position
+                    fputc('\b', uart); // backspace
+                    fputc(' ', uart); // space to clear what was
+                    fputc('\b', uart); // backspace again to position
                 }
             }
         }
         else
         {
             //echo the input  
-            if (echo_on) putchar(input);
+            if (echo_on) fputc(input, uart);
 
             // assemble the command
             command_buf[command_head] = input;
@@ -122,7 +124,7 @@ void AssembleCommand(int input)
             else // command is to big
             {
                 command_buf[1] = '\0'; 
-                if (echo_on) printf_P(PSTR("Ignore_Input\r\n"));
+                if (echo_on) fprintf_P(uart, PSTR("Ignore_Input\r\n"));
                 echo_on = 0;
             }
         }
@@ -130,7 +132,7 @@ void AssembleCommand(int input)
 }
 
 // find argument(s) starting from a given offset
-uint8_t findArgument(uint8_t at_command_buf_offset) 
+uint8_t findArgument(FILE *uart, uint8_t at_command_buf_offset) 
 {
     if (at_command_buf_offset < COMMAND_BUFFER_SIZE) 
     {
@@ -145,7 +147,7 @@ uint8_t findArgument(uint8_t at_command_buf_offset)
         // after command+space but the char is null
         if( (command_buf[lastAlphaNum] == '\0') ) 
         {
-            if (echo_on) printf_P(PSTR("{\"err\": \"NullArgAftrCmd+Sp\"}\r\n"));
+            if (echo_on) fprintf_P(uart, PSTR("{\"err\": \"NullArgAftrCmd+Sp\"}\r\n"));
             initCommandBuffer();
             return 0;
         }
@@ -156,7 +158,7 @@ uint8_t findArgument(uint8_t at_command_buf_offset)
             // to many arguments
             if( !(arg_count < MAX_ARGUMENT_COUNT) ) 
             {
-                if (echo_on) printf_P(PSTR("{\"err\": \"ArgCnt%dAt%d\"}\r\n"), arg_count, lastAlphaNum);
+                if (echo_on) fprintf_P(uart, PSTR("{\"err\": \"ArgCnt%dAt%d\"}\r\n"), arg_count, lastAlphaNum);
                 initCommandBuffer();
                 return 0;
             }   
@@ -175,7 +177,7 @@ uint8_t findArgument(uint8_t at_command_buf_offset)
                     // check if char after delimiter is valid for an arg 
                     if( !(isalnum(command_buf[lastAlphaNum+1]) || (command_buf[lastAlphaNum+1] == '-')) ) 
                     {
-                        if (echo_on) printf_P(PSTR("{\"err\": \"ArgAftr'%c@%d!Valid\"}\r\n"),command_buf[lastAlphaNum],lastAlphaNum);
+                        if (echo_on) fprintf_P(uart, PSTR("{\"err\": \"ArgAftr'%c@%d!Valid\"}\r\n"),command_buf[lastAlphaNum],lastAlphaNum);
                         initCommandBuffer();
                         return 0;
                     }  
@@ -187,7 +189,7 @@ uint8_t findArgument(uint8_t at_command_buf_offset)
                 else
                 {
                     // a delimiter was found but there is not enough room for an argument and null termination
-                    if (echo_on) printf_P(PSTR("{\"err\": \"DropArgCmdLn2Lng\"}\r\n"));
+                    if (echo_on) fprintf_P(uart, PSTR("{\"err\": \"DropArgCmdLn2Lng\"}\r\n"));
                     initCommandBuffer();
                     return 0;
                 }
@@ -197,7 +199,7 @@ uint8_t findArgument(uint8_t at_command_buf_offset)
             else if (command_buf[lastAlphaNum] != '\0')
             {
                 // do not index past command buffer
-                if (echo_on) printf_P(PSTR("{\"err\": \"!DelimAftrArg'%c@%d\"}\r\n"), command_buf[lastAlphaNum],lastAlphaNum);
+                if (echo_on) fprintf_P(uart, PSTR("{\"err\": \"!DelimAftrArg'%c@%d\"}\r\n"), command_buf[lastAlphaNum],lastAlphaNum);
                 initCommandBuffer();
                 return 0;
             }
@@ -207,7 +209,7 @@ uint8_t findArgument(uint8_t at_command_buf_offset)
     else
     {
         // do not index past command buffer
-        if (echo_on) printf_P(PSTR("{\"err\": \"ArgIndxPastCmdBuf\"}\r\n"));
+        if (echo_on) fprintf_P(uart, PSTR("{\"err\": \"ArgIndxPastCmdBuf\"}\r\n"));
         initCommandBuffer();
         return 0;
     }
@@ -219,7 +221,7 @@ uint8_t findArgument(uint8_t at_command_buf_offset)
 // the combined address  and command looks like an MQTT topic or the directory structure of a file system 
 // e.g. /0/pwm 127
 // find end of command and place a null termination so it can be used as a string
-uint8_t findCommand(void) 
+uint8_t findCommand(FILE *uart) 
 {
     uint8_t lastAlpha =2; 
     // if command_buf has "/1/i1scan?", 
@@ -246,7 +248,7 @@ uint8_t findCommand(void)
         }
         else
         {
-            if (echo_on) printf_P(PSTR("{\"err\": \"BadCharInCmd '%c'\"}\r\n"),command_buf[lastAlpha]);
+            if (echo_on) fprintf_P(uart, PSTR("{\"err\": \"BadCharInCmd '%c'\"}\r\n"),command_buf[lastAlpha]);
             initCommandBuffer();
             return 0;
         }
@@ -255,7 +257,7 @@ uint8_t findCommand(void)
     // command does  not fit in buffer
     if ( lastAlpha >= (COMMAND_BUFFER_SIZE-1) ) 
     {
-        if (echo_on) printf_P(PSTR("{\"err\": \"HugeCmd\"}\r\n"));
+        if (echo_on) fprintf_P(uart, PSTR("{\"err\": \"HugeCmd\"}\r\n"));
         initCommandBuffer();
         return 0;
     }
@@ -263,7 +265,7 @@ uint8_t findCommand(void)
     if ( isspace(command_buf[lastAlpha]) )
     {
         // the next poistion may be an argument.
-        if ( findArgument(lastAlpha+1) )
+        if ( findArgument(uart, lastAlpha+1) )
         {
             // replace the space with a null so command works as a null terminated string.
             command_buf[lastAlpha] = '\0';
@@ -271,7 +273,7 @@ uint8_t findCommand(void)
         else
         {
             // isspace() found after command but argument was not valid 
-            if (echo_on) printf_P(PSTR("{\"err\": \"CharAftrCmdBad '%c'\"}\r\n"),command_buf[lastAlpha+1]);
+            if (echo_on) fprintf_P(uart, PSTR("{\"err\": \"CharAftrCmdBad '%c'\"}\r\n"),command_buf[lastAlpha+1]);
             initCommandBuffer();
             return 0;
         }
@@ -281,7 +283,7 @@ uint8_t findCommand(void)
         if (command_buf[lastAlpha] != '\0')
         {
             // null must end command. 
-            if (echo_on) printf_P(PSTR("{\"err\": \"MissNullAftrCmd '%c'\"}\r\n"),command_buf[lastAlpha]);
+            if (echo_on) fprintf_P(uart, PSTR("{\"err\": \"MissNullAftrCmd '%c'\"}\r\n"),command_buf[lastAlpha]);
             initCommandBuffer();
             return 0;
         }
@@ -290,36 +292,36 @@ uint8_t findCommand(void)
     return lastAlpha;
 }
 
-unsigned long is_arg_in_ul_range (uint8_t arg_num, unsigned long min, unsigned long max)
+unsigned long is_arg_in_ul_range (FILE *uart, uint8_t arg_num, unsigned long min, unsigned long max)
 {
     // check that arg[arg_num] is a digit 
     if ( ( !( isdigit(arg[arg_num][0]) ) ) )
     {
-        printf_P(PSTR("{\"err\":\"%sArg%d_NaN\"}\r\n"),command[1],arg_num);
+        fprintf_P(uart, PSTR("{\"err\":\"%sArg%d_NaN\"}\r\n"),command[1],arg_num);
         return 0;
     }
     unsigned long ul = strtoul(arg[arg_num], (char **)NULL, 10);
     if ( ( ul < min) || (ul > max) )
     {
-        printf_P(PSTR("{\"err\":\"%sArg%d_OutOfRng\"}\r\n"),command[1],arg_num);
+        fprintf_P(uart, PSTR("{\"err\":\"%sArg%d_OutOfRng\"}\r\n"),command[1],arg_num);
         return 0;
     }
     return ul;
 }
 
 // return arg[arg_num] value if in range
-uint8_t is_arg_in_uint8_range(uint8_t arg_num, uint8_t min, uint8_t max)
+uint8_t is_arg_in_uint8_range(FILE *uart, uint8_t arg_num, uint8_t min, uint8_t max)
 {
     // check that arg[arg_num] is a digit 
     if ( ( !( isdigit(arg[arg_num][0]) ) ) )
     {
-        printf_P(PSTR("{\"err\":\"%sArg%d_NaN\"}\r\n"),command[1],arg_num);
+        fprintf_P(uart, PSTR("{\"err\":\"%sArg%d_NaN\"}\r\n"),command[1],arg_num);
         return 0;
     }
     uint8_t argument = atoi(arg[arg_num]);
     if ( ( argument < min) || (argument > max) )
     {
-        printf_P(PSTR("{\"err\":\"%sArg%d_OutOfRng\"}\r\n"),command[1],arg_num);
+        fprintf_P(uart, PSTR("{\"err\":\"%sArg%d_OutOfRng\"}\r\n"),command[1],arg_num);
         return 0;
     }
     return argument;

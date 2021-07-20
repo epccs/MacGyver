@@ -34,11 +34,13 @@ static unsigned long blink_started_at;
 static unsigned long blink_delay;
 static char rpu_addr;
 
+FILE *uart0;
+
 void ProcessCmd()
 { 
     if ( (strcmp_P( command, PSTR("/id?")) == 0) && ( (arg_count == 0) || (arg_count == 1)) )
     {
-        Id("Uart");
+        Id(uart0, PSTR("Uart"));
     }
 }
 
@@ -51,9 +53,9 @@ void setup(void)
     // Initialize Timers TCA0 is split into two 8 bit timers, the high underflow (HUNF) event it used for  time tracking
     initTimers(); //PWM: TCA route A to PC0, PC1, PC2, PC3, PC4, PC5.
 
-    /* Initialize UART to 38.4kbps, it returns a pointer to FILE so redirect of stdin and stdout works*/
-    stderr = stdout = stdin = uart0_init(38400UL, UART0_RX_REPLACE_CR_WITH_NL);
-    
+    /* Initialize UART0 to 38.4kbps for streaming, it returns a pointer to a FILE structure */
+    uart0 = uart0_init(38400UL, UART0_RX_REPLACE_CR_WITH_NL);
+
     /* Initialize I2C to manager*/
     twim_defaultPins();           // DA master (and slave) pins are PA2, PA3 and go to the DB (PF2, PF3)
     twim_baud( F_CPU, 100000ul ); // setup the master
@@ -98,17 +100,17 @@ int main(void) {
     {
         // use STATUS_LED to show if I2C has a bus manager
         blink();
-        
+
         // check if character is available to assemble a command, e.g. non-blocking
         if ( (!command_done) && uart0_available() ) // command_done is an extern from parse.h
         {
-            // get a character from stdin and use it to assemble a command
-            AssembleCommand(getchar());
+            // get a character and use it to assemble a command
+            AssembleCommand(uart0);
 
             // address is a char e.g. the ascii value for '0' warning: a null will terminate the command string. 
-            StartEchoWhenAddressed(rpu_addr);
+            StartEchoWhenAddressed(uart0, rpu_addr);
         }
-        
+
         // check if the character is available, and if so stop transmit and the command in process.
         // a multi-drop bus can have another device start transmitting after the second received byte so
         // there is little time to detect a possible collision
@@ -131,15 +133,15 @@ int main(void) {
                 // command is a pointer to string and arg[] is an array of pointers to strings
                 // use findCommand to make them point to the correct places in the command line
                 // this can only be done once, since spaces and delimeters are replaced with null termination
-                if (command_done == 1)  
+                if (command_done == 1)
                 {
-                    findCommand();
+                    findCommand(uart0);
                     command_done = 10;
                 }
                 
                 if ( (command_done >= 10) && (command_done < 250) )
                 {
-                     ProcessCmd();
+                    ProcessCmd();
                 }
                 else 
                 {

@@ -25,76 +25,76 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 #include "../lib/rpu_mgr.h"
 #include "id.h"
 
-void Id(char name[])
+void Id(FILE *uart, const char name[])
 { 
     // /id? 
     if ( (command_done == 10) && (arg_count == 0) )
     {
-        printf_P(PSTR("{\"id\":{"));
+        fprintf_P(uart, PSTR("{\"id\":{"));
         command_done = 11;
     }
     // /id? name 
     else if ( (command_done == 10) && (arg_count == 1) && (strcmp_P( arg[0], PSTR("name")) == 0) ) 
     {
-        printf_P(PSTR("{\"id\":{"));
+        fprintf_P(uart, PSTR("{\"id\":{"));
         command_done = 11;
     }
     // /id? desc
     else if ( (command_done == 10) && (arg_count == 1) && (strcmp_P( arg[0], PSTR("desc")) == 0) )
     {
-        printf_P(PSTR("{\"id\":{" ));
+        fprintf_P(uart, PSTR("{\"id\":{" ));
         command_done = 12;
     }
     // /id? avr-gcc
     else if ( (command_done == 10) && (arg_count == 1) && (strcmp_P( arg[0], PSTR("avr-gcc")) == 0) )
     {
-        printf_P(PSTR("{\"id\":{"));
+        fprintf_P(uart, PSTR("{\"id\":{"));
         command_done = 14;
     }
     else if ( command_done == 11 )
     {
-        printf_P(PSTR("\"name\":\"%s\"" ),name);
+        fprintf_P(uart, PSTR("\"name\":\"%s\"" ),name);
         if (arg_count == 1) 
         { 
             command_done = 15;  
         }
         else 
         { 
-            printf_P(PSTR("," ));
+            fprintf_P(uart, PSTR("," ));
             command_done = 12; 
         }
     }
     else if ( command_done == 12 )
     {
-        printf_P(PSTR("\"desc\":\"MacGyver (19260^1) " ));
+        fprintf_P(uart, PSTR("\"desc\":\"MacGyver (19260^1) " ));
         command_done = 13;
     }
     else if ( command_done == 13 )
     {
-        printf_P(PSTR("Board /w AVR128DA28\""));
+        fprintf_P(uart, PSTR("Board /w AVR128DA28\""));
         if (arg_count == 1) 
         { 
             command_done = 15; 
         }
         else 
         { 
-            printf_P(PSTR("," ));
+            fprintf_P(uart, PSTR("," ));
             command_done = 14; 
         }
     }
     else if ( command_done == 14 )
     {
-        printf_P(PSTR("\"avr-gcc\":\"%s\""),__VERSION__);
+        fprintf_P(uart, PSTR("\"avr-gcc\":\"%s\""),__VERSION__);
         command_done = 15; 
     }
     else if ( command_done == 15 )
     {
-        printf_P(PSTR("}}\r\n"));
+        fprintf_P(uart, PSTR("}}\r\n"));
         initCommandBuffer();
     }
     else
     {
-        printf_P(PSTR("{\"err\":\"idBadArg_%s\"}\r\n"),arg[0]);
+        fprintf_P(uart, PSTR("{\"err\":\"idBadArg_%s\"}\r\n"),arg[0]);
         initCommandBuffer();
     }
 }
