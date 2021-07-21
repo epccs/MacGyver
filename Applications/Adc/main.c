@@ -24,7 +24,7 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 #include "../lib/parse.h"
 #include "../lib/adc_bsd.h"
 #include "../lib/twi.h"
-//#include "../lib/rpu_mgr.h"
+#include "../lib/rpu_mgr.h"
 #include "../lib/io_enum_bsd.h"
 #include "../Uart/id.h"
 #include "analog.h"
@@ -37,19 +37,21 @@ static unsigned long blink_started_at;
 static unsigned long blink_delay;
 static char rpu_addr;
 
+FILE *uart0;
+
 void ProcessCmd()
 { 
     if ( (strcmp_P( command, PSTR("/id?")) == 0) && ( (arg_count == 0) || (arg_count == 1)) )
     {
-        Id("Adc");
+        Id(uart0, "Adc");
     }
     if ( (strcmp_P( command, PSTR("/analog?")) == 0) && ( (arg_count >= 1 ) && (arg_count <= 5) ) )
     {
-        Analogf(cnvrt_milli(2000UL)); // update every 2 sec until terminated
+        Analogf(uart0, cnvrt_milli(2000UL)); // update every 2 sec until terminated
     }
     if ( (strcmp_P( command, PSTR("/adc?")) == 0) && ( (arg_count >= 1 ) && (arg_count <= 5) ) )
     {
-        Analogd(cnvrt_milli(2000UL)); // update every 2 sec until terminated
+        Analogd(uart0, cnvrt_milli(2000UL)); // update every 2 sec until terminated
     }
 }
 
@@ -77,7 +79,7 @@ void setup(void)
     // STATUS_LED
     ioDir(MCU_IO_TX2, DIRECTION_OUTPUT); 
     ioWrite(MCU_IO_TX2, LOGIC_LEVEL_HIGH);
-    
+
     // Initialize Timers TCA0 is split into two 8 bit timers, the high underflow (HUNF) event it used for  time tracking
     initTimers(); //PWM: TCA route A to PC0, PC1, PC2, PC3, PC4, PC5.
     init_ADC_single_conversion();
@@ -87,8 +89,8 @@ void setup(void)
     adc_started_at = milliseconds();
 
     /* Initialize UART to 38.4kbps, it returns a pointer to FILE so redirect of stdin and stdout works*/
-    stderr = stdout = stdin = uart0_init(38400UL, UART0_RX_REPLACE_CR_WITH_NL);
-    
+    uart0 = uart0_init(38400UL, UART0_RX_REPLACE_CR_WITH_NL);
+
     /* Initialize I2C */
     twim_defaultPins();           // DA master (and slave) pins are PA2, PA3 and go to the DB (PF2, PF3)
     twim_baud( F_CPU, 100000ul ); // setup the master
@@ -98,13 +100,13 @@ void setup(void)
 
     // Enable global interrupts to start TIMER0 and UART ISR's
     sei(); 
-    
+
     // tick count is not milliseconds use cnvrt_milli() to convert time into ticks, thus tickAtomic()/cnvrt_milli(1000) gives seconds
     blink_started_at = tickAtomic();
     blink_delay = cnvrt_milli(BLINK_DELAY);
-    
-    rpu_addr = '0'; //i2c_get_Rpu_address();
-    
+
+    rpu_addr = i2c_get_Rpu_address();
+
     // blink fast if a default address from RPU manager not found
     if (rpu_addr == 0)
     {
@@ -119,7 +121,7 @@ void blink(void)
     if ( kRuntime > blink_delay)
     {
         ioToggle(MCU_IO_TX2);
-        
+
         // next toggle 
         blink_started_at += blink_delay; 
     }
@@ -143,17 +145,17 @@ int main(void)
     { 
         // use LED to show if I2C has a bus manager
         blink();
-        
+
         // check if character is available to assemble a command, e.g. non-blocking
         if ( (!command_done) && uart0_available() ) // command_done is an extern from parse.h
         {
             // get a character from stdin and use it to assemble a command
-            AssembleCommand(getchar());
+            AssembleCommand(uart0);
 
             // address is an ascii value, warning: a null address would terminate the command string. 
-            StartEchoWhenAddressed(rpu_addr);
+            StartEchoWhenAddressed(uart0, rpu_addr);
         }
-        
+
         // check if a character is available, and if so flush transmit buffer and nuke the command in process.
         // A multi-drop bus can have another device start transmitting after getting an address byte so
         // the first byte is used as a warning, it is the onlly chance to detect a possible collision.
@@ -163,22 +165,22 @@ int main(void)
             uart0_empty(); 
             initCommandBuffer();
         }
-        
+
         // delay between ADC burst
         adc_burst();
-          
+
         // finish echo of the command line befor starting a reply (or the next part of a reply)
         if ( command_done && uart0_availableForWrite() )
         {
             if ( !echo_on  )
-            { // this happons when the address did not match 
+            { // this happons when the address did not match
                 initCommandBuffer();
             }
             else
             {
-                if (command_done == 1)  
+                if (command_done == 1)
                 {
-                    findCommand();
+                    findCommand(uart0);
                     command_done = 10;
                 }
                 
@@ -193,6 +195,6 @@ int main(void)
                 }
             }
          }
-    }        
+    }
     return 0;
 }

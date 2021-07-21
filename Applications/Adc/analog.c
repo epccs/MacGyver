@@ -27,7 +27,7 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 #include <ctype.h>
 #include "../lib/parse.h"
 #include "../lib/adc_bsd.h"
-//#include "../lib/rpu_mgr.h" // ADC_CH_MGR_MAX_NOT_A_CH is commented out
+#include "../lib/rpu_mgr.h"
 #include "../lib/twi.h"
 #include "../lib/timers_bsd.h"
 #include "../lib/uart0_bsd.h"
@@ -39,16 +39,16 @@ static unsigned long serial_print_started_at;
 static uint8_t adc_arg_index;
 
 /* return adc corrected values */
-void Analogf(unsigned long serial_print_delay_ticks)
+void Analogf(FILE *stream, unsigned long serial_print_delay_ticks)
 {
     if ( (command_done == 10) )
     {
         // check that arguments are digit in the range 0..7
         for (adc_arg_index=0; adc_arg_index < arg_count; adc_arg_index++) 
         {
-            if ( ( !( isdigit(arg[adc_arg_index][0]) ) ) || (atoi(arg[adc_arg_index]) < ADC_CH_ADC0) || (atoi(arg[adc_arg_index]) > (ADC_CHANNELS /*+ ADC_CH_MGR_MAX_NOT_A_CH*/)) )
+            if ( ( !( isdigit(arg[adc_arg_index][0]) ) ) || (atoi(arg[adc_arg_index]) < ADC_CH_ADC0) || (atoi(arg[adc_arg_index]) > (ADC_CHANNELS + ADC_CH_MGR_MAX_NOT_A_CH)) )
             {
-                printf_P(PSTR("{\"err\":\"AdcChOutOfRng\"}\r\n"));
+                fprintf_P(stream, PSTR("{\"err\":\"AdcChOutOfRng\"}\r\n"));
                 initCommandBuffer();
                 return;
             }
@@ -56,7 +56,7 @@ void Analogf(unsigned long serial_print_delay_ticks)
         // if references failed to loaded show an error
         if (ref_loaded == VREF_LOADED_ERR)
         {
-            printf_P(PSTR("{\"err\":\"AdcRefNotLoaded\"}\r\n"));
+            fprintf_P(stream, PSTR("{\"err\":\"AdcRefNotLoaded\"}\r\n"));
             initCommandBuffer();
             return;
         }
@@ -64,14 +64,14 @@ void Analogf(unsigned long serial_print_delay_ticks)
         // if calibrations failed to loaded show an error
         if (cal_loaded == CALIBRATE_LOADED_ERR)
         {
-            printf_P(PSTR("{\"err\":\"AdcCalNotLoaded\"}\r\n"));
+            fprintf_P(stream, PSTR("{\"err\":\"AdcCalNotLoaded\"}\r\n"));
             initCommandBuffer();
             return;
         }
 
         // print in steps otherwise the serial buffer will fill and block the program from running
         serial_print_started_at = tickAtomic();
-        printf_P(PSTR("{"));
+        fprintf_P(stream, PSTR("{"));
         adc_arg_index= 0;
         command_done = 11;
     }
@@ -88,11 +88,11 @@ void Analogf(unsigned long serial_print_delay_ticks)
             case ADC_CH_ADC5:
             case ADC_CH_ADC6:
             case ADC_CH_ADC7:
-                printf_P(PSTR("\"ADC%s\":"),arg[adc_arg_index]);
+                fprintf_P(stream, PSTR("\"ADC%s\":"),arg[adc_arg_index]);
                 break;
 
             default:
-                printf_P(PSTR("{\"err\":\"AdcNotChannel\"}\r\n"));
+                fprintf_P(stream, PSTR("{\"err\":\"AdcNotChannel\"}\r\n"));
                 initCommandBuffer();
                 return;
         }
@@ -109,16 +109,16 @@ void Analogf(unsigned long serial_print_delay_ticks)
         float temp_ref = *ptr_temp_ref;
         float temp_ch_calibration_value = adcConfMap[arg_indx_channel].calibration;
         float corrected = temp_adc*temp_ref*temp_ch_calibration_value;
-        printf_P(PSTR("\"%1.4f\""), corrected);
+        fprintf_P(stream, PSTR("\"%1.4f\""), corrected);
 
         if ( (adc_arg_index+1) >= arg_count) 
         {
-            printf_P(PSTR("}\r\n"));
+            fprintf_P(stream, PSTR("}\r\n"));
             command_done = 21;
         }
         else
         {
-            printf_P(PSTR(","));
+            fprintf_P(stream, PSTR(","));
             adc_arg_index++;
             command_done = 11;
         }
@@ -138,16 +138,16 @@ void Analogf(unsigned long serial_print_delay_ticks)
 }
 
 /* return adc intiger values */
-void Analogd(unsigned long serial_print_delay_ticks)
+void Analogd(FILE *stream, unsigned long serial_print_delay_ticks)
 {
     if ( (command_done == 10) )
     {
         // check that arguments are digit in the range 0..7
         for (adc_arg_index=0; adc_arg_index < arg_count; adc_arg_index++) 
         {
-            if ( ( !( isdigit(arg[adc_arg_index][0]) ) ) || (atoi(arg[adc_arg_index]) < ADC_CH_ADC0) || (atoi(arg[adc_arg_index]) > (ADC_CHANNELS /*+ ADC_CH_MGR_MAX_NOT_A_CH*/)) )
+            if ( ( !( isdigit(arg[adc_arg_index][0]) ) ) || (atoi(arg[adc_arg_index]) < ADC_CH_ADC0) || (atoi(arg[adc_arg_index]) > (ADC_CHANNELS + ADC_CH_MGR_MAX_NOT_A_CH)) )
             {
-                printf_P(PSTR("{\"err\":\"AdcChOutOfRng\"}\r\n"));
+                fprintf_P(stream, PSTR("{\"err\":\"AdcChOutOfRng\"}\r\n"));
                 initCommandBuffer();
                 return;
             }
@@ -155,7 +155,7 @@ void Analogd(unsigned long serial_print_delay_ticks)
         // if references failed to loaded show an error
         if (ref_loaded == VREF_LOADED_ERR)
         {
-            printf_P(PSTR("{\"err\":\"AdcRefNotLoaded\"}\r\n"));
+            fprintf_P(stream, PSTR("{\"err\":\"AdcRefNotLoaded\"}\r\n"));
             initCommandBuffer();
             return;
         }
@@ -163,14 +163,14 @@ void Analogd(unsigned long serial_print_delay_ticks)
         // if calibrations failed to loaded show an error
         if (cal_loaded == CALIBRATE_LOADED_ERR)
         {
-            printf_P(PSTR("{\"err\":\"AdcCalNotLoaded\"}\r\n"));
+            fprintf_P(stream, PSTR("{\"err\":\"AdcCalNotLoaded\"}\r\n"));
             initCommandBuffer();
             return;
         }
 
         // print in steps otherwise the serial buffer will fill and block the program from running
         serial_print_started_at = tickAtomic();
-        printf_P(PSTR("{"));
+        fprintf_P(stream, PSTR("{"));
         adc_arg_index= 0;
         command_done = 11;
     }
@@ -187,11 +187,11 @@ void Analogd(unsigned long serial_print_delay_ticks)
             case ADC_CH_ADC5:
             case ADC_CH_ADC6:
             case ADC_CH_ADC7:
-                printf_P(PSTR("\"ADC%s\":"),arg[adc_arg_index]);
+                fprintf_P(stream, PSTR("\"ADC%s\":"),arg[adc_arg_index]);
                 break;
 
             default:
-                printf_P(PSTR("\"err\":\"AdcNotChannel\"}\r\n"));
+                fprintf_P(stream, PSTR("\"err\":\"AdcNotChannel\"}\r\n"));
                 initCommandBuffer();
                 return;
         }
@@ -217,16 +217,16 @@ void Analogd(unsigned long serial_print_delay_ticks)
 
         // There are values from 0 to 4095 for 4096 slots where each reperesents 1/4096 of the reference.
         // Slot 4095 also includes higher values e.g., VREF*(4095/4096) and up.
-        printf_P(PSTR("\"%d\""), temp_adc);
+        fprintf_P(stream, PSTR("\"%d\""), temp_adc);
 
         if ( (adc_arg_index+1) >= arg_count) 
         {
-            printf_P(PSTR("}\r\n"));
+            fprintf_P(stream, PSTR("}\r\n"));
             command_done = 21;
         }
         else
         {
-            printf_P(PSTR(","));
+            fprintf_P(stream, PSTR(","));
             adc_arg_index++;
             command_done = 11;
         }
