@@ -146,19 +146,17 @@ int adcSingle(ADC_CH_t channel)
 // The ISR will iterate through the channels and save the results in a buffer then disable.
 void adc_burst(unsigned long *adc_started_at, unsigned long *adc_delay_milsec)
 {
-    if (adc_isr_status != ISR_ADCBURST_START) {
-        unsigned long prior_burst = elapsed(adc_started_at);
-        if ((prior_burst) > (*adc_delay_milsec)) {
-            adc_isr_status = ISR_ADCBURST_START; // mark so we know new readings are wip
-            adc_auto_conversion = 1;
+    unsigned long prior_burst = elapsed(adc_started_at);
+    if ((prior_burst) > (*adc_delay_milsec)) {
+        adc_isr_status = ISR_ADCBURST_START; // mark so we know new readings are wip
+        adc_auto_conversion = 1;
 
-            // setup first channel and start conversion
-            channel_setup(ADC_CH_ADC1);
-            start_adc_conversion();
-            enable_adc_interrupt();
+        // setup first channel and start conversion
+        channel_setup(ADC_CH_ADC1);
+        start_adc_conversion();
+        enable_adc_interrupt();
 
-            // save time for next burst
-            *adc_started_at += *adc_delay_milsec; 
-        }
+        // save time for next burst
+        *adc_started_at += *adc_delay_milsec; 
     }
 }

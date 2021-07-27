@@ -31,6 +31,7 @@ https://en.wikipedia.org/wiki/BSD_licenses#0-clause_license_(%22Zero_Clause_BSD%
 
 #define ADC_DELAY_MILSEC 200UL
 static unsigned long adc_started_at;
+static unsigned long adc_delay;
 
 #define BLINK_DELAY 1000UL
 static unsigned long blink_started_at;
@@ -82,11 +83,11 @@ void setup(void)
 
     // Initialize Timers TCA0 is split into two 8 bit timers, the high underflow (HUNF) event it used for  time tracking
     initTimers(); //PWM: TCA route A to PC0, PC1, PC2, PC3, PC4, PC5.
-    init_ADC_single_conversion();
 
-    // put ADC in Auto Trigger mode and fetch an array of channels
-    enable_ADC_auto_conversion(BURST_MODE);
-    adc_started_at = milliseconds();
+    // ADC, start taking readings on each ADC channel.
+    init_ADC_single_conversion();
+    adc_started_at = tickAtomic();
+    adc_delay = cnvrt_milli(ADC_DELAY_MILSEC);
 
     /* Initialize UART to 38.4kbps, it returns a pointer to FILE so redirect of stdin and stdout works*/
     uart0 = uart0_init(38400UL, UART0_RX_REPLACE_CR_WITH_NL);
@@ -127,14 +128,14 @@ void blink(void)
     }
 }
 
-void adc_burst(void)
+void adc_burst_main(unsigned long *adc_started_at, unsigned long *adc_delay)
 {
-    unsigned long kRuntime= elapsed(&adc_started_at);
-    if ((kRuntime) > ((unsigned long)ADC_DELAY_MILSEC))
-    {
-        enable_ADC_auto_conversion(BURST_MODE);
-        adc_started_at += ADC_DELAY_MILSEC; 
-    } 
+    //unsigned long prior_burst= elapsed(adc_started_at);
+    //if ((prior_burst) > (*adc_delay))
+    //{
+        adc_burst(adc_started_at, adc_delay);
+        //*adc_started_at += *adc_delay;
+    //} 
 }
 
 int main(void) 
@@ -167,7 +168,7 @@ int main(void)
         }
 
         // delay between ADC burst
-        adc_burst();
+        adc_burst(&adc_started_at, &adc_delay);
 
         // finish echo of the command line befor starting a reply (or the next part of a reply)
         if ( command_done && uart0_availableForWrite() )
