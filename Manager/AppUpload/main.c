@@ -42,7 +42,7 @@ uint8_t wrbuf[5];
 static int got_a;
 FILE *uart1;
 
-static uint8_t toApp_addr = 40; // app only has one twi port
+static uint8_t toApp_addr = 40; // app (avr128da28) has a twi port
 //static uint8_t toMgr_fromApp_addr = 41; // manager-twi1 to application-twi0 
 //static uint8_t fromHost_addr = 42; // R-Pi-twi0 to manager-twi0 (mgr has MVIO on the alt twi0 port used)
 
@@ -118,6 +118,7 @@ void abort_safe(void)
 
 void setup(void)
 {
+    // STATUS_LED
     ioCntl(MCU_IO_MGR_LED, PORT_ISC_INTDISABLE_gc, PORT_PULLUP_DISABLE, PORT_INVERT_NORMAL);
     ioDir(MCU_IO_MGR_LED, DIRECTION_OUTPUT);
     ioWrite(MCU_IO_MGR_LED,LOGIC_LEVEL_HIGH);
@@ -210,7 +211,11 @@ int main(void)
         {
             blink(); // also ping_i2c1() at the toggle event
         }
+
+        // i2c server transactions print on serial debug set up with init
         i2c_monitor();
+
+        // upload or serial
         uint8_t *buf = got_twi0();
         if (buf) // only if write+read is done can the host change UPDI mode for Application programing
         {

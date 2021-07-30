@@ -3,6 +3,7 @@ TARGET = Adc
 LIBDIR = ../lib
 OBJECTS = main.o \
 	analog.o \
+	../AppUpload/i2c_monitor.o \
 	$(LIBDIR)/twi.o \
 	$(LIBDIR)/uart1_bsd.o \
 	$(LIBDIR)/adc_bsd.o \

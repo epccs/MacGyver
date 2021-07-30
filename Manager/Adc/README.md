@@ -3,8 +3,13 @@
 ## Todo
 
 (done) show ADC values in debug
-(done, ouch)verify values are correct
-add way to return ADC values on TWI
+(done, ouch) verify values are correct
+(needs test from app) add way to return ADC values on TWI
+    app request value as a master write+read to the manager,
+    the manager reply as a master write to the application.
+    That is crazy cool (note write+read was reused from AppUpload, it is not ideal)
+use twi server monitor to track transactions
+remove "print adc json if stram is available for write"
 add references and return on TWI
 add corrections and return on TWI
 
@@ -18,14 +23,14 @@ The channel number is used in a switch statement (see LoadAdcConfig() function i
 
 ## Manager has Reference and Callibration Values
 
-The application controller and manager will have a private I2C bus between them.
+The application controller and manager have an I2C bus between them.
 
 ```text
-Callibraion         type        i2c command/select/data         manager defaults 
-alt_i               INT16       32,0,0                          32,(12bits from adc ch 0)
-alt_v               INT16       32,0,1                          32,(12bits from adc ch 1)
-pwr_i               INT16       32,0,2                          32,(12bits from adc ch 6)
-pwr_v               INT16       32,0,3                          32,(12bits from adc ch 7)
+Callibraion         type        i2c command                     manager defaults 
+alt_i               INT16       32,0                            32,(12bits from adc ch 1)
+alt_v               INT16       32,1                            32,(12bits from adc ch 2)
+pwr_i               INT16       32,2                            32,(12bits from adc ch 3)
+pwr_v               INT16       32,3                            32,(12bits from adc ch 4)
 ref_extern_vdd      FLOAT       38,0,0,0,0,0                    38,0,0x40,0xA0,0x0,0x0
 ref_intern_1v0      FLOAT       38,1,0,0,0,0                    38,1,0x3F,0x8A,0x3D,0x71
 ref_intern_2v0      FLOAT       38,2,0,0,0,0                    38,2,TBD
@@ -35,6 +40,8 @@ alt_v_callibraion   FLOAT       33,1,0,0,0,0                    33,1,0x3C,0x30,0
 pwr_i_callibraion   FLOAT       33,2,0x39,0x96,0x96,0x96        33,2,0x39,0x96,0x96,0x96
 pwr_v_callibraion   FLOAT       33,3,0x3B,0xEA,0x88,0x1A        33,3,0x3B,0xEA,0x88,0x1A
 ```
+
+alt_i will cause the manager to send the channel ADC reading back to the application. The application makes the original request as a client and the manager as a server; then the manager becomes the client (master) and the application the server (slave) to respond. Most people are probably not using multi-master; I am just exploring it.
 
 The ref_extern_vdd value should be used when VREF_REFSEL_VDD_gc is selected. The DACREF0..2 can be connected to positive ADC input to directly measure the 1V024, 2V048, and 4V096 referances that go to the DAC. I am ignoring the 2V5 referance for now.
 
