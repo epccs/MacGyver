@@ -128,16 +128,6 @@ void blink(void)
     }
 }
 
-void adc_burst_main(unsigned long *adc_started_at, unsigned long *adc_delay)
-{
-    //unsigned long prior_burst= elapsed(adc_started_at);
-    //if ((prior_burst) > (*adc_delay))
-    //{
-        adc_burst(adc_started_at, adc_delay);
-        //*adc_started_at += *adc_delay;
-    //} 
-}
-
 int main(void) 
 {
     setup();

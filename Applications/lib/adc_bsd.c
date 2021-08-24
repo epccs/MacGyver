@@ -93,19 +93,11 @@ ISR(ADC0_RESRDY_vect)
 // also used to init for auto conversion
 void init_ADC_single_conversion(void)
 {
-    // load references or set error
+    // load references, calibrations, and  or set error
     ref_loaded = VREF_LOADED_NO;
-    while(ref_loaded < VREF_LOADED_DONE)
-    {
-        LoadAnalogRef();
-    }
-
-    // load calibrations or set error
     cal_loaded = CALIBRATE_LOADED_NO;
-    while(cal_loaded < CALIBRATE_LOADED_DONE)
-    {
-        LoadAdcConfig();
-    }
+    cal_mgr_loaded = CAL_MGR_LOADED_NO;
+    while(!LoadAdcConfig());
 }
 
 // return two byes from the last ADC update with an atomic transaction to make sure ISR does not change it durring the read

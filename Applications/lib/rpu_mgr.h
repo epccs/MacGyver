@@ -5,19 +5,11 @@
 
 #define I2C_ADDR_OF_BUS_MGR 0x29
 
-// enumeraiton names for ADC from manager
-typedef enum ADC_CH_MGR_enum {
-    ADC_CH_MGR_ALT_I, // manager analog channel 0
-    ADC_CH_MGR_ALT_V, // manager analog channel 1
-    ADC_CH_MGR_PWR_I, // manager analog channel 6
-    ADC_CH_MGR_PWR_V, // manager analog channel 7
-    ADC_CH_MGR_MAX_NOT_A_CH // not a channel
-} ADC_CH_MGR_t;
-
 extern uint8_t mgr_twiErrorCode;
 
 extern bool i2c_ping(uint8_t address);
 extern char i2c_get_Rpu_address(void);
+extern void i2c_get_mgr_adc(uint8_t ch, uint8_t cb_port);
 //extern uint8_t i2c_set_Rpu_shutdown(void);
 //extern uint8_t i2c_detect_Rpu_shutdown(void);
 /*

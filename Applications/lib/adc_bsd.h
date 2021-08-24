@@ -20,6 +20,15 @@ typedef enum ADC_CH_enum {
     ADC_CHANNELS
 } ADC_CH_t;
 
+// enumeraiton names for channels from manager 
+typedef enum ADC_CH_MGR_enum {
+    ADC_CH_MGR_ALT_I, // ATL_I (charging current) from MGR
+    ADC_CH_MGR_ALT_V, // ALT_V (charging voltage)
+    ADC_CH_MGR_PWR_I, // PWR_I (current usage not including charging)
+    ADC_CH_MGR_PWR_V, // PWR_V (battery voltage)
+    ADC_CHANNELS_MGR
+} ADC_CH_MGR_t;
+
 extern volatile int adc[];
 extern volatile ADC_CH_t adc_channel;
 extern volatile VREF_REFSEL_t analog_reference;

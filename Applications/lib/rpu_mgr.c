@@ -163,6 +163,19 @@ char i2c_get_Rpu_address(void)
     }
 }
 
+// get ADC (channel) value from manager
+// The manager will become i2c a client (master) and place the value on the callback port
+// in other words the applicaiton's slave will recive the value on that port.
+void i2c_get_mgr_adc(uint8_t ch, uint8_t cb_port)
+{
+    uint8_t wrdata[] = ANALOG_RD_CMD;
+    memcpy(wrbuf, wrdata, sizeof(wrdata));
+    twim_callback(twimCallback);
+    twim_on(I2C_ADDR_OF_BUS_MGR);
+    twim_write( wrbuf, sizeof(wrbuf) );
+    twim_cb_interlock = true;
+}
+
 /* ToDo
 
 

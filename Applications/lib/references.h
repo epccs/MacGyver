@@ -1,6 +1,8 @@
 #ifndef References_H
 #define References_H
 
+#include <stdbool.h>
+
 typedef enum VREF_LOADED_enum
 {
     VREF_LOADED_NO,  // not loaded and not started
@@ -27,6 +29,17 @@ typedef enum CALIBRATE_LOADED_enum
     CALIBRATE_LOADED_ERR  // Fail to load calibrations
 } CALIBRATE_LOADED_t;
 
+typedef enum CAL_MGR_LOADED_enum
+{
+    CAL_MGR_LOADED_NO,  // not loaded and not started
+    CAL_MGR_LOADED_ALT_I,  // work in prcess, load ALT_I cal and reference
+    CAL_MGR_LOADED_ALT_V,  // work in prcess, load ALT_V cal and reference
+    CAL_MGR_LOADED_PWR_I,  // work in prcess, load load PWR_I cal and reference
+    CAL_MGR_LOADED_PWR_V,  // work in prcess, load load PWR_V cal and reference
+    CAL_MGR_LOADED_DONE,  // calibrations loaded and references set
+    CAL_MGR_LOADED_ERR  // Fail to load calibrations
+} CAL_MGR_LOADED_t;
+
 extern VREF_LOADED_t ref_loaded;
 extern float ref_extern_vdd;
 extern float ref_intern_1v0;
@@ -34,6 +47,7 @@ extern float ref_intern_2v0;
 extern float ref_intern_4v1;
 
 extern CALIBRATE_LOADED_t cal_loaded;
+extern CAL_MGR_LOADED_t cal_mgr_loaded;
 
 struct AdcConf_Map { 
     float calibration; // calibrated value need for an ADC divion of the channel.
@@ -46,7 +60,14 @@ struct AdcConf_Map {
 
 extern struct AdcConf_Map adcConfMap[]; // size is ADC_CHANNELS
 
-extern VREF_LOADED_t LoadAnalogRef();
-extern CALIBRATE_LOADED_t LoadAdcConfig();
+struct AdcMgrConf_Map {
+    int value; // ADC value from manager
+    float calibration; // calibrated value need for an ADC divion of the channel.
+    float *ref; // pointer to the referance value used for channel
+};
+
+extern struct AdcMgrConf_Map adcMgrConfMap[]; // size is 4 (alt_i, alt_v, pwr_i, pwr_v)
+
+extern bool LoadAdcConfig();
 
 #endif // Analog_H 
